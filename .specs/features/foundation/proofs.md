@@ -1,6 +1,6 @@
 # foundation proofs
 
-**HEAD**: 012174d
+**HEAD**: b8be724
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 80 pass, 0 fail
@@ -93,41 +93,41 @@
 `Run unit` - exit 0
 
 ```
- ✓ |unit| test/unit/services/profile.service.test.ts > ProfileService > get returns the row or throws NotFoundError 2ms
+ ✓ |unit| test/unit/llm/pii-guard.test.ts > pii guard > redacts every occurrence 0ms
+ ✓ |unit| test/unit/services/profile.service.test.ts > ProfileService > get returns the row or throws NotFoundError 4ms
  ✓ |unit| test/unit/services/profile.service.test.ts > ProfileService > update upserts row 1 0ms
- ✓ |unit| test/unit/app/openapi.test.ts > openapi > lists api routes and no admin route 18ms
- ✓ |unit| test/unit/db/schema.test.ts > drizzle config > targets curriculum_api with snake_case 2ms
+ ✓ |unit| test/unit/db/schema.test.ts > drizzle config > targets curriculum_api with snake_case 1ms
  ✓ |unit| test/unit/db/schema.test.ts > schema > declares seven tables in curriculum_api 1ms
- ✓ |unit| test/unit/container.test.ts > container > constructs every repository and service without io 4ms
  ✓ |unit| test/unit/db/client.test.ts > db client > routes db.localtest.me to the local proxy 1ms
- ✓ |unit| test/unit/cli.test.ts > cli > hash-password prints a bcrypt hash that verifies 1074ms
+ ✓ |unit| test/unit/container.test.ts > container > constructs every repository and service without io 4ms
+ ✓ |unit| test/unit/cli.test.ts > cli > hash-password prints a bcrypt hash that verifies 1104ms
  ✓ |unit| test/unit/cli.test.ts > cli > unknown command prints usage and exits 1 1ms
  ✓ |unit| test/unit/examples/node-server.test.ts > node example > uses port 3001 and insecure cookies 1ms
 
  Test Files  27 passed (27)
       Tests  66 passed (66)
-   Start at  02:56:43
-   Duration  1.74s (import 69%, tests 23%, transform 7%, worker 2%)
+   Start at  02:58:47
+   Duration  1.86s (import 68%, tests 23%, transform 7%, worker 1%)
 ```
 
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/db/constraints.test.ts > constraints > deleting a resume nulls the chat link 599ms
- ✓ |integration| test/integration/repositories/personal-info.repository.test.ts > PersonalInfoRepository > covers insert, find, update, delete and list order 1615ms
- ✓ |integration| test/integration/repositories/settings.repository.test.ts > SettingsRepository > round trips get, all, set and delete 1488ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1255ms
- ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1217ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 446ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 600ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 948ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 699ms
- ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 413ms
+ ✓ |integration| test/integration/db/constraints.test.ts > constraints > deleting a resume nulls the chat link 594ms
+ ✓ |integration| test/integration/repositories/personal-info.repository.test.ts > PersonalInfoRepository > covers insert, find, update, delete and list order 1612ms
+ ✓ |integration| test/integration/repositories/settings.repository.test.ts > SettingsRepository > round trips get, all, set and delete 1476ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1247ms
+ ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1133ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 422ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 593ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 890ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 666ms
+ ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 407ms
 
  Test Files  10 passed (10)
       Tests  16 passed (16)
-   Start at  02:56:45
-   Duration  20.19s (tests 87%, import 13%)
+   Start at  02:58:49
+   Duration  19.96s (tests 87%, import 13%)
 ```
 
 `pnpm build && test -f dist/index.js && test -f dist/index.d.ts && test -f dist/cli.js` - exit 0
@@ -142,11 +142,11 @@ ESM Build start
 ESM dist/cli.js            3.00 KB
 ESM dist/chunk-NY6RKQJR.js 6.13 KB
 ESM dist/chunk-5WHZS7JL.js 2.85 KB
-ESM dist/index.js          23.05 KB
 ESM dist/admin-MLWRZU5B.js 55.42 KB
-ESM ⚡️ Build success in 16ms
+ESM dist/index.js          23.05 KB
+ESM ⚡️ Build success in 15ms
 DTS Build start
-DTS ⚡️ Build success in 1212ms
+DTS ⚡️ Build success in 1191ms
 DTS dist/index.d.ts 4.39 KB
 ```
 
@@ -164,8 +164,8 @@ DTS dist/index.d.ts 4.39 KB
 
  Test Files  37 passed (37)
       Tests  82 passed (82)
-   Start at  02:57:10
-   Duration  21.63s (tests 69%, import 29%, transform 2%)
+   Start at  02:59:14
+   Duration  21.71s (tests 69%, import 29%, transform 2%, worker 1%)
 
-Checked 112 files in 45ms. No fixes applied.
+Checked 112 files in 42ms. No fixes applied.
 ```
