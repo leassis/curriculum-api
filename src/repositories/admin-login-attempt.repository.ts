@@ -1,6 +1,6 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, gt, isNull, or, sql, sum } from "drizzle-orm";
 import type { Db } from "../db/client.js";
-import { adminLoginAttempts } from "../db/schema.js";
+import { adminLoginAttempts, publicUsage, recruiterChats, tailoredResumes } from "../db/schema.js";
 
 export interface DashboardCounts {
   activeChats: number;
@@ -42,19 +42,26 @@ export class AdminLoginAttemptRepository implements AdminLoginAttemptRepo {
   }
 
   async counts(): Promise<DashboardCounts> {
-    const result = (await this.db.execute(sql`
-      select
-        (select count(*) from curriculum_api.recruiter_chats
-          where status = 'active' and (expires_at is null or expires_at > now()))::int as chats,
-        (select count(*) from curriculum_api.tailored_resumes)::int as resumes,
-        (select coalesce(sum(used), 0) from curriculum_api.public_usage
-          where day = current_date)::int as usage
-    `)) as unknown as { rows: { chats: number; resumes: number; usage: number }[] };
-    const row = result.rows[0];
+    const [[chats], [resumeRows], [usage]] = await Promise.all([
+      this.db
+        .select({ n: count() })
+        .from(recruiterChats)
+        .where(
+          and(
+            eq(recruiterChats.status, "active"),
+            or(isNull(recruiterChats.expiresAt), gt(recruiterChats.expiresAt, sql`now()`)),
+          ),
+        ),
+      this.db.select({ n: count() }).from(tailoredResumes),
+      this.db
+        .select({ total: sum(publicUsage.used) })
+        .from(publicUsage)
+        .where(eq(publicUsage.day, sql`current_date`)),
+    ]);
     return {
-      activeChats: Number(row?.chats ?? 0),
-      resumes: Number(row?.resumes ?? 0),
-      publicQuestionsToday: Number(row?.usage ?? 0),
+      activeChats: chats?.n ?? 0,
+      resumes: resumeRows?.n ?? 0,
+      publicQuestionsToday: Number(usage?.total ?? 0),
     };
   }
 }
