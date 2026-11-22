@@ -1,20 +1,25 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { Pool } from "pg";
 
-/** Generic Drizzle database: repositories never depend on the neon-http driver (AD-002). */
+/** Generic Drizzle database: repositories never depend on the concrete driver (ADR 0003). */
 export type Db = PgDatabase<PgQueryResultHKT>;
 
-const NEON_LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
+/** A `Db` that owns its connection pool, so short-lived callers (CLI, tests) can close it. */
+export type PooledDb = NodePgDatabase & { $client: Pool };
 
-/** Neon Local serves the HTTP SQL endpoint on the Postgres port; every other host is Neon cloud. */
-export function fetchEndpointFor(host: string, port?: number | string): string {
-  return NEON_LOCAL_HOSTS.has(host) ? `http://${host}:${port || 5432}/sql` : `https://${host}/sql`;
+/** Kept small: the pooled (PgBouncer) connection string multiplexes server connections. */
+const POOL_MAX = 5;
+
+/** Builds the pool lazily: no connection is opened until the first query. */
+export function createDb(url: string): PooledDb {
+  const pool = new Pool({ connectionString: url, max: POOL_MAX });
+  // An idle client can be dropped by the server or the pooler; without a listener that crashes the process.
+  pool.on("error", (error) => console.error("postgres pool error:", error.message));
+  return drizzle(pool, { casing: "snake_case" });
 }
 
-// A pure assignment, no I/O at import time.
-neonConfig.fetchEndpoint = fetchEndpointFor;
-
-export function createDb(url: string): Db {
-  return drizzle(neon(url), { casing: "snake_case" });
+/** Ends the pool so the process can exit. */
+export async function closeDb(db: PooledDb): Promise<void> {
+  await db.$client.end();
 }

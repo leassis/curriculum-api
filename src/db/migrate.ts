@@ -1,9 +1,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { migrate as runMigrations } from "drizzle-orm/neon-http/migrator";
-import "./client.js"; // routes localhost to Neon Local over http
+import { migrate as runMigrations } from "drizzle-orm/node-postgres/migrator";
+import { closeDb, createDb } from "./client.js";
 
 /** `drizzle/` sits next to `dist/` once packaged, and two levels above `src/db/` in source. */
 function migrationsFolder(): string {
@@ -14,11 +12,16 @@ function migrationsFolder(): string {
   throw new Error("drizzle migrations folder not found");
 }
 
+/** Pass the unpooled (direct) connection string when there is one: DDL does not belong behind PgBouncer. */
 export async function migrate(databaseUrl: string): Promise<void> {
-  const db = drizzle(neon(databaseUrl), { casing: "snake_case" });
-  await runMigrations(db, {
-    migrationsFolder: migrationsFolder(),
-    migrationsSchema: "curriculum_api",
-    migrationsTable: "__drizzle_migrations",
-  });
+  const db = createDb(databaseUrl);
+  try {
+    await runMigrations(db, {
+      migrationsFolder: migrationsFolder(),
+      migrationsSchema: "curriculum_api",
+      migrationsTable: "__drizzle_migrations",
+    });
+  } finally {
+    await closeDb(db);
+  }
 }
