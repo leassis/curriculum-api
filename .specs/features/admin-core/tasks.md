@@ -285,4 +285,4 @@ Proof: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Settled mid-build:** none
 **Dispatched:** none
-**Walked:** pending
+**Walked:** (2026-11-22): `pnpm dev` served :3001; GET /admin/login 200, wrong password POST 401 (500 ms delay), GET /admin without session 303. No browser pass of the HTMX personal-info swaps (unit-tested markup only); no captures cited.
