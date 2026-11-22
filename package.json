@@ -32,7 +32,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:int": "vitest run --project integration",
-    "dev": "tsx scripts/build-js.ts && tsx --env-file=.env examples/node/server.ts",
+    "dev": "tsx scripts/build-js.ts && tsx --env-file-if-exists=.env --env-file-if-exists=.env.local examples/node/server.ts",
     "db:generate": "drizzle-kit generate",
     "vendor:htmx": "tsx scripts/vendor-htmx.ts",
     "build:css": "tsx scripts/build-css.ts",

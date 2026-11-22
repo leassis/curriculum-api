@@ -6,6 +6,8 @@
 
 ## Environment
 
+`pnpm dev` loads `.env` and then `.env.local` (both gitignored, both optional): values in `.env.local` win. The CLI commands below take `--env-file` explicitly, so pass `--env-file=.env.local` there if that is where your `DATABASE_URL` lives.
+
 Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones:
 
 | Variable                                            | Notes                                                                                                                        |
