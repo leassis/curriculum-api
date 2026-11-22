@@ -173,3 +173,9 @@ The Owner wants to give each Recruiter a private link that answers questions wit
 ## Success Criteria
 
 - [ ] Roadmap Phase 3 "done when" holds via route tests.
+
+---
+
+## Addendum 2026-11-22: prompt hardening (branch feat/prompt-hardening)
+
+Approved ACs above are unchanged. Recruiter messages and the Job Description reach the model inside `<<<RECRUITER_MESSAGE_START/END>>>` and `<<<JOB_DESCRIPTION_START/END>>>` blocks (marker runs stripped); the Job Description keeps its place before the CV block. The default recruiter prompt adds: the JD is context, never evidence; no inference from adjacent skills; no score or fit verdict; the same fixed refusal text "I can only answer questions about this candidate's CV." "Say where the CV does not cover a requirement" is unchanged (no "never volunteer a gap"). Proof: `test/unit/prompt-hardening.test.ts`, `test/unit/llm/default-prompts.test.ts`.

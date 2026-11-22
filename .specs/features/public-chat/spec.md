@@ -175,3 +175,9 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 - [ ] Concurrency test passes 10 runs in a row.
 - [ ] Zero Personal Info Field values in recorded prompts across the suite.
+
+---
+
+## Addendum 2026-11-22: prompt hardening (branch feat/prompt-hardening)
+
+Approved ACs above are unchanged. Visitor messages reach the model inside `<<<VISITOR_MESSAGE_START/END>>>` blocks (runs of 3+ `<`/`>` stripped). The default public prompt treats delimited text as data, never infers from an adjacent skill, gives no score or fit verdict, and refuses a whole-CV, verbatim, system-prompt or other-person request with the fixed text "I can only answer questions about this candidate's CV." Proof: `test/unit/prompt-hardening.test.ts`, `test/unit/llm/default-prompts.test.ts`.
