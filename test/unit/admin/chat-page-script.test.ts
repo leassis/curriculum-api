@@ -1,6 +1,6 @@
 import vm from "node:vm";
 import { describe, expect, it } from "vitest";
-import { CHAT_PAGE_JS } from "../../../src/admin/chat-page-script";
+import { CHAT_PAGE_JS } from "../../../src/admin/chat-page/script";
 
 interface Node {
   textContent: string;

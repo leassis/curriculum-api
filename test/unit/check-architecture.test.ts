@@ -67,4 +67,24 @@ describe("check-architecture", () => {
     });
     expect(checkArchitecture(lazy)).toEqual([]);
   });
+
+  it("keeps admin view files free of services, repositories, security, db and llm", () => {
+    const root = tree({
+      "admin/profile/view.tsx": 'import type { X } from "../../services/x.js";\n',
+      "admin/chats/view.tsx": 'import { y } from "../../security/y.js";\n',
+      "admin/chats/messages/view.tsx": 'import { z } from "../../../llm/z.js";\n',
+      "admin/layout.tsx": 'import { r } from "../repositories/r.js";\n',
+      "admin/login/view.tsx": 'import { w } from "../../db/client.js";\n',
+      "admin/settings/view.tsx": 'import { Layout } from "../layout.js";\n',
+      "admin/settings/routes.ts": 'import { s } from "../../services/s.js";\n',
+    });
+    const files = [...new Set(checkArchitecture(root).map((v) => v.file))].sort();
+    expect(files).toEqual([
+      "src/admin/chats/messages/view.tsx",
+      "src/admin/chats/view.tsx",
+      "src/admin/layout.tsx",
+      "src/admin/login/view.tsx",
+      "src/admin/profile/view.tsx",
+    ]);
+  });
 });

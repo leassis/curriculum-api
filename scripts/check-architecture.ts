@@ -45,6 +45,9 @@ const PLATFORM = /^(@vercel\/|aws-sdk$|@aws-sdk\/)/;
 const PROVIDER_PKG = "@openrouter/ai-sdk-provider";
 const DATA_LAYERS = ["db/", "repositories/"];
 const UI_LAYERS = ["routes/", "admin/", "middleware/"];
+/** Admin view files are pure JSX: plain props in, markup out. */
+const VIEW_FILE = /^admin\/(?:.+\/)?(?:view|layout|error-fragment)\.tsx$/;
+const VIEW_FORBIDDEN = ["services/", "repositories/", "security/", "db/", "llm/"];
 const PROVIDER_FILE = "llm/openrouter";
 const PROVIDER_IMPORTERS = new Set(["services/llm.service.ts", "container.ts"]);
 
@@ -69,6 +72,11 @@ export function checkArchitecture(root: string): Violation[] {
         DATA_LAYERS.some((l) => target.startsWith(l))
       ) {
         report(`imports ${spec}: routes, admin and middleware must not import db or repositories`);
+      }
+      if (VIEW_FILE.test(file) && VIEW_FORBIDDEN.some((l) => target.startsWith(l))) {
+        report(
+          `imports ${spec}: admin views must not import services, repositories, security, db or llm`,
+        );
       }
       if (target === PROVIDER_FILE && !PROVIDER_IMPORTERS.has(file)) {
         report("imports src/llm/openrouter.ts outside the llm service and the container");
