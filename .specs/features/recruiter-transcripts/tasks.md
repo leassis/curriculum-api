@@ -59,7 +59,7 @@ T1 → T2 → T3 → T4 → T5
 **Tests**: unit, integration
 **Gate**: Full
 **Commit**: `feat(db): add recruiter chat messages table`
-**Status**: pending
+**Status**: done
 
 ---
 

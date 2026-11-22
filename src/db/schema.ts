@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   check,
   date,
+  index,
   integer,
   pgSchema,
   primaryKey,
@@ -76,6 +78,24 @@ export const recruiterChats = curriculum.table(
     lastUsedAt: timestamp({ withTimezone: true }),
   },
   (t) => [check("recruiter_chats_status", sql`${t.status} in ('active', 'revoked')`)],
+);
+
+export const recruiterChatMessages = curriculum.table(
+  "recruiter_chat_messages",
+  {
+    id: uuid().primaryKey().default(sql`gen_random_uuid()`),
+    chatId: uuid()
+      .notNull()
+      .references(() => recruiterChats.id, { onDelete: "cascade" }),
+    seq: bigint({ mode: "number" }).generatedAlwaysAsIdentity().notNull(),
+    role: text().notNull(),
+    content: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("recruiter_chat_messages_role", sql`${t.role} in ('user', 'assistant')`),
+    index("recruiter_chat_messages_chat_seq").on(t.chatId, t.seq),
+  ],
 );
 
 export const publicUsage = curriculum.table(

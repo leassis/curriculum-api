@@ -64,6 +64,7 @@ const FILES = [
   "src/admin/resumes.tsx",
   "src/admin/print.tsx",
   "drizzle/0000_init.sql",
+  "drizzle/0001_demonic_winter_soldier.sql",
   "drizzle/meta/_journal.json",
   "examples/node/server.ts",
   "scripts/check-architecture.ts",
@@ -163,11 +164,11 @@ describe("repo layout", () => {
     }
   });
 
-  it("ships exactly one migration", () => {
+  it("ships the init migration and the transcripts migration", () => {
     const sql = readdirSync(join(root, "drizzle")).filter((f) => f.endsWith(".sql"));
-    expect(sql).toEqual(["0000_init.sql"]);
+    expect(sql).toEqual(["0000_init.sql", "0001_demonic_winter_soldier.sql"]);
     const journal = JSON.parse(read("drizzle/meta/_journal.json"));
-    expect(journal.entries).toHaveLength(1);
+    expect(journal.entries).toHaveLength(2);
     expect(JSON.parse(read("package.json")).files).toContain("drizzle");
   });
 });
