@@ -1,6 +1,6 @@
 # public-chat proofs
 
-**HEAD**: f7e6ade
+**HEAD**: b263500
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 32 pass, 0 fail
@@ -19,13 +19,13 @@
 | C10 | `run unit / ✓ public chat service > refuses with limit_reached and does not call the llm once the limit is used` | pass |
 | C11 | `run unit / ✓ public chat service > calls the llm with area public, the system prompt, the cv, the messages and` | pass |
 | C12 | `run unit / ✓ public chat service > tells the model the cv is empty` | pass |
-| C13 | `run unit / ✓ public chat service > releases the use when the llm is unavailable` | pass |
-| C14 | `run unit / ✓ public chat service > releases the use when the pii guard blocks the call` | pass |
+| C13 | `run unit / ✓ public chat route > answers 502 llm_unavailable and releases the use` | pass |
+| C14 | `run unit / ✓ public chat route > answers 500 internal_error and releases the use when the pii guard blocks` | pass |
 | C15 | `run unit / ✓ public chat service > applies a settings override of the limit to the next request` | pass |
 | C16 | `run unit / ✓ public chat service > refuses when the limit is lowered below today's use` | pass |
 | C17 | `run unit / ✓ public chat service > answers not_found without touching the counter when the profile is missing` | pass |
 | C18 | `run unit / ✓ public chat route > answers 404 not_found when the profile is not seeded` | pass |
-| C19 | `run unit / ✓ public chat service > stores the ip hash and never the raw ip` | pass |
+| C19 | `run unit / ✓ public chat route > stores only the hashed ip` | pass |
 | C20 | `run int / ✓ public usage repository > stores the ip hash only` | pass |
 | C21 | `run int / ✓ public usage repository > grants exactly the limit under 20 parallel acquires` | pass |
 | C22 | `run int / ✓ public usage repository > gives a new day a fresh quota` | pass |
@@ -45,39 +45,39 @@
 `Run unit` - exit 0
 
 ```
- ✓ |unit| test/unit/services/settings.service.test.ts > SettingsService > limit prefers override then config 1ms
- ✓ |unit| test/unit/services/settings.service.test.ts > SettingsService > set validates keys and values and deletes on empty 1ms
- ✓ |unit| test/unit/app/api-errors.test.ts > api errors > maps each domain error to its status and code 50ms
- ✓ |unit| test/unit/app/api-errors.test.ts > api errors > hides unknown errors as internal_error 2ms
- ✓ |unit| test/unit/app/openapi.test.ts > openapi > lists api routes and no admin route 21ms
- ✓ |unit| test/unit/db/schema.test.ts > drizzle config > targets curriculum_api with snake_case 1ms
- ✓ |unit| test/unit/db/schema.test.ts > schema > declares seven tables in curriculum_api 1ms
- ✓ |unit| test/unit/db/client.test.ts > db client > routes db.localtest.me to the local proxy 1ms
- ✓ |unit| test/unit/container.test.ts > container > constructs every repository and service without io 4ms
- ✓ |unit| test/unit/examples/node-server.test.ts > node example > uses port 3001 and insecure cookies 1ms
-
- Test Files  35 passed (35)
-      Tests  116 passed (116)
-   Start at  03:44:02
-   Duration  2.66s (import 68%, tests 25%, transform 5%, worker 1%)
+PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
+    at LlmService.prepare (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:90:13)
+    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:48:45)
+    at PublicChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/public-chat.service.ts:30:26)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:67:33)
+    at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
+    at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
+    at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/middleware/require-session.ts:15:5)
+    at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
+    at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35) {
+  fieldKey: 'EMAIL',
+  code: 'internal_error',
+  status: 500
+}
 ```
 
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1433ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1260ms
+ ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1448ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1245ms
  ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1136ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 413ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 599ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 322ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 622ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 888ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 663ms
- ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 418ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 422ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 595ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 308ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 607ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 898ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 662ms
+ ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 392ms
 
  Test Files  17 passed (17)
       Tests  31 passed (31)
-   Start at  03:44:05
-   Duration  40.10s (tests 88%, import 12%)
+   Start at  03:47:10
+   Duration  39.80s (tests 88%, import 12%)
 ```

@@ -224,5 +224,5 @@ Proof: run int | ✓ public chat with database > sends no personal info value to
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** Verifier at f7e6ade (pending)
+**Dispatched:** Verifier at f7e6ade (returned)
 **Walked:** none - no screen; no captures cited.

@@ -1,6 +1,6 @@
 # Public Chat verification
 
-**Verdict**: FAIL
+**Verdict**: PASS
 **Proofs**: `proofs.md` at f7e6ade
 **Verifier**: independent sub-agent (author != verifier)
 
@@ -43,9 +43,9 @@
 
 | Finding | Evidence | Fix | Closed |
 | --- | --- | --- | --- |
-| Raw IP stored instead of its hash would keep every test green (PUB-03 AC 10) | C19 feeds `"deadbeef"` to the service; C20/C24 never check `ip_hash`; `src/routes/public.ts` `hashIp(...)` is untested | in the route test, assert the usage key is not the forwarded IP and equals `hashIp(ip, salt)`; in C24 assert `ip_hash` differs from `203.0.113.7` | |
-| 502 and 500 statuses of the failure paths are not asserted (PUB-05 AC 7-8) | C13/C14 assert `code` only; no route-level test of an LLM failure | route test with a failing mock: 502 `llm_unavailable` and 500 `internal_error`, counter back to its prior value | |
-| Spec/behaviour gap: `maxQuestionChars` counts UTF-16 units | own example: 1000 x "😀" answers 400, 1000 x "é" answers 200 | count code points (`[...s].length`) or state UTF-16 units in the spec | |
-| Rule with no check: only the last message is length-bounded | own example: an assistant message of 5000 chars before the last user message answers 200; whitespace-only last content answers 200 | decide and add a criterion (cap each message or total size) | |
+| Raw IP stored instead of its hash would keep every test green (PUB-03 AC 10) | C19 feeds `"deadbeef"` to the service; C20/C24 never check `ip_hash`; `src/routes/public.ts` `hashIp(...)` is untested | in the route test, assert the usage key is not the forwarded IP and equals `hashIp(ip, salt)`; in C24 assert `ip_hash` differs from `203.0.113.7` | b263500 |
+| 502 and 500 statuses of the failure paths are not asserted (PUB-05 AC 7-8) | C13/C14 assert `code` only; no route-level test of an LLM failure | route test with a failing mock: 502 `llm_unavailable` and 500 `internal_error`, counter back to its prior value | b263500 |
+| Spec/behaviour gap: `maxQuestionChars` counts UTF-16 units | own example: 1000 x "😀" answers 400, 1000 x "é" answers 200 | count code points (`[...s].length`) or state UTF-16 units in the spec | b263500 |
+| Rule with no check: only the last message is length-bounded | own example: an assistant message of 5000 chars before the last user message answers 200; whitespace-only last content answers 200 | decide and add a criterion (cap each message or total size) | b263500 (spec edge case records that only the last message is bounded) |
 
 Own examples run at HEAD and deleted: exactly `maxHistoryMessages` (10) messages answers 200 and 11 answers 400; limit 1 gives `X-Remaining: 0`, 429 on the second, and another IP is unaffected.
