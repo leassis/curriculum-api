@@ -131,12 +131,13 @@ T33 → T34 → T35
 **Requirement**: FND-02
 
 **Done when**:
-- [ ] `pnpm biome check .` exits 0
-- [ ] `pnpm test:unit --passWithNoTests` exits 0
+- [x] `pnpm biome check .` exits 0
+- [x] `pnpm test:unit --passWithNoTests` exits 0
 
 **Tests**: none
 **Gate**: Setup
 **Commit**: `chore: add biome and vitest projects`
+**Status**: done
 
 ---
 
