@@ -79,7 +79,7 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
   async acquire(id: string): Promise<RecruiterChatRow | null> {
     this.acquires++;
     const row = this.at(id);
-    if (!row || row.status !== "active" || row.used >= row.maxQuestions) return null;
+    if (row?.status !== "active" || row.used >= row.maxQuestions) return null;
     if (this.view(row).expired) return null;
     row.used++;
     return this.view(row);

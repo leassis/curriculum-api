@@ -1,9 +1,9 @@
 import type { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { chatsRouter } from "../../../src/admin/chats";
+import { chatsRouter } from "../../../src/admin/chats/routes";
 import { dashboardRouter } from "../../../src/admin/dashboard/routes";
 import { loginRouter } from "../../../src/admin/login/routes";
-import { personalInfoRouter } from "../../../src/admin/personal-info";
+import { personalInfoRouter } from "../../../src/admin/personal-info/routes";
 import { printRouter } from "../../../src/admin/print";
 import { profileRouter } from "../../../src/admin/profile/routes";
 import { resumesRouter } from "../../../src/admin/resumes";

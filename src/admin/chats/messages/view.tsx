@@ -1,17 +1,19 @@
-import { Hono } from "hono";
-import type { FC } from "hono/jsx";
-import type { Env } from "../env.js";
-import type { Transcript } from "../services/recruiter-chat.service.js";
-import { Layout } from "./layout.js";
+import { Layout } from "../../layout.js";
 
 const stamp = (d: Date) => d.toISOString().slice(0, 16).replace("T", " ");
 
 const BLOCK = "white-space: pre-wrap; overflow-wrap: anywhere; margin: 0.25rem 0 0;";
 
 /** Messages render as plain text: JSX escapes every character, no markdown, no raw HTML. */
-const MessagesPage: FC<{ basePath: string; transcript: Transcript }> = ({
+export const MessagesPage = ({
   basePath,
   transcript: { chat, messages },
+}: {
+  basePath: string;
+  transcript: {
+    chat: { recruiterName: string };
+    messages: { role: string; content: string; createdAt: Date }[];
+  };
 }) => (
   <Layout title="Chat messages" basePath={basePath}>
     <p>
@@ -33,16 +35,4 @@ const MessagesPage: FC<{ basePath: string; transcript: Transcript }> = ({
       </ol>
     )}
   </Layout>
-);
-
-/** Mounted at `/admin`. */
-export const messagesRouter = new Hono<Env>();
-
-messagesRouter.get("/chats/:id/messages", async (c) =>
-  c.html(
-    <MessagesPage
-      basePath={c.var.config.basePath}
-      transcript={await c.var.services.recruiterChat.transcript(c.req.param("id"))}
-    />,
-  ),
 );

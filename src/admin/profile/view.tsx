@@ -1,4 +1,3 @@
-import type { FC } from "hono/jsx";
 import { ErrorFragment } from "../error-fragment.js";
 import { Layout } from "../layout.js";
 

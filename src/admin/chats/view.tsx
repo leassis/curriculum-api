@@ -1,18 +1,36 @@
-import { Hono } from "hono";
-import type { FC } from "hono/jsx";
-import type { Env } from "../env.js";
-import type { RecruiterChat, ResumeOption } from "../services/recruiter-chat.service.js";
-import { Layout } from "./layout.js";
+import { Layout } from "../layout.js";
+
+/** The slice of a Recruiter Chat the pages show. */
+export interface ChatView {
+  id: string;
+  token: string;
+  recruiterName: string;
+  company: string | null;
+  maxQuestions: number;
+  used: number;
+  status: string;
+  expiresAt: Date | null;
+  lastUsedAt: Date | null;
+}
+
+export interface ResumeChoice {
+  id: string;
+  title: string;
+}
 
 const stamp = (d: Date | null) => (d ? d.toISOString().slice(0, 16).replace("T", " ") : "");
 
 /** The Recruiter Link: the site and the API share one origin, so it is `<origin>/r/<token>`. */
-const linkFor = (origin: string, chat: RecruiterChat) => `${origin}/r/${chat.token}`;
+const linkFor = (origin: string, chat: ChatView) => `${origin}/r/${chat.token}`;
 
-const ChatRow: FC<{ basePath: string; origin: string; chat: RecruiterChat }> = ({
+export const ChatRow = ({
   basePath,
   origin,
   chat,
+}: {
+  basePath: string;
+  origin: string;
+  chat: ChatView;
 }) => {
   const url = `${basePath}/admin/chats/${chat.id}`;
   return (
@@ -50,7 +68,7 @@ const ChatRow: FC<{ basePath: string; origin: string; chat: RecruiterChat }> = (
   );
 };
 
-const Created: FC<{ basePath: string; origin: string; chat: RecruiterChat }> = (p) => (
+export const Created = (p: { basePath: string; origin: string; chat: ChatView }) => (
   <div id="created">
     <p>
       Recruiter Link for {p.chat.recruiterName}: <code>{linkFor(p.origin, p.chat)}</code>{" "}
@@ -61,16 +79,21 @@ const Created: FC<{ basePath: string; origin: string; chat: RecruiterChat }> = (
   </div>
 );
 
-const Rows: FC<{ basePath: string; origin: string; chats: RecruiterChat[] }> = ({
+export const Rows = ({
   basePath,
   origin,
   chats,
+}: {
+  basePath: string;
+  origin: string;
+  chats: ChatView[];
 }) =>
   chats.length === 0 ? (
     <tr>
       <td colspan={7}>No recruiter chats yet</td>
     </tr>
   ) : (
+    // biome-ignore lint/complexity/noUselessFragments: c.html needs a single node, not an array
     <>
       {chats.map((chat) => (
         <ChatRow basePath={basePath} origin={origin} chat={chat} />
@@ -78,13 +101,19 @@ const Rows: FC<{ basePath: string; origin: string; chats: RecruiterChat[] }> = (
     </>
   );
 
-const ListPage: FC<{
+export const ChatsPage = ({
+  basePath,
+  origin,
+  chats,
+  resumes,
+  defaultMax,
+}: {
   basePath: string;
   origin: string;
-  chats: RecruiterChat[];
-  resumes: ResumeOption[];
+  chats: ChatView[];
+  resumes: ResumeChoice[];
   defaultMax: number;
-}> = ({ basePath, origin, chats, resumes, defaultMax }) => (
+}) => (
   <Layout title="Chats" basePath={basePath}>
     <h1>Recruiter chats</h1>
     <script src={`${basePath}/admin/chats/chats.js`} />
@@ -161,91 +190,3 @@ const ListPage: FC<{
     </form>
   </Layout>
 );
-
-/** Copies a link on click; shows a failed request in the status line instead of dropping it. */
-const CHATS_JS = `document.addEventListener("click", (e) => {
-  const button = e.target.closest("[data-copy]");
-  if (button && navigator.clipboard) {
-    navigator.clipboard.writeText(button.dataset.copy).then(() => {
-      button.textContent = "Copied";
-    });
-  }
-});
-document.addEventListener("htmx:beforeSwap", (e) => {
-  const target = document.getElementById("chat-status");
-  if (e.detail.xhr.status >= 400 && target) {
-    e.detail.shouldSwap = true;
-    e.detail.isError = false;
-    e.detail.target = target;
-    e.detail.swapOverride = "innerHTML";
-  }
-});
-`;
-
-const text = (value: unknown) => (typeof value === "string" ? value : "");
-
-/** Mounted at `/admin`. */
-export const chatsRouter = new Hono<Env>();
-
-chatsRouter.get("/chats/chats.js", (c) =>
-  c.body(CHATS_JS, 200, { "Content-Type": "text/javascript; charset=utf-8" }),
-);
-
-chatsRouter.get("/chats", async (c) => {
-  const { config, services } = c.var;
-  return c.html(
-    <ListPage
-      basePath={config.basePath}
-      origin={new URL(c.req.url).origin}
-      chats={await services.recruiterChat.list()}
-      resumes={await services.recruiterChat.resumeOptions()}
-      defaultMax={await services.settings.limit("recruiterQuestionsDefault")}
-    />,
-  );
-});
-
-chatsRouter.get("/chats/rows", async (c) =>
-  c.html(
-    <Rows
-      basePath={c.var.config.basePath}
-      origin={new URL(c.req.url).origin}
-      chats={await c.var.services.recruiterChat.list()}
-    />,
-  ),
-);
-
-chatsRouter.post("/chats", async (c) => {
-  const body = await c.req.parseBody();
-  const max = text(body.maxQuestions).trim();
-  const chat = await c.var.services.recruiterChat.create({
-    recruiterName: text(body.recruiterName),
-    company: text(body.company),
-    jobDescriptionShort: text(body.jobDescriptionShort),
-    maxQuestions: max === "" ? undefined : Number(max),
-    expiresAt: text(body.expiresAt),
-    tailoredResumeId: text(body.tailoredResumeId),
-  });
-  c.header("HX-Trigger", "chats-changed");
-  return c.html(
-    <Created basePath={c.var.config.basePath} origin={new URL(c.req.url).origin} chat={chat} />,
-  );
-});
-
-chatsRouter.patch("/chats/:id/revoke", async (c) => {
-  const chat = await c.var.services.recruiterChat.revoke(c.req.param("id"));
-  return c.html(
-    <ChatRow basePath={c.var.config.basePath} origin={new URL(c.req.url).origin} chat={chat} />,
-  );
-});
-
-chatsRouter.patch("/chats/:id/reset", async (c) => {
-  const chat = await c.var.services.recruiterChat.reset(c.req.param("id"));
-  return c.html(
-    <ChatRow basePath={c.var.config.basePath} origin={new URL(c.req.url).origin} chat={chat} />,
-  );
-});
-
-chatsRouter.delete("/chats/:id", async (c) => {
-  await c.var.services.recruiterChat.delete(c.req.param("id"));
-  return c.body(null, 200);
-});
