@@ -1,33 +1,33 @@
 # Public Chat verification
 
 **Verdict**: PASS
-**Proofs**: `proofs.md` at f7e6ade
-**Verifier**: independent sub-agent (author != verifier)
+**Proofs**: `proofs.md` at 972af3f
+**Verifier**: independent sub-agent (author != verifier) - re-verified from scratch; the implementer's earlier PASS was not trusted
 
 ## Checks
 
 | Check | Test | Holds |
 | --- | --- | --- |
-| C1 | public-chat route (test/unit/routes/public.test.ts) `public session > sets a public curr_session cookie when turnstile verifies the token` | yes |
+| C1 | `public session > sets a public curr_session cookie when turnstile verifies the token` - 204, Max-Age, HttpOnly, SameSite=Strict, signed scope public | yes |
 | C2 | `public session > answers 403 captcha_failed and sets no cookie when turnstile rejects` | yes |
 | C3 | `public session > answers 400 validation_error without a turnstileToken string` | yes |
 | C4 | `public session > sends the client ip as remoteip to turnstile` | yes |
 | C5 | `public chat route > answers 401 without a session and leaves the counter untouched` | yes |
 | C6 | `public chat route > answers 401 for a recruiter session` | yes |
-| C7 | `public chat route > answers 400 validation_error for invalid bodies and leaves the counter untouched` | yes - 11 messages, 1001 chars, 1000 accepted; I also confirmed exactly 10 messages is accepted |
+| C7 | `public chat route > answers 400 validation_error for invalid bodies and leaves the counter untouched` | yes |
 | C8 | `public chat route > answers 400 validation_error for a body that is not json` | yes |
 | C9 | `public chat route > streams the answer with X-Remaining and no-store` | yes |
 | C10 | `public chat service > refuses with limit_reached and does not call the llm once the limit is used` | yes |
 | C11 | `public chat service > calls the llm with area public, the system prompt, the cv, the messages and max output tokens` | yes |
 | C12 | `public chat service > tells the model the cv is empty` | yes |
-| C13 | `public chat service > releases the use when the llm is unavailable` | no - asserts `code` and the counter at service level, never the 502 status the criterion fixes |
-| C14 | `public chat service > releases the use when the pii guard blocks the call` | no - asserts `code` and the counter at service level, never the 500 status the criterion fixes |
+| C13 | `public chat route > answers 502 llm_unavailable and releases the use` - exact body `{error}`, counter back to 0 | yes |
+| C14 | `public chat route > answers 500 internal_error and releases the use when the pii guard blocks` - exact body, no detail leak, counter 0 | yes |
 | C15 | `public chat service > applies a settings override of the limit to the next request` | yes |
 | C16 | `public chat service > refuses when the limit is lowered below today's use` | yes |
 | C17 | `public chat service > answers not_found without touching the counter when the profile is missing` | yes |
 | C18 | `public chat route > answers 404 not_found when the profile is not seeded` | yes |
-| C19 | `public chat service > stores the ip hash and never the raw ip` | no - passes the string `deadbeef` straight to `ask`; the route's `hashIp` call is never exercised, so sending the raw IP would stay green |
-| C20 | `public usage repository > stores the ip hash only` | yes (schema columns; stores the value it is given) |
+| C19 | `public chat route > stores only the hashed ip` - asserts key equals sha256-hex hash of forwarded ip, not the raw ip | yes |
+| C20 | `public usage repository > stores the ip hash only` | yes |
 | C21 | `public usage repository > grants exactly the limit under 20 parallel acquires` | yes |
 | C22 | `public usage repository > gives a new day a fresh quota` | yes |
 | C23 | `public usage repository > releases one use and never goes below zero` | yes |
@@ -37,15 +37,15 @@
 | C27 | `public chat pii > redacts a personal value typed by the visitor` | yes |
 | C28 | `public chat pii > keeps the full name out of the system prompt` | yes |
 | C29 | `public chat with database > sends no personal info value to the model` | yes |
-| Build | `pnpm build && pnpm typecheck && pnpm lint` | yes (proofs.md rows pass; 29 checks plus 3 build proofs = 32 rows) |
+| C30 | `public chat route > caps the total size of the history` - 9001+1000 is 400 with counter 0; 9000+1000 is 200 | yes |
+| C1b | same test, HttpOnly + SameSite=Strict asserted | yes |
 
 ## Findings
 
 | Finding | Evidence | Fix | Closed |
 | --- | --- | --- | --- |
-| Raw IP stored instead of its hash would keep every test green (PUB-03 AC 10) | C19 feeds `"deadbeef"` to the service; C20/C24 never check `ip_hash`; `src/routes/public.ts` `hashIp(...)` is untested | in the route test, assert the usage key is not the forwarded IP and equals `hashIp(ip, salt)`; in C24 assert `ip_hash` differs from `203.0.113.7` | b263500 |
-| 502 and 500 statuses of the failure paths are not asserted (PUB-05 AC 7-8) | C13/C14 assert `code` only; no route-level test of an LLM failure | route test with a failing mock: 502 `llm_unavailable` and 500 `internal_error`, counter back to its prior value | b263500 |
-| Spec/behaviour gap: `maxQuestionChars` counts UTF-16 units | own example: 1000 x "😀" answers 400, 1000 x "é" answers 200 | count code points (`[...s].length`) or state UTF-16 units in the spec | b263500 |
-| Rule with no check: only the last message is length-bounded | own example: an assistant message of 5000 chars before the last user message answers 200; whitespace-only last content answers 200 | decide and add a criterion (cap each message or total size) | b263500 (spec edge case records that only the last message is bounded) |
+| Earlier history messages were unbounded: 10 messages of any size reached the paid model on every request (cost/abuse risk with rotating IPs) | `src/routes/public.ts` only bounded the last message | total code points capped at `maxQuestionChars * maxHistoryMessages`; spec PUB-09, C30 | 58c5807 (C30) |
+| Cookie HttpOnly/SameSite not asserted | C1 checked only Max-Age | assert HttpOnly and SameSite=Strict | 58c5807 (C1, C1b) |
+| 502/500 bodies asserted by `error` field only, so detail leaks would pass | C13/C14 | assert exact body equality | 58c5807 (C13, C14) |
 
-Own examples run at HEAD and deleted: exactly `maxHistoryMessages` (10) messages answers 200 and 11 answers 400; limit 1 gives `X-Remaining: 0`, 429 on the second, and another IP is unaffected.
+Probed: concurrency test run 5 times (5 passed); gate `pnpm lint && typecheck && test && build` green (150 tests before, 151 after); 5xx handler returns only `{ error }`; Turnstile fails closed and 401 precedes any counter touch.

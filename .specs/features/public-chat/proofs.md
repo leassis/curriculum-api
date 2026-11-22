@@ -1,9 +1,9 @@
 # public-chat proofs
 
-**HEAD**: 91de64a
+**HEAD**: 972af3f
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 32 pass, 0 fail
+**Result**: 34 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -36,6 +36,8 @@
 | C27 | `run unit / ✓ public chat pii > redacts a personal value typed by the visitor` | pass |
 | C28 | `run unit / ✓ public chat pii > keeps the full name out of the system prompt` | pass |
 | C29 | `run int / ✓ public chat with database > sends no personal info value to the model` | pass |
+| C30 | `run unit / ✓ public chat route > caps the total size of the history` | pass |
+| C30 | `run unit / ✓ public session > sets a public curr_session cookie when turnstile verifies the token` | pass |
 | Build | `pnpm build` | pass |
 | Build | `pnpm typecheck` | pass |
 | Build | `pnpm lint` | pass |
@@ -49,7 +51,7 @@ PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
     at LlmService.prepare (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:90:13)
     at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:48:45)
     at PublicChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/public-chat.service.ts:30:26)
-    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:67:33)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:69:33)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
@@ -65,19 +67,19 @@ PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1438ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1256ms
- ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1140ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 425ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 593ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 320ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 615ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 894ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 661ms
+ ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1439ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1267ms
+ ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1138ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 414ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 591ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 318ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 614ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 899ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 654ms
  ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 414ms
 
  Test Files  17 passed (17)
       Tests  31 passed (31)
-   Start at  03:48:05
-   Duration  39.75s (tests 88%, import 12%)
+   Start at  03:51:31
+   Duration  39.90s (tests 88%, import 12%)
 ```
