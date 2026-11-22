@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CliIo, runCli } from "../../src/cli";
+import { migrate } from "../../src/db/migrate";
+
+vi.mock("../../src/db/migrate", () => ({ migrate: vi.fn(async () => {}) }));
 
 function io(stdin = "", env: Record<string, string | undefined> = {}) {
   const out: string[] = [];
@@ -35,5 +38,28 @@ describe("cli", () => {
         expect(usage).toContain(command);
       }
     }
+  });
+
+  describe("migrate", () => {
+    beforeEach(() => vi.mocked(migrate).mockClear());
+
+    it("prefers DATABASE_URL_UNPOOLED", async () => {
+      const { cli } = io("", { DATABASE_URL: "pooled", DATABASE_URL_UNPOOLED: "direct" });
+      expect(await runCli(["migrate"], cli)).toBe(0);
+      expect(migrate).toHaveBeenCalledWith("direct");
+    });
+
+    it("falls back to DATABASE_URL", async () => {
+      const { cli } = io("", { DATABASE_URL: "pooled" });
+      expect(await runCli(["migrate"], cli)).toBe(0);
+      expect(migrate).toHaveBeenCalledWith("pooled");
+    });
+
+    it("errors when neither is set", async () => {
+      const { cli, err } = io();
+      expect(await runCli(["migrate"], cli)).toBe(1);
+      expect(err).toEqual(["DATABASE_URL is required"]);
+      expect(migrate).not.toHaveBeenCalled();
+    });
   });
 });

@@ -8,11 +8,12 @@
 
 `pnpm dev` loads `.env` and then `.env.local` (both gitignored, both optional): values in `.env.local` win. The CLI commands below take `--env-file` explicitly, so pass `--env-file=.env.local` there if that is where your `DATABASE_URL` lives.
 
-Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones:
+Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones and `DATABASE_URL_UNPOOLED`:
 
 | Variable                                            | Notes                                                                                                                        |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                                      | Local dev: `postgres://postgres:postgres@db.localtest.me:5432/curriculum` (never `curriculum_test`, the test suite wipes it) |
+| `DATABASE_URL_UNPOOLED`                             | Optional: direct (non-pooled) Neon connection used only by `migrate`; falls back to `DATABASE_URL`                           |
 | `OPENROUTER_API_KEY`                                | Real key needed for real LLM answers                                                                                         |
 | `SESSION_SECRET`                                    | >= 32 bytes: `openssl rand -base64 32`                                                                                       |
 | `TURNSTILE_SECRET`                                  | Real secret for real captchas (see below)                                                                                    |
@@ -27,7 +28,7 @@ Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is 
 ```bash
 docker compose up -d --wait        # db + neon proxy (use `down -v` for a clean slate)
 pnpm install
-pnpm tsx --env-file=.env src/cli.ts migrate
+pnpm tsx --env-file=.env src/cli.ts migrate   # uses DATABASE_URL_UNPOOLED when set, else DATABASE_URL
 pnpm tsx --env-file=.env src/cli.ts seed
 pnpm dev                           # http://localhost:3001
 ```

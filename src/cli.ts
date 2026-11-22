@@ -16,7 +16,7 @@ export interface CliIo {
 const USAGE = `Usage: curriculum-api <command>
 
 Commands:
-  migrate         apply database migrations (needs DATABASE_URL)
+  migrate         apply database migrations (uses DATABASE_URL_UNPOOLED, falling back to DATABASE_URL)
   seed            create the profile row with default prompts (needs DATABASE_URL)
   hash-password   read a password from stdin and print its bcrypt hash
   cleanup         delete public_usage and admin_login_attempts rows older than 30 days (needs DATABASE_URL)`;
@@ -27,15 +27,15 @@ const BCRYPT_COST = 12;
 export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const [command] = argv;
 
-  const databaseUrl = () => {
-    const url = io.env.DATABASE_URL;
+  const databaseUrl = (preferred?: string) => {
+    const url = preferred || io.env.DATABASE_URL;
     if (!url) io.err("DATABASE_URL is required");
     return url;
   };
 
   switch (command) {
     case "migrate": {
-      const url = databaseUrl();
+      const url = databaseUrl(io.env.DATABASE_URL_UNPOOLED);
       if (!url) return 1;
       await migrate(url);
       io.out("migrations applied");
