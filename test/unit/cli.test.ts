@@ -69,4 +69,27 @@ describe("cli", () => {
     );
     expect(hostOf("not a url")).toBe("(unparseable url)");
   });
+
+  describe("migrate", () => {
+    beforeEach(() => vi.mocked(migrate).mockClear());
+
+    it("prefers DATABASE_URL_UNPOOLED", async () => {
+      const { cli } = io("", { DATABASE_URL: "pooled", DATABASE_URL_UNPOOLED: "direct" });
+      expect(await runCli(["migrate"], cli)).toBe(0);
+      expect(migrate).toHaveBeenCalledWith("direct");
+    });
+
+    it("falls back to DATABASE_URL", async () => {
+      const { cli } = io("", { DATABASE_URL: "pooled" });
+      expect(await runCli(["migrate"], cli)).toBe(0);
+      expect(migrate).toHaveBeenCalledWith("pooled");
+    });
+
+    it("errors when neither is set", async () => {
+      const { cli, err } = io();
+      expect(await runCli(["migrate"], cli)).toBe(1);
+      expect(err).toEqual(["DATABASE_URL is required"]);
+      expect(migrate).not.toHaveBeenCalled();
+    });
+  });
 });
