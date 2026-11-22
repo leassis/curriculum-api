@@ -108,13 +108,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-01
 
 **Done when**:
-- [ ] Unit tests cover list, empty state, create 303/400, delete, 404
-- [ ] Full gate passes
+- [x] Unit tests cover list, empty state, create 303/400, delete, 404
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(resumes): add list, create and delete routes`
-**Status**: pending
+**Status**: done
 
 ---
 

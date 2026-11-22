@@ -1,6 +1,7 @@
 import { MockLanguageModelV4 } from "ai/test";
 import type { CurriculumApiConfig } from "../../src/config";
 import type { ModelFactory } from "../../src/llm/openrouter";
+import { signSession } from "../../src/security/session";
 import { LlmService } from "../../src/services/llm.service";
 import { PersonalInfoService } from "../../src/services/personal-info.service";
 import { ProfileService } from "../../src/services/profile.service";
@@ -12,6 +13,7 @@ import { FakeProfileRepo, profileInput } from "./fakes/profile.fake";
 import { FakeSettingsRepo } from "./fakes/settings.fake";
 import { createRecordingModel, type RecordingModelOptions } from "./mock-llm";
 import { FakeResumeRepo } from "./resume.fake";
+import { createTestApp } from "./test-app";
 
 export const CV = "Ten years building backends in TypeScript.";
 export const JD = "We need a senior backend engineer who knows Postgres.";
@@ -72,5 +74,45 @@ export async function resumeSetup(
     resumes,
     calls: recording.calls,
     addField,
+  };
+}
+
+/** The test app with resume services wired in, plus helpers that send the admin cookie. */
+export async function resumeApp(opts: Parameters<typeof resumeSetup>[0] = {}) {
+  const setup = await resumeSetup(opts);
+  const { app } = createTestApp({
+    config: opts.config,
+    services: {
+      resumes: setup.resumes,
+      profile: setup.profile,
+      personalInfo: setup.personalInfo,
+      settings: setup.settings,
+      llm: setup.llm,
+    },
+  });
+  const token = await signSession({ scope: "admin" }, setup.config.sessionSecret, 60);
+  const headers = (extra: Record<string, string> = {}) => ({
+    cookie: `curr_admin=${token}`,
+    ...extra,
+  });
+  const form = (fields: Record<string, string | string[]>) => {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(fields)) {
+      for (const item of Array.isArray(v) ? v : [v]) body.append(k, item);
+    }
+    return {
+      body: body.toString(),
+      headers: headers({ "content-type": "application/x-www-form-urlencoded" }),
+    };
+  };
+  return {
+    ...setup,
+    app,
+    get: (path: string) => app.request(path, { headers: headers() }),
+    post: (path: string, fields: Record<string, string | string[]> = {}) =>
+      app.request(path, { method: "POST", ...form(fields) }),
+    put: (path: string, fields: Record<string, string | string[]> = {}) =>
+      app.request(path, { method: "PUT", ...form(fields) }),
+    del: (path: string) => app.request(path, { method: "DELETE", headers: headers() }),
   };
 }
