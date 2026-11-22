@@ -550,12 +550,13 @@ T33 → T34 → T35
 **Requirement**: FND-22
 
 **Done when**:
-- [ ] Unit tests prove C54, C55, C77
-- [ ] Quick gate passes
+- [x] Unit tests prove C54, C55, C77
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(llm): add pii guard`
+**Status**: done
 
 ---
 
