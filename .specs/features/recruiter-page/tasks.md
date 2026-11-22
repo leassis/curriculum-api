@@ -65,13 +65,13 @@ T1 → T2
 **Requirement**: RPG-03
 
 **Done when**:
-- [ ] Tests for this layer cover its checks
-- [ ] Full gate passes
+- [x] Tests for this layer cover its checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(admin): add recruiter chat page script`
-**Status**: pending
+**Status**: done
 
 ---
 
