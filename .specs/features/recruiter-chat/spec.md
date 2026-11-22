@@ -1,6 +1,6 @@
 # Recruiter Chat Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/routes/recruiter.ts`, `src/admin/chats.tsx`, `src/services/recruiter-chat.service.ts`, `src/repositories/recruiter-chat.repository.ts`, `src/middleware/require-active-recruiter-chat.ts`, their tests. `requireSession` comes from `foundation` (FND-14).
 
@@ -149,14 +149,14 @@ The Owner wants to give each Recruiter a private link that answers questions wit
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| REC-01 | P1: Manage recruiter chats (AC 1-5 list, create) | Design | Pending |
-| REC-02 | P1: Manage recruiter chats (AC 6-9 revoke, reset, delete) | Design | Pending |
-| REC-03 | P1: Open a recruiter link | Design | Pending |
-| REC-04 | P1: Start a recruiter session | Design | Pending |
-| REC-05 | P1: Ask within quota (AC 1-3 auth, scope, validation) | Design | Pending |
-| REC-06 | P1: Ask within quota (AC 4-7 atomic counter, revoke) | Design | Pending |
-| REC-07 | P1: Ask within quota (AC 8-11 context, stream, failure) | Design | Pending |
-| REC-08 | P1: No recruiter identity or personal data reaches the model | Design | Pending |
+| REC-01 | P1: Manage recruiter chats (AC 1-5 list, create) | Design | Verified |
+| REC-02 | P1: Manage recruiter chats (AC 6-9 revoke, reset, delete) | Design | Verified |
+| REC-03 | P1: Open a recruiter link | Design | Verified |
+| REC-04 | P1: Start a recruiter session | Design | Verified |
+| REC-05 | P1: Ask within quota (AC 1-3 auth, scope, validation) | Design | Verified |
+| REC-06 | P1: Ask within quota (AC 4-7 atomic counter, revoke) | Design | Verified |
+| REC-07 | P1: Ask within quota (AC 8-11 context, stream, failure) | Design | Verified |
+| REC-08 | P1: No recruiter identity or personal data reaches the model | Design | Verified |
 
 **Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️ (tasks not written yet)
 

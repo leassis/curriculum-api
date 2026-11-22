@@ -1,7 +1,8 @@
 import { createMiddleware } from "hono/factory";
 import type { Env } from "../env.js";
 
-/** Filled by the recruiter-chat track. Fails closed until then, so it can never let a request through. */
-export const requireActiveRecruiterChat = createMiddleware<Env>(async () => {
-  throw new Error("requireActiveRecruiterChat is not implemented");
+/** Lets a request through only for a known, unrevoked, unexpired chat: 404 or 410 otherwise. */
+export const requireActiveRecruiterChat = createMiddleware<Env>(async (c, next) => {
+  await c.var.services.recruiterChat.requireActive(c.req.param("token") ?? "");
+  await next();
 });

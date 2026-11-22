@@ -5,6 +5,8 @@ export interface RecordedCall {
   modelId: string;
   /** System and message text flattened, so tests can assert `not.toContain(value)`. */
   prompt: string;
+  /** Text of the system messages only, to assert what sits in the system block. */
+  system: string;
   maxOutputTokens: number | undefined;
 }
 
@@ -23,6 +25,10 @@ const usage = {
 const finishReason = { unified: "stop", raw: undefined } as const;
 
 type PromptMessage = { role: string; content: unknown };
+
+function systemText(prompt: PromptMessage[]): string {
+  return flatten(prompt.filter((m) => m.role === "system"));
+}
 
 function flatten(prompt: PromptMessage[]): string {
   return prompt
@@ -46,6 +52,7 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
         calls.push({
           modelId,
           prompt: flatten(options.prompt as PromptMessage[]),
+          system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
         });
         return {
@@ -59,6 +66,7 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
         calls.push({
           modelId,
           prompt: flatten(options.prompt as PromptMessage[]),
+          system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
         });
         if (opts.failBeforeFirstChunk) {
