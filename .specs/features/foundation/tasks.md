@@ -626,12 +626,13 @@ T33 → T34 → T35
 **Requirement**: FND-18
 
 **Done when**:
-- [ ] Unit test proves C42
-- [ ] Quick gate passes
+- [x] Unit test proves C42
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(security): add security headers`
+**Status**: done
 
 ---
 
