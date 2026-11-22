@@ -512,12 +512,13 @@ T33 → T34 → T35
 **Requirement**: FND-20
 
 **Done when**:
-- [ ] Unit tests prove C46, C47, C48; integration test proves C49
-- [ ] Full gate passes
+- [x] Unit tests prove C46, C47, C48; integration test proves C49
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(service): add settings service with overrides`
+**Status**: done
 
 ---
 
