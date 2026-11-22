@@ -645,12 +645,13 @@ T33 → T34 → T35
 **Requirement**: FND-09, FND-10, FND-11, FND-12
 
 **Done when**:
-- [ ] Unit tests prove C25, C26, C27, C28, C29, C30, C75
-- [ ] Build gate passes (end of phase)
+- [x] Unit tests prove C25, C26, C27, C28, C29, C30, C75
+- [x] Build gate passes (end of phase)
 
 **Tests**: unit
 **Gate**: Build
 **Commit**: `feat(app): add createApp with health, openapi and error mapping`
+**Status**: done
 
 ---
 
