@@ -262,3 +262,23 @@ describe("recruiter pii", () => {
     expect(s.calls[0]?.prompt).not.toContain(EMAIL);
   });
 });
+
+describe("recruiter routes", () => {
+  it("answers with the same status, headers and body while recording the transcript", async () => {
+    const s = await recruiterApp({ mock: { chunks: ["Ten ", "years."] } });
+    const chat = await s.newChat();
+    const res = await s.ask(chat.token, await s.cookieFor(chat.id));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Ten years.");
+    expect(Object.fromEntries(res.headers)).toMatchObject({
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "x-robots-tag": "noindex",
+      "x-remaining": "4",
+    });
+    expect((await s.repo.messages(chat.id)).map((m) => [m.role, m.content])).toEqual([
+      ["user", "What do you do?"],
+      ["assistant", "Ten years."],
+    ]);
+  });
+});

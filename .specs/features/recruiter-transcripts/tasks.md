@@ -97,7 +97,7 @@ T1 → T2 → T3 → T4 → T5
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(recruiter): persist the redacted transcript when an answer completes`
-**Status**: pending
+**Status**: done
 
 ---
 
