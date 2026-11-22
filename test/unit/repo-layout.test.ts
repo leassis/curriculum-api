@@ -230,4 +230,21 @@ describe("repo layout", () => {
     );
     expect(offenders).toEqual([]);
   });
+
+  it("docs describe Neon, not the old Postgres stack", () => {
+    const banned = [
+      "curriculum_test",
+      "db.localtest.me",
+      "TEST_DATABASE_URL",
+      "local-neon-http-proxy",
+      "Postgres 17",
+    ];
+    for (const file of ["RUNNING.md", "CLAUDE.md"]) {
+      const text = read(file);
+      for (const word of banned) {
+        expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
+      }
+      expect(text, `${file} mentions Neon Local`).toContain("Neon Local");
+    }
+  });
 });

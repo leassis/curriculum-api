@@ -11,7 +11,7 @@ Core invariant: **personal data never reaches an LLM.** Only the Career Body (ma
 ## Commands
 
 ```bash
-docker compose up -d --wait   # Postgres 17 + Neon HTTP proxy (required for dev and integration tests)
+docker compose up -d --wait   # Neon Local: ephemeral Neon branch of PARENT_BRANCH_ID (required for dev; Neon vars in .env)
 pnpm dev                      # tsx --env-file=.env examples/node/server.ts, http://localhost:3001
 pnpm tsx --env-file=.env src/cli.ts <migrate|seed|hash-password|cleanup>
 pnpm lint                     # biome check + scripts/check-architecture.ts (import-boundary rules)
@@ -19,7 +19,7 @@ pnpm typecheck
 pnpm build                    # tsup -> dist/ (index + cli)
 pnpm test                     # all vitest projects
 pnpm test:unit                # no DB
-pnpm test:int                 # needs Docker; uses TEST_DATABASE_URL
+pnpm test:int                 # throwaway Neon branch per run (needs NEON_API_KEY, NEON_PROJECT_ID, PARENT_BRANCH_ID or TEST_PARENT_BRANCH_ID in .env/.env.local)
 pnpm vitest run --project unit test/unit/path/to.test.ts   # single file
 pnpm vitest run -t "name"                                  # single test by name
 pnpm db:generate              # drizzle-kit generate (new migration in drizzle/)
@@ -28,7 +28,7 @@ pnpm build:css                # regenerate src/admin/static/*.generated.ts
 
 CI order: lint, typecheck, test, build, then `node dist/cli.js migrate`.
 
-`TEST_DATABASE_URL` must point to `curriculum_test`; the integration suite **wipes it**. Never point it at the dev DB. Integration files run serially (`fileParallelism: false`). Tests use a recording mock model (`test/support/mock-llm.ts`) and never call OpenRouter/Cloudflare.
+The integration suite creates a throwaway Neon branch per run via the Neon API (migrated, then deleted at teardown, with a 1h `expires_at` safety net), so it can no longer wipe the dev DB. Integration files run serially (`fileParallelism: false`). Tests use a recording mock model (`test/support/mock-llm.ts`) and never call OpenRouter/Cloudflare.
 
 ## Architecture
 

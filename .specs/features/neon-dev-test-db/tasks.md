@@ -186,8 +186,8 @@ T5 → T6 → T7
 
 **Done when**:
 
-- [ ] repo-layout test asserts neither file mentions `curriculum_test`, `db.localtest.me`, `TEST_DATABASE_URL`, `local-neon-http-proxy` or `Postgres 17`
-- [ ] Gate check passes: `pnpm build && pnpm typecheck && pnpm lint && pnpm test`
+- [x] repo-layout test asserts neither file mentions `curriculum_test`, `db.localtest.me`, `TEST_DATABASE_URL`, `local-neon-http-proxy` or `Postgres 17`
+- [x] Gate check passes: `pnpm build && pnpm typecheck && pnpm lint && pnpm test`
 
 **Tests**: unit
 **Gate**: build
@@ -265,7 +265,7 @@ Proof: run unit | ✓ repo layout > docs describe Neon, not the old Postgres sta
 ## Handoff
 
 **Settled mid-build:** 2026-11-22 - user: "use .env.local for now.. is there a way?" -> T4 `globalSetup` loads `.env.local` as well as `.env` (neither overrides a variable already set; `.env` first, so it wins). Neon variables currently live in `.env.local`.
-**Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker returned (48aaf94); T4 worker returned (8f5167a); T5 worker returned (a9b5e96); T6 worker returned (one sub-agent per task, run in order)
+**Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker returned (48aaf94); T4 worker returned (8f5167a); T5 worker returned (a9b5e96); T6 worker returned (baf52a8); T7 worker returned (one sub-agent per task, run in order)
 **Walked:** none
 
 ---
