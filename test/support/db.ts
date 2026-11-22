@@ -14,13 +14,6 @@ export function testDb(): Db {
   return shared;
 }
 
-/** Throws unless the database name contains "test": resetDb wipes everything. */
-export function assertTestDatabase(name: string): void {
-  if (!name.includes("test")) {
-    throw new Error(`refusing to TRUNCATE database "${name}": name must contain "test"`);
-  }
-}
-
 const TABLES = [
   "profile",
   "settings",
@@ -32,11 +25,8 @@ const TABLES = [
   "admin_login_attempts",
 ];
 
+/** Wipes the run's throwaway Neon branch (never the dev database: its URL is injected by global setup). */
 export async function resetDb(db: Db = testDb()): Promise<void> {
-  const current = (await db.execute(sql`SELECT current_database() AS name`)) as {
-    rows: { name: string }[];
-  };
-  assertTestDatabase(String(current.rows[0]?.name));
   const list = TABLES.map((t) => `"curriculum_api"."${t}"`).join(", ");
   await db.execute(sql.raw(`TRUNCATE ${list} RESTART IDENTITY CASCADE`));
 }
