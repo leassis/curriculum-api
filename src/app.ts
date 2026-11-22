@@ -62,6 +62,15 @@ export function buildApp(config: ResolvedConfig, services: Services, extend?: Ex
     await next();
   });
   routes.route("/api", api);
+  // Internal page: only redirects into `/admin`, where the admin session is checked.
+  routes.get("/r/:token", (c) => {
+    c.header("Cache-Control", "no-store");
+    c.header("X-Robots-Tag", "noindex");
+    return c.redirect(
+      `${config.basePath}/admin/chat/${encodeURIComponent(c.req.param("token"))}`,
+      303,
+    );
+  });
   routes.all("/admin/*", async (c) => (await loadAdmin()).fetch(c.req.raw));
   routes.all("/admin", async (c) => (await loadAdmin()).fetch(c.req.raw));
 

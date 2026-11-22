@@ -5,6 +5,7 @@ import type { Services } from "../container.js";
 import type { Env } from "../env.js";
 import { requireAdmin } from "../middleware/require-admin.js";
 import { DomainError, ForbiddenError } from "../services/errors.js";
+import { chatPageRouter } from "./chat-page.js";
 import { chatsRouter } from "./chats.js";
 import { dashboardRouter } from "./dashboard.js";
 import { ErrorFragment } from "./error-fragment.js";
@@ -63,6 +64,7 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
   admin.route("/", settingsRouter);
   admin.route("/", personalInfoRouter);
   admin.route("/", chatsRouter);
+  admin.route("/", chatPageRouter);
   admin.route("/", resumesRouter);
   admin.route("/", printRouter);
   return admin;

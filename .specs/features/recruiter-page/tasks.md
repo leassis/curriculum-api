@@ -46,13 +46,13 @@ T1 → T2
 **Requirement**: RPG-01, RPG-02
 
 **Done when**:
-- [ ] Tests for this layer cover its checks
-- [ ] Full gate passes
+- [x] Tests for this layer cover its checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(admin): add admin-only recruiter chat page and session`
-**Status**: pending
+**Status**: done
 
 ---
 
