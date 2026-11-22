@@ -474,12 +474,13 @@ T33 → T34 → T35
 **Requirement**: FND-21
 
 **Done when**:
-- [ ] Integration test covers every method and the `sort_order, key` ordering
-- [ ] Full gate passes
+- [x] Integration test covers every method and the `sort_order, key` ordering
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(repo): add personal info repository`
+**Status**: done
 
 ---
 
