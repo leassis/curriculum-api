@@ -11,7 +11,8 @@ Core invariant: **personal data never reaches an LLM.** Only the Career Body (ma
 ## Commands
 
 ```bash
-docker compose up -d --wait   # Neon Local: ephemeral Neon branch of PARENT_BRANCH_ID (required for dev; Neon vars in .env)
+pnpm db:up                    # Neon Local: ephemeral Neon branch of PARENT_BRANCH_ID (required for dev; Neon vars in .env.local); pnpm db:down stops it
+pnpm db:migrate               # / pnpm db:seed: CLI migrate/seed with .env.local
 pnpm dev                      # tsx --env-file=.env examples/node/server.ts, http://localhost:3001
 pnpm tsx --env-file=.env src/cli.ts <migrate|seed|hash-password|cleanup>
 pnpm lint                     # biome check + scripts/check-architecture.ts (import-boundary rules)
