@@ -1,26 +1,12 @@
+# Neon Local: proxies to a branch of your Neon cloud project.
+# Requires NEON_API_KEY and NEON_PROJECT_ID (see .env.example).
 services:
   db:
-    image: postgres:17
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: curriculum_test
+    image: neondatabase/neon_local:latest
     ports:
       - "5432:5432"
-    volumes:
-      - ./docker/initdb.sql:/docker-entrypoint-initdb.d/01-databases.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d curriculum_test"]
-      interval: 2s
-      timeout: 3s
-      retries: 30
-
-  neon-proxy:
-    image: ghcr.io/timowilhelm/local-neon-http-proxy@sha256:cd2ae14edf2feafbc3330492de5c80506f77274c3bd013154cdef697bdeb768a
     environment:
-      PG_CONNECTION_STRING: postgres://postgres:postgres@db:5432/curriculum_test
-    ports:
-      - "4444:4444"
-    depends_on:
-      db:
-        condition: service_healthy
+      NEON_API_KEY: ${NEON_API_KEY}
+      NEON_PROJECT_ID: ${NEON_PROJECT_ID}
+      PARENT_BRANCH_ID: ${PARENT_BRANCH_ID:-}
+      DELETE_BRANCH: ${DELETE_BRANCH:-true}

@@ -147,10 +147,33 @@ describe("repo layout", () => {
     expect(compose).toBeGreaterThanOrEqual(0);
     expect(compose).toBeLessThan(position("pnpm test"));
     expect(position("dist/cli.js migrate")).toBeGreaterThan(position("pnpm build"));
+  });
 
+  it("compose runs Neon Local only", () => {
     const composeFile = parse(read("docker-compose.yml"));
-    expect(Object.keys(composeFile.services).sort()).toEqual(["db", "neon-proxy"]);
-    expect(composeFile.services.db.image).toBe("postgres:17");
+    expect(Object.keys(composeFile.services)).toEqual(["db"]);
+    const db = composeFile.services.db;
+    expect(db.image).toBe("neondatabase/neon_local:latest");
+    expect(db.ports).toEqual(["5432:5432"]);
+    expect(Object.keys(db.environment).sort()).toEqual([
+      "DELETE_BRANCH",
+      "NEON_API_KEY",
+      "NEON_PROJECT_ID",
+      "PARENT_BRANCH_ID",
+    ]);
+    expect(db.environment.DELETE_BRANCH).toMatch(/^\$\{DELETE_BRANCH:-true\}$/);
+  });
+
+  it("has no local Postgres stack", () => {
+    const compose = read("docker-compose.yml");
+    expect(compose).not.toContain("postgres:17");
+    expect(compose).not.toContain("local-neon-http-proxy");
+    expect(existsSync(join(root, "docker/initdb.sql"))).toBe(false);
+    const sources = (readdirSync(join(root, "src"), { recursive: true }) as string[]).filter((f) =>
+      /\.tsx?$/.test(f),
+    );
+    const offenders = sources.filter((f) => read(`src/${f}`).includes("db.localtest.me"));
+    expect(offenders).toEqual([]);
   });
 
   it("env example documents every variable", () => {
