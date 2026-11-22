@@ -84,13 +84,13 @@ T1 → T2 → T3 → T4 → T5
 **Requirement**: PUB-01, PUB-07
 
 **Done when**:
-- [ ] Unit tests cover session AC 1-4 and the profile AC 1-3
-- [ ] Full gate passes
+- [x] Unit tests cover session AC 1-4 and the profile AC 1-3
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(public): add session and profile routes`
-**Status**: pending
+**Status**: done
 
 ---
 
