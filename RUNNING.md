@@ -8,17 +8,17 @@
 
 Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones:
 
-| Variable                                            | Notes                                                                                                                 |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                      | Local: `postgres://postgres:postgres@db.localtest.me:5432/curriculum_test`                                            |
-| `OPENROUTER_API_KEY`                                | Real key needed for real LLM answers                                                                                  |
-| `SESSION_SECRET`                                    | >= 32 bytes: `openssl rand -base64 32`                                                                                |
-| `TURNSTILE_SECRET`                                  | Real secret for real captchas (see below)                                                                             |
-| `ADMIN_PASSWORD_HASH`                               | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`) |
-| `IP_HASH_SALT`                                      | any random string                                                                                                     |
-| `PII_ENCRYPTION_KEY`                                | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                     |
-| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` | OpenRouter model IDs (Settings in admin override them)                                                                |
-| `TEST_DATABASE_URL`                                 | integration tests, same local URL as above                                                                            |
+| Variable                                            | Notes                                                                                                                        |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                      | Local dev: `postgres://postgres:postgres@db.localtest.me:5432/curriculum` (never `curriculum_test`, the test suite wipes it) |
+| `OPENROUTER_API_KEY`                                | Real key needed for real LLM answers                                                                                         |
+| `SESSION_SECRET`                                    | >= 32 bytes: `openssl rand -base64 32`                                                                                       |
+| `TURNSTILE_SECRET`                                  | Real secret for real captchas (see below)                                                                                    |
+| `ADMIN_PASSWORD_HASH`                               | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`)        |
+| `IP_HASH_SALT`                                      | any random string                                                                                                            |
+| `PII_ENCRYPTION_KEY`                                | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                            |
+| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` | OpenRouter model IDs (Settings in admin override them)                                                                       |
+| `TEST_DATABASE_URL`                                 | integration tests, `.../curriculum_test` (reset by the suite)                                                                |
 
 ## Start
 
@@ -45,7 +45,7 @@ After `pnpm build` the same commands exist as `node dist/cli.js <migrate|seed|ha
 docker compose up -d --wait
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm test:unit      # no database
-pnpm test:int       # needs Docker; uses TEST_DATABASE_URL (the same database as local dev: it is reset by the suite)
+pnpm test:int       # needs Docker; uses TEST_DATABASE_URL (`curriculum_test`, a separate database from dev: it is reset by the suite)
 ```
 Tests use a recording mock model and never call OpenRouter or Cloudflare.
 
