@@ -16,7 +16,7 @@
 - **Trade-off**: No interactive transactions (only `db.batch`); every atomic rule must be a single statement. Docker required for local dev.
 - **Scope**: `src/db/client.ts`, all repositories, test setup, CI.
 - **Date**: 2026-11-22
-- **Status**: active
+- **Status**: active; Docker Postgres part superseded by AD-005
 
 ### AD-003
 - **Decision**: Work is split into five features: `foundation` first (sequential), then `public-chat`, `admin-core`, `recruiter-chat`, `tailored-resumes` in parallel worktrees. `foundation` owns every table and the single initial migration, the container wiring, every route/admin mount point (as empty routers), `LlmService` + PII guard, and the shared services (profile, settings, personal info). Tracks only fill files they own; no track generates a migration.
@@ -31,6 +31,14 @@
 - **Reason**: In-memory throttling does not hold across serverless instances. Adds a table the source data model (01-curriculum-api.md §4) does not list. User: "agree" to Q8.
 - **Trade-off**: One extra DB write per failed login; one more table to clean up.
 - **Scope**: `foundation` (table), `admin-core` (behaviour).
+- **Date**: 2026-11-22
+- **Status**: active
+
+### AD-005
+- **Decision**: Local development runs on Neon Local (`neondatabase/neon_local`, an ephemeral branch of `PARENT_BRANCH_ID`); integration tests run on a throwaway Neon branch created per run by Vitest `globalSetup` and deleted in teardown. The Docker `postgres:17` + `local-neon-http-proxy` stack is removed. `drizzle-orm/neon-http` stays the only driver (AD-002).
+- **Reason**: Dev and tests shared one Postgres and were kept apart only by database name; `.env` pointed dev at `curriculum_test`, which the suite wipes. User chose "Neon for dev and tests", then 1a (branch per run), 2a (remove local Postgres), 3a (fold in `DATABASE_URL_UNPOOLED`); same strategy as curriculum-ai.
+- **Trade-off**: Dev and integration tests need network and Neon credentials; no offline database.
+- **Scope**: `docker-compose.yml`, `src/db/client.ts`, `test/support/`, RUNNING.md, CLAUDE.md, `.env.example`.
 - **Date**: 2026-11-22
 - **Status**: active
 

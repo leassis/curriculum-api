@@ -1,6 +1,6 @@
 # neon-dev-test-db proofs
 
-**HEAD**: 60b7ebc
+**HEAD**: 7d9d3b1
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 24 pass, 0 fail
@@ -98,7 +98,7 @@ PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
 
 ```
 migrations applied
-time="2026-11-22T20:17:55+01:00" level=warning msg="Found orphan containers (curriculum-api-neon-proxy-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+time="2026-11-22T20:18:51+01:00" level=warning msg="Found orphan containers (curriculum-api-neon-proxy-1) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container curriculum-api-db-1 Running 
  Container curriculum-api-db-1 Waiting 
  Container curriculum-api-db-1 Healthy
