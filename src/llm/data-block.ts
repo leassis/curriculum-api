@@ -13,12 +13,17 @@ export function dataBlock(name: string, value: string): string {
   return `<<<${name}_START>>>\n${sanitizeMarkers(value).trim()}\n<<<${name}_END>>>`;
 }
 
-/** Wraps each user message as a data block; assistant messages pass through. */
+/**
+ * Wraps each user message as a data block. Assistant turns come from the client too, so they are
+ * sanitized (never wrapped), which keeps a forged turn from carrying a marker.
+ */
 export function wrapUserMessages<M extends { role: string; content: string }>(
   messages: M[],
   name: string,
 ): M[] {
   return messages.map((m) =>
-    m.role === "user" ? { ...m, content: dataBlock(name, m.content) } : m,
+    m.role === "user"
+      ? { ...m, content: dataBlock(name, m.content) }
+      : { ...m, content: sanitizeMarkers(m.content) },
   );
 }
