@@ -16,7 +16,7 @@
 - **Trade-off**: No interactive transactions (only `db.batch`); every atomic rule must be a single statement. Docker required for local dev.
 - **Scope**: `src/db/client.ts`, all repositories, test setup, CI.
 - **Date**: 2026-11-22
-- **Status**: active; Docker Postgres part superseded by AD-005
+- **Status**: superseded by AD-005 (ADR 0003, `node-postgres`)
 
 ### AD-003
 - **Decision**: Work is split into five features: `foundation` first (sequential), then `public-chat`, `admin-core`, `recruiter-chat`, `tailored-resumes` in parallel worktrees. `foundation` owns every table and the single initial migration, the container wiring, every route/admin mount point (as empty routers), `LlmService` + PII guard, and the shared services (profile, settings, personal info). Tracks only fill files they own; no track generates a migration.
@@ -49,3 +49,13 @@
 - **Next**: dispatch the Verifier (validate.md) over HEAD, fix findings in one pass, rerun `check_proofs.py`, then `validate_verification.py foundation`. No captures cited, so no screens sub-agent.
 - **Notes**: `ai` major 7 (`MockLanguageModelV4`); `typescript` pinned 6.0.3 because tsup dts breaks on TypeScript 7; vitest output is rewritten by the RTK hook, use `rtk proxy pnpm vitest ... --reporter=verbose` for raw lines.
 - **Blockers**: none.
+
+### AD-005
+- **Decision**: `drizzle-orm/node-postgres` (`pg` Pool, max 5) replaces `neon-http` everywhere (supersedes AD-002; ADR 0003). Production uses Neon's pooled (`-pooler`) string; `migrate` uses `DATABASE_URL_UNPOOLED` when set. Docker Compose runs plain `postgres:17` at `localhost:5432`; the `neon-proxy` service and the `db.localtest.me` host are gone.
+- **Reason**: Vercel's Node runtime has TCP, PgBouncer bounds connections, and interactive transactions are now possible.
+- **Trade-off**: Per-instance pool and connection handshake on cold start.
+- **Scope**: `src/db/*`, `src/cli.ts`, compose, CI, test support.
+- **Date**: 2026-11-22
+- **Status**: active
+
+> Note: older feature specs under `.specs/features/` and `curriculum-specs/` still mention `db.localtest.me` / the Neon proxy; that is historical, read it as `localhost` + `pg`.

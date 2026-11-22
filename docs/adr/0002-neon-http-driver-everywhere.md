@@ -1,5 +1,7 @@
 # `neon-http` driver everywhere, local proxy for dev and tests
 
+Status: superseded by [0003](0003-node-postgres-driver.md).
+
 Production, local dev, tests and CI all use `drizzle-orm/neon-http`. Locally that driver talks to Docker Compose `postgres:17` through `local-neon-http-proxy`. Tests therefore run the same query path as production, including the single-statement atomic counters.
 
 ## Considered Options
