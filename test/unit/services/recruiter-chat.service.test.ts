@@ -158,6 +158,9 @@ describe("recruiter chat service", () => {
     expect(prompt).toContain("Tailored body about Postgres.");
     expect(prompt).toContain(JD);
     expect(prompt).not.toContain(CV);
+    expect(calls[0]?.system).toContain(JD);
+    expect(calls[0]?.system).toContain(RECRUITER_PROMPT);
+    expect(calls[0]?.system).toContain("Tailored body about Postgres.");
   });
 
   it("falls back to the master cv when the resume is missing or empty", async () => {
