@@ -8,5 +8,6 @@ export interface Env {
     config: ResolvedConfig;
     services: Services;
     session?: SessionPayload;
+    admin?: SessionPayload;
   };
 }

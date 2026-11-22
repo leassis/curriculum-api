@@ -683,12 +683,13 @@ T33 → T34 → T35
 **Requirement**: FND-25
 
 **Done when**:
-- [ ] Unit tests prove C65, C66
-- [ ] Quick gate passes
+- [x] Unit tests prove C65, C66
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(admin): add requireAdmin middleware`
+**Status**: done
 
 ---
 
