@@ -10,28 +10,28 @@
 
 Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones and `DATABASE_URL_UNPOOLED`:
 
-| Variable                                            | Notes                                                                                                                        |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                      | Local dev: `postgres://neon:npg@localhost:5432/neondb` (Neon Local)                                                          |
-| `DATABASE_URL_UNPOOLED`                             | Optional: direct (non-pooled) Neon connection used only by `migrate`; falls back to `DATABASE_URL`                           |
-| `OPENROUTER_API_KEY`                                | Real key needed for real LLM answers                                                                                         |
-| `SESSION_SECRET`                                    | >= 32 bytes: `openssl rand -base64 32`                                                                                       |
-| `TURNSTILE_SECRET`                                  | Real secret for real captchas (see below)                                                                                    |
-| `ADMIN_PASSWORD_HASH`                               | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`)        |
-| `IP_HASH_SALT`                                      | any random string                                                                                                            |
-| `PII_ENCRYPTION_KEY`                                | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                            |
-| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` | OpenRouter model IDs (Settings in admin override them)                                                                       |
-| `NEON_API_KEY` / `NEON_PROJECT_ID`                  | Neon API credentials, read by Neon Local (docker compose, from `.env`) and by the integration tests (`.env` or `.env.local`) |
-| `PARENT_BRANCH_ID`                                  | Neon branch Neon Local forks its ephemeral dev branch from; also the default parent of the test branch                       |
-| `TEST_PARENT_BRANCH_ID`                             | Optional: parent of the integration test branch instead of `PARENT_BRANCH_ID`                                                |
+| Variable                                            | Notes                                                                                                                            |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                      | Local dev: `postgres://neon:npg@localhost:5432/neondb` (Neon Local)                                                              |
+| `DATABASE_URL_UNPOOLED`                             | Optional: direct (non-pooled) Neon connection used only by `migrate`; falls back to `DATABASE_URL`                               |
+| `OPENROUTER_API_KEY`                                | Real key needed for real LLM answers                                                                                             |
+| `SESSION_SECRET`                                    | >= 32 bytes: `openssl rand -base64 32`                                                                                           |
+| `TURNSTILE_SECRET`                                  | Real secret for real captchas (see below)                                                                                        |
+| `ADMIN_PASSWORD_HASH`                               | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`)            |
+| `IP_HASH_SALT`                                      | any random string                                                                                                                |
+| `PII_ENCRYPTION_KEY`                                | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                                |
+| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` | OpenRouter model IDs (Settings in admin override them)                                                                           |
+| `NEON_API_KEY` / `NEON_PROJECT_ID`                  | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`) and by the integration tests (`.env` or `.env.local`) |
+| `PARENT_BRANCH_ID`                                  | Neon branch Neon Local forks its ephemeral dev branch from; also the default parent of the test branch                           |
+| `TEST_PARENT_BRANCH_ID`                             | Optional: parent of the integration test branch instead of `PARENT_BRANCH_ID`                                                    |
 
 ## Start
 
 ```bash
-docker compose up -d --wait        # Neon Local: an ephemeral Neon branch of PARENT_BRANCH_ID on localhost:5432
+pnpm db:up                         # Neon Local: an ephemeral Neon branch of PARENT_BRANCH_ID on localhost:5432 (reads .env.local; `pnpm db:down` stops it)
 pnpm install
-pnpm tsx --env-file=.env src/cli.ts migrate   # uses DATABASE_URL_UNPOOLED when set, else DATABASE_URL
-pnpm tsx --env-file=.env src/cli.ts seed
+pnpm db:migrate                    # uses DATABASE_URL_UNPOOLED when set, else DATABASE_URL
+pnpm db:seed
 pnpm dev                           # http://localhost:3001
 ```
 `pnpm dev` first rebuilds the admin page scripts (`pnpm build:js`) so the generated files match their sources. To edit a page script (`src/admin/<page>/client.ts`), run `pnpm dev:assets` in a second terminal (rebuilds on save; reload the browser), then commit the regenerated `src/admin/static/*-js.generated.ts`. `pnpm build:assets` rebuilds CSS and scripts; `pnpm lint` fails when a generated script is stale.

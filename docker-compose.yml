@@ -1,5 +1,5 @@
 # Neon Local: proxies to a branch of your Neon cloud project.
-# Requires NEON_API_KEY and NEON_PROJECT_ID (see .env.example).
+# Requires NEON_API_KEY and NEON_PROJECT_ID (see .env.example). Run: pnpm db:up
 services:
   db:
     image: neondatabase/neon_local:latest
