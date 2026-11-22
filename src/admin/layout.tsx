@@ -9,12 +9,15 @@ export interface LayoutProps {
   basePath: string;
   /** Highlights the matching nav link (styled from `body[data-section]`). */
   section?: Section;
+  /** Renders only the content (no sidebar or logout); for pages shown before sign-in. */
+  bare?: boolean;
 }
 
 export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
   title,
   basePath,
   section,
+  bare,
   children,
 }) => {
   const admin = `${basePath}/admin`;
@@ -29,34 +32,36 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
       </head>
       <body data-section={section}>
         <div class="app-shell">
-          <aside class="sidebar">
-            <div class="brand">
-              <div class="logo-tile" aria-hidden="true">
-                CV
+          {bare ? null : (
+            <aside class="sidebar">
+              <div class="brand">
+                <div class="logo-tile" aria-hidden="true">
+                  CV
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-display text-base font-semibold">Career Chat</span>
+                  <span class="text-xs text-muted">Admin</span>
+                </div>
               </div>
-              <div class="flex flex-col gap-0.5">
-                <span class="font-display text-base font-semibold">Career Chat</span>
-                <span class="text-xs text-muted">Admin</span>
+              <nav aria-label="Admin">
+                <a href={admin}>Dashboard</a>
+                <a href={`${admin}/profile`}>Profile</a>
+                <a href={`${admin}/settings`}>Settings</a>
+                <a href={`${admin}/personal-info`}>Personal info</a>
+                <a href={`${admin}/resumes`}>Resumes</a>
+                <a href={`${admin}/chats`}>Chats</a>
+              </nav>
+              <div class="sidebar-foot">
+                <form method="post" action={`${admin}/logout`}>
+                  <button type="submit" class="btn-ghost w-full">
+                    Logout
+                  </button>
+                </form>
               </div>
-            </div>
-            <nav aria-label="Admin">
-              <a href={admin}>Dashboard</a>
-              <a href={`${admin}/profile`}>Profile</a>
-              <a href={`${admin}/settings`}>Settings</a>
-              <a href={`${admin}/personal-info`}>Personal info</a>
-              <a href={`${admin}/resumes`}>Resumes</a>
-              <a href={`${admin}/chats`}>Chats</a>
-            </nav>
-            <div class="sidebar-foot">
-              <form method="post" action={`${admin}/logout`}>
-                <button type="submit" class="btn-ghost w-full">
-                  Logout
-                </button>
-              </form>
-            </div>
-          </aside>
+            </aside>
+          )}
           <main class="main">
-            <div class="main-inner">{children}</div>
+            <div class={bare ? "main-inner justify-center" : "main-inner"}>{children}</div>
           </main>
         </div>
       </body>
