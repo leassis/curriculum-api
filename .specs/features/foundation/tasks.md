@@ -322,12 +322,13 @@ T33 → T34 → T35
 **Requirement**: FND-09
 
 **Done when**:
-- [ ] Unit tests prove C22, C23, C24
-- [ ] Quick gate passes
+- [x] Unit tests prove C22, C23, C24
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(core): validate config with defaults`
+**Status**: done
 
 ---
 
