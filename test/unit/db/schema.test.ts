@@ -18,13 +18,14 @@ describe("drizzle config", () => {
 });
 
 describe("schema", () => {
-  it("declares seven tables in curriculum_api", () => {
+  it("declares eight tables in curriculum_api", () => {
     const tables = Object.values(schema).filter((v) => is(v, PgTable));
     expect(tables.map((t) => getTableName(t)).sort()).toEqual([
       "admin_login_attempts",
       "personal_info",
       "profile",
       "public_usage",
+      "recruiter_chat_messages",
       "recruiter_chats",
       "settings",
       "tailored_resumes",

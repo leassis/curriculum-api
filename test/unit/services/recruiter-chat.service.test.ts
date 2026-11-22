@@ -230,4 +230,100 @@ describe("recruiter chat service", () => {
       for (const call of calls) expect(call.prompt).not.toContain(secret);
     }
   });
+
+  it("stores the redacted question and the full answer when the stream completes", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup({
+      mock: { chunks: ["Ten ", "years."] },
+    });
+    const chat = await newChat();
+    const history = [
+      { role: "user" as const, content: "Earlier question" },
+      { role: "assistant" as const, content: "Earlier answer" },
+      { role: "user" as const, content: "What do you do?" },
+    ];
+    const { stream } = await recruiterChat.ask(chat, history);
+    expect(await repo.messages(chat.id)).toEqual([]);
+    expect(await readAll(stream)).toBe("Ten years.");
+    const stored = await repo.messages(chat.id);
+    expect(stored.map((m) => [m.role, m.content])).toEqual([
+      ["user", "What do you do?"],
+      ["assistant", "Ten years."],
+    ]);
+  });
+
+  it("never stores a personal info value from the question or the answer", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup({
+      mock: { chunks: ["Write to ", EMAIL, " or call ", PHONE, "."] },
+    });
+    const chat = await newChat();
+    const { stream } = await recruiterChat.ask(chat, [
+      { role: "user", content: `My mail is ${EMAIL} and my phone is ${PHONE}` },
+    ]);
+    await readAll(stream);
+    const stored = await repo.messages(chat.id);
+    expect(stored).toHaveLength(2);
+    for (const m of stored) {
+      expect(m.content).toContain("[redacted]");
+      for (const secret of [EMAIL, PHONE]) expect(m.content).not.toContain(secret);
+    }
+  });
+
+  it("stores nothing when the llm is unavailable or the stream fails or is cancelled", async () => {
+    const down = await recruiterSetup({ mock: { failBeforeFirstChunk: true } });
+    const downChat = await down.newChat();
+    await expect(down.recruiterChat.ask(downChat, messages)).rejects.toMatchObject({
+      code: "llm_unavailable",
+    });
+    expect(await down.repo.messages(downChat.id)).toEqual([]);
+
+    const broken = await recruiterSetup();
+    const brokenChat = await broken.newChat();
+    vi.spyOn(broken.llm, "stream").mockResolvedValue({
+      model: "m",
+      stream: new ReadableStream<string>({
+        start(controller) {
+          controller.enqueue("partial");
+          controller.error(new Error("provider died"));
+        },
+      }),
+    });
+    const { stream } = await broken.recruiterChat.ask(brokenChat, messages);
+    await expect(readAll(stream)).rejects.toThrow("provider died");
+    expect(await broken.repo.messages(brokenChat.id)).toEqual([]);
+
+    const cancelled = await recruiterSetup({ mock: { chunks: ["a", "b", "c"] } });
+    const cancelledChat = await cancelled.newChat();
+    const answer = await cancelled.recruiterChat.ask(cancelledChat, messages);
+    const reader = answer.stream.getReader();
+    await reader.read();
+    await reader.cancel();
+    expect(await cancelled.repo.messages(cancelledChat.id)).toEqual([]);
+  });
+
+  it("streams the whole answer when storing the transcript fails", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup({
+      mock: { chunks: ["Hi", "!"] },
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    repo.failAddMessages = true;
+    const chat = await newChat();
+    const { stream } = await recruiterChat.ask(chat, messages);
+    expect(await readAll(stream)).toBe("Hi!");
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it("returns the transcript of a chat and not found for an unknown or malformed id", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    const chat = await newChat();
+    expect(await recruiterChat.transcript(chat.id)).toMatchObject({
+      chat: { id: chat.id },
+      messages: [],
+    });
+    await repo.addMessages(chat.id, [{ role: "user", content: "q" }]);
+    expect((await recruiterChat.transcript(chat.id)).messages.map((m) => m.content)).toEqual(["q"]);
+    for (const id of [MISSING, "not-a-uuid"]) {
+      await expect(recruiterChat.transcript(id)).rejects.toBeInstanceOf(NotFoundError);
+    }
+  });
 });

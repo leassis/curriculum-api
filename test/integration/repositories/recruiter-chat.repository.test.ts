@@ -91,6 +91,45 @@ describe("recruiter chat repository", () => {
     expect(await repo.reset(missing)).toBeNull();
   });
 
+  it("stores messages in order and lists them by seq", async () => {
+    const a = await repo.insert(input());
+    const b = await repo.insert(input());
+    await repo.addMessages(a.id, [
+      { role: "user", content: "first question" },
+      { role: "assistant", content: "first answer" },
+    ]);
+    await repo.addMessages(b.id, [{ role: "user", content: "other chat" }]);
+    await repo.addMessages(a.id, [
+      { role: "user", content: "second question" },
+      { role: "assistant", content: "second answer" },
+    ]);
+    await repo.addMessages(a.id, []);
+    const stored = await repo.messages(a.id);
+    expect(stored.map((m) => [m.role, m.content])).toEqual([
+      ["user", "first question"],
+      ["assistant", "first answer"],
+      ["user", "second question"],
+      ["assistant", "second answer"],
+    ]);
+    expect(stored[0]?.createdAt).toBeInstanceOf(Date);
+    expect(await repo.messages(b.id)).toHaveLength(1);
+    expect(await repo.messages("00000000-0000-4000-8000-00000000ffff")).toEqual([]);
+  });
+
+  it("keeps messages on reset and deletes them with the chat", async () => {
+    const chat = await repo.insert(input());
+    await repo.addMessages(chat.id, [{ role: "user", content: "q" }]);
+    await repo.acquire(chat.id);
+    await repo.reset(chat.id);
+    expect(await repo.messages(chat.id)).toHaveLength(1);
+    await repo.delete(chat.id);
+    expect(await repo.messages(chat.id)).toEqual([]);
+    const left = await db.execute(
+      sql`select count(*)::int as n from curriculum_api.recruiter_chat_messages`,
+    );
+    expect((left as unknown as { rows: { n: number }[] }).rows[0]?.n).toBe(0);
+  });
+
   it("reads the linked resume content and lists resume titles", async () => {
     const resume = await resumes.insert({ title: "Backend", company: null, jobDescription: "jd" });
     await resumes.update(resume.id, { content: "Tailored text" });

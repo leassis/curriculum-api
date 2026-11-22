@@ -1,5 +1,7 @@
 import { dataBlock, wrapUserMessages } from "../llm/data-block.js";
+import { redactPii } from "../llm/pii-guard.js";
 import type {
+  ChatMessageRow,
   RecruiterChatRepo,
   RecruiterChatRow,
   ResumeOption,
@@ -18,7 +20,7 @@ import type { ContactItem, PersonalInfoService } from "./personal-info.service.j
 import type { ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 
-export type { ResumeOption };
+export type { ChatMessageRow, ResumeOption };
 
 export type ChatStatus = "active" | "revoked" | "expired";
 
@@ -53,6 +55,11 @@ export interface ChatOpening {
   remaining: number;
   status: "active";
   contact: ContactItem[];
+}
+
+export interface Transcript {
+  chat: RecruiterChat;
+  messages: ChatMessageRow[];
 }
 
 export interface RecruiterAnswer {
@@ -211,12 +218,59 @@ export class RecruiterChatService {
         maxOutputTokens: await this.settings.limit("recruiterMaxOutputTokens"),
       });
       await this.chats.touch(granted.id);
-      return { stream, remaining: granted.maxQuestions - granted.used };
+      return {
+        stream: await this.recordTranscript(granted.id, messages, stream),
+        remaining: granted.maxQuestions - granted.used,
+      };
     } catch (error) {
       // AC10: only an unavailable LLM gives the question back.
       if (error instanceof LlmUnavailableError) await this.chats.release(granted.id);
       throw error;
     }
+  }
+
+  /** The chat and its messages, oldest first; NotFound for an unknown or malformed id. */
+  async transcript(id: string): Promise<Transcript> {
+    const row = UUID.test(id) ? await this.chats.findById(id) : null;
+    const chat = this.found(row);
+    return { chat, messages: await this.chats.messages(chat.id) };
+  }
+
+  /**
+   * Passes the answer through unchanged and, when it completes, stores the question the model saw
+   * (after the PII Guard redaction) and the answer. An error or a cancel never reaches `flush`, so
+   * nothing is stored then; a storing failure is logged and never breaks the stream.
+   */
+  private async recordTranscript(
+    chatId: string,
+    messages: ChatMessage[],
+    stream: ReadableStream<string>,
+  ): Promise<ReadableStream<string>> {
+    const question = messages.findLast((m) => m.role === "user")?.content;
+    if (question === undefined) return stream;
+    const fields = await this.personalInfo.allValues();
+    const chunks: string[] = [];
+    const chats = this.chats;
+    return stream.pipeThrough(
+      new TransformStream<string, string>({
+        transform(chunk, controller) {
+          chunks.push(chunk);
+          controller.enqueue(chunk);
+        },
+        async flush() {
+          const answer = chunks.join("");
+          if (answer === "") return;
+          try {
+            await chats.addMessages(chatId, [
+              { role: "user", content: redactPii(question, fields) },
+              { role: "assistant", content: redactPii(answer, fields) },
+            ]);
+          } catch (error) {
+            console.error("recruiter transcript was not stored", error);
+          }
+        },
+      }),
+    );
   }
 
   private found(row: RecruiterChatRow | null): RecruiterChat {

@@ -33,7 +33,7 @@ async function publicObjectCounts() {
 describe("migrate", () => {
   beforeEach(dropSchema);
 
-  it("creates seven tables and the migrations table in curriculum_api", async () => {
+  it("creates eight tables and the migrations table in curriculum_api", async () => {
     await migrate(TEST_DATABASE_URL);
     const tables = await rows<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'curriculum_api' ORDER BY table_name",
@@ -44,6 +44,7 @@ describe("migrate", () => {
       "personal_info",
       "profile",
       "public_usage",
+      "recruiter_chat_messages",
       "recruiter_chats",
       "settings",
       "tailored_resumes",
@@ -60,7 +61,7 @@ describe("migrate", () => {
     const before = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
     await expect(migrate(TEST_DATABASE_URL)).resolves.toBeUndefined();
     const after = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
-    expect(before).toHaveLength(1);
+    expect(before).toHaveLength(2);
     expect(after).toEqual(before);
   });
 });

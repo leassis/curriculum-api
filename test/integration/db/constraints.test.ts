@@ -1,6 +1,12 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { personalInfo, profile, recruiterChats, tailoredResumes } from "../../../src/db/schema";
+import {
+  personalInfo,
+  profile,
+  recruiterChatMessages,
+  recruiterChats,
+  tailoredResumes,
+} from "../../../src/db/schema";
 import { pgErrorCode, resetDb, testDb } from "../../support/db";
 
 const db = testDb();
@@ -55,6 +61,28 @@ describe("constraints", () => {
     expect(
       await codeOf(db.insert(recruiterChats).values({ token: "dup", recruiterName: "B" })),
     ).toBe("23505");
+  });
+
+  it("rejects a message with an unknown role or an unknown chat", async () => {
+    const [chat] = await db
+      .insert(recruiterChats)
+      .values({ token: "msg", recruiterName: "A" })
+      .returning();
+    const chatId = chat?.id as string;
+    expect(
+      await codeOf(
+        db.insert(recruiterChatMessages).values({ chatId, role: "system", content: "x" }),
+      ),
+    ).toBe("23514");
+    expect(
+      await codeOf(
+        db.insert(recruiterChatMessages).values({
+          chatId: "00000000-0000-4000-8000-00000000ffff",
+          role: "user",
+          content: "x",
+        }),
+      ),
+    ).toBe("23503");
   });
 
   it("deleting a resume nulls the chat link", async () => {

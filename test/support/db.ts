@@ -15,6 +15,7 @@ const TABLES = [
   "personal_info",
   "tailored_resumes",
   "recruiter_chats",
+  "recruiter_chat_messages",
   "public_usage",
   "admin_login_attempts",
 ];

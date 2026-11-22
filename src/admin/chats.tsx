@@ -26,6 +26,7 @@ const ChatRow: FC<{ basePath: string; origin: string; chat: RecruiterChat }> = (
       <td>{stamp(chat.expiresAt)}</td>
       <td>{stamp(chat.lastUsedAt)}</td>
       <td>
+        <a href={`${url}/messages`}>Messages</a>{" "}
         <button type="button" data-copy={linkFor(origin, chat)}>
           Copy link
         </button>{" "}
