@@ -6,7 +6,9 @@ export const TEST_PII_KEY = Buffer.alloc(32, 7).toString("base64");
 
 export function validConfig(overrides: Partial<CurriculumApiConfig> = {}): CurriculumApiConfig {
   return {
-    databaseUrl: "postgres://postgres:postgres@db.localtest.me:5432/curriculum_test",
+    databaseUrl:
+      process.env.TEST_DATABASE_URL ??
+      "postgres://postgres:postgres@db.localtest.me:5432/curriculum_test",
     openrouterApiKey: "sk-or-test-key",
     sessionSecret: "s".repeat(40),
     turnstileSecret: "turnstile-secret",
