@@ -360,12 +360,13 @@ T33 → T34 → T35
 **Requirement**: FND-14
 
 **Done when**:
-- [ ] Unit test on a minimal Hono app proves C43
-- [ ] Quick gate passes
+- [x] Unit test on a minimal Hono app proves C43
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(security): add requireSession middleware`
+**Status**: done
 
 ---
 
