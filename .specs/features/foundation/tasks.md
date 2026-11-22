@@ -150,12 +150,13 @@ T33 → T34 → T35
 **Requirement**: FND-03, FND-23, FND-24
 
 **Done when**:
-- [ ] Unit tests with fixture trees prove C5, C6, C61, C63
-- [ ] Quick gate passes
+- [x] Unit tests with fixture trees prove C5, C6, C61, C63
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(lint): enforce layering, portability and llm import rules`
+**Status**: done
 
 ---
 
