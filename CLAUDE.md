@@ -54,3 +54,7 @@ Other things that span files:
 ## Specs and workflow
 
 Feature work is spec-driven: `.specs/features/<feature>/{spec,tasks,proofs,verification}.md` and `.specs/STATE.md` (decisions AD-xxx, handoff) are the source of truth; product background in `curriculum-specs/`. Schema changes are serialized on `main` as their own migration (parallel branches collide on `drizzle/meta/_journal.json`).
+
+## Commits
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): subject` in the imperative, with types such as `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `chore`. One atomic commit per task. Breaking changes are marked `!` or with a `BREAKING CHANGE:` footer.
