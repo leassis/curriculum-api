@@ -740,13 +740,14 @@ T33 → T34 → T35
 **Requirement**: FND-26
 
 **Done when**:
-- [ ] Unit test proves C74
-- [ ] `pnpm dev` + `curl localhost:3001/api/health` returns `{"ok":true}` (logged in Handoff Walked)
-- [ ] Quick gate passes
+- [x] Unit test proves C74
+- [x] `pnpm dev` + `curl localhost:3001/api/health` returns `{"ok":true}` (logged in Handoff Walked)
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(examples): add node dev server`
+**Status**: done
 
 ---
 
@@ -1023,7 +1024,7 @@ Proof: run unit | ✓ node example > uses port 3001 and insecure cookies
 
 **Settled mid-build:** none
 **Dispatched:** none
-**Walked:** none
+**Walked:** T34 (2026-11-22): `pnpm dev` with a local `.env` served :3001; `curl localhost:3001/api/health` returned 200 `{"ok":true}` with `x-frame-options: DENY`; `GET /admin` without a session answered 303 to `/admin/login`. Admin pages (login, dashboard) are empty stubs until `admin-core`, so no screen walk or pictures yet.
 
 ---
 
