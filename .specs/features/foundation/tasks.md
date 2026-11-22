@@ -227,12 +227,13 @@ T33 → T34 → T35
 **Requirement**: FND-04, FND-06
 
 **Done when**:
-- [ ] Unit tests prove C9, C10
-- [ ] Quick gate passes
+- [x] Unit tests prove C9, C10
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(db): define curriculum_api schema and drizzle config`
+**Status**: done
 
 ---
 
