@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { dashboardRouter } from "../../../src/admin/dashboard";
+import { dashboardRouter } from "../../../src/admin/dashboard/routes";
 import { Layout } from "../../../src/admin/layout";
-import { profileRouter } from "../../../src/admin/profile";
+import { profileRouter } from "../../../src/admin/profile/routes";
 import htmx from "../../../src/admin/static/htmx.generated";
 import { signSession } from "../../../src/security/session";
 import { NotFoundError } from "../../../src/services/errors";

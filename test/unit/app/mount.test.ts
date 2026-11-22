@@ -1,13 +1,13 @@
 import type { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { chatsRouter } from "../../../src/admin/chats";
-import { dashboardRouter } from "../../../src/admin/dashboard";
-import { loginRouter } from "../../../src/admin/login";
+import { dashboardRouter } from "../../../src/admin/dashboard/routes";
+import { loginRouter } from "../../../src/admin/login/routes";
 import { personalInfoRouter } from "../../../src/admin/personal-info";
 import { printRouter } from "../../../src/admin/print";
-import { profileRouter } from "../../../src/admin/profile";
+import { profileRouter } from "../../../src/admin/profile/routes";
 import { resumesRouter } from "../../../src/admin/resumes";
-import { settingsRouter } from "../../../src/admin/settings";
+import { settingsRouter } from "../../../src/admin/settings/routes";
 import { publicRouter } from "../../../src/routes/public";
 import { recruiterRouter } from "../../../src/routes/recruiter";
 import { signSession } from "../../../src/security/session";
