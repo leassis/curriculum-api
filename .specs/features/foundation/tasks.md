@@ -303,12 +303,13 @@ T33 → T34 → T35
 **Requirement**: FND-11
 
 **Done when**:
-- [ ] Unit test asserts each class's `code` and `status`
-- [ ] Quick gate passes
+- [x] Unit test asserts each class's `code` and `status`
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(core): add domain errors`
+**Status**: done
 
 ---
 
