@@ -99,3 +99,28 @@ describe("admin print style", () => {
     expect(body).toContain("-webkit-print-color-adjust: exact");
   });
 });
+
+describe("admin print toolbar", () => {
+  it("links back to the resume editor and to the profile page", async () => {
+    const { get, id } = await withResume();
+    const resume = await (await get(`/admin/resumes/${id}/print`)).text();
+    expect(resume).toContain(`<a id="print-back" href="/admin/resumes/${id}">Back to resume</a>`);
+    const profile = await (await get("/admin/profile/print")).text();
+    expect(profile).toContain('<a id="print-back" href="/admin/profile">Back to profile</a>');
+  });
+
+  it("tells the owner to turn off headers and footers", async () => {
+    const { get } = await withResume();
+    const html = await (await get("/admin/profile/print")).text();
+    expect(html).toContain("turn off Headers and footers");
+  });
+
+  it("hides the link and the tip in print", async () => {
+    const { get, id } = await withResume();
+    const html = await (await get(`/admin/resumes/${id}/print`)).text();
+    expect(html).toMatch(/<p class="screen-only">\s*<a id="print-back"[^>]*>[^<]*<\/a>[^<]*Tip:/);
+    expect(html).toMatch(/@media print \{\s*\.screen-only \{ display: none !important; \}/);
+    expect(html).toContain('src="/admin/print/print.js"');
+    expect(html).not.toMatch(/<script>|onclick=/i);
+  });
+});

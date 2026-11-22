@@ -8,7 +8,11 @@ import { printCss } from "./print-style.js";
 const PRINT_JS = `document.getElementById("print-button")?.addEventListener("click", () => window.print());
 `;
 
-const PrintPage: FC<{ basePath: string; data: PrintData }> = ({ basePath, data }) => (
+const PrintPage: FC<{
+  basePath: string;
+  data: PrintData;
+  back: { href: string; label: string };
+}> = ({ basePath, data, back }) => (
   <html lang="en">
     <head>
       <meta charset="utf-8" />
@@ -29,6 +33,13 @@ const PrintPage: FC<{ basePath: string; data: PrintData }> = ({ basePath, data }
         <button id="print-button" type="button">
           Print / Save as PDF
         </button>
+      </p>
+      <p class="screen-only">
+        <a id="print-back" href={back.href}>
+          {back.label}
+        </a>
+        {" · "}
+        Tip: in the print dialog turn off Headers and footers so the browser adds no URL or date.
       </p>
       <header>
         <h1>{data.fullName}</h1>
@@ -58,14 +69,19 @@ printRouter.get("/profile/print", async (c) => {
   const data = await c.var.services.resumes.profilePrintData();
   c.header("Cache-Control", noindex["Cache-Control"]);
   c.header("X-Robots-Tag", noindex["X-Robots-Tag"]);
-  return c.html(<PrintPage basePath={c.var.config.basePath} data={data} />);
+  const basePath = c.var.config.basePath;
+  const back = { href: `${basePath}/admin/profile`, label: "Back to profile" };
+  return c.html(<PrintPage basePath={basePath} data={data} back={back} />);
 });
 
 printRouter.get("/resumes/:id/print", async (c) => {
-  const data = await c.var.services.resumes.printData(c.req.param("id"));
+  const id = c.req.param("id");
+  const data = await c.var.services.resumes.printData(id);
   c.header("Cache-Control", noindex["Cache-Control"]);
   c.header("X-Robots-Tag", noindex["X-Robots-Tag"]);
-  return c.html(<PrintPage basePath={c.var.config.basePath} data={data} />);
+  const basePath = c.var.config.basePath;
+  const back = { href: `${basePath}/admin/resumes/${id}`, label: "Back to resume" };
+  return c.html(<PrintPage basePath={basePath} data={data} back={back} />);
 });
 
 printRouter.get("/resumes/:id/download.md", async (c) => {

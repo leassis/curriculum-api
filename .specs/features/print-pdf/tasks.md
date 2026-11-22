@@ -75,13 +75,13 @@ Sequential: all three tasks edit the same stylesheet and page.
 **Requirement**: PDF-08..PDF-10
 
 **Done when**:
-- [ ] Tests for PDF-08..PDF-10 pass
-- [ ] Full gate passes
+- [x] Tests for PDF-08..PDF-10 pass
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(print): add back link and header tip to the print view`
-**Status**: pending
+**Status**: done
 
 ---
 
