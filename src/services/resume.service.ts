@@ -1,4 +1,5 @@
 import { renderMarkdown } from "../lib/markdown.js";
+import { dataBlock } from "../llm/data-block.js";
 import { findPii } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
 import { NotFoundError, ValidationError } from "./errors.js";
@@ -64,6 +65,7 @@ export class ResumeService {
     protected readonly settings: SettingsService,
     protected readonly personalInfo: PersonalInfoService,
     protected readonly llm: LlmService,
+    private readonly now: () => Date = () => new Date(),
   ) {}
 
   list(): Promise<Resume[]> {
@@ -104,7 +106,7 @@ export class ResumeService {
       area: "tailor",
       system: profile.tailorSystemPrompt,
       body: profile.masterCv,
-      input: resume.jobDescription,
+      input: `Today's date: ${this.now().toISOString().slice(0, 10)}\n\n${dataBlock("JOB_DESCRIPTION", resume.jobDescription)}`,
       maxOutputTokens: TAILOR_MAX_OUTPUT_TOKENS,
     });
     return this.update(id, { content: text, model });

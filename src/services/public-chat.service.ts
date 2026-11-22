@@ -1,3 +1,4 @@
+import { wrapUserMessages } from "../llm/data-block.js";
 import type { PublicUsageRepo } from "../repositories/public-usage.repository.js";
 import { LimitReachedError, LlmUnavailableError, PiiLeakError } from "./errors.js";
 import type { ChatMessage, LlmService } from "./llm.service.js";
@@ -31,7 +32,7 @@ export class PublicChatService {
         area: "public",
         system: profile.publicSystemPrompt,
         body: profile.masterCv.trim() === "" ? EMPTY_CV : profile.masterCv,
-        messages,
+        messages: wrapUserMessages(messages, "VISITOR_MESSAGE"),
         maxOutputTokens: await this.settings.limit("publicMaxOutputTokens"),
       });
       return { stream, remaining: limit - grant.used };

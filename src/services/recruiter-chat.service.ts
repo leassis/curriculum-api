@@ -1,3 +1,4 @@
+import { dataBlock, wrapUserMessages } from "../llm/data-block.js";
 import type {
   RecruiterChatRepo,
   RecruiterChatRow,
@@ -204,9 +205,9 @@ export class RecruiterChatService {
         system:
           jd === null
             ? profile.recruiterSystemPrompt
-            : `${profile.recruiterSystemPrompt}\n\nJob Description:\n${jd}`,
+            : `${profile.recruiterSystemPrompt}\n\nJob Description:\n${dataBlock("JOB_DESCRIPTION", jd)}`,
         body: content.trim() === "" ? EMPTY_CV : content,
-        messages,
+        messages: wrapUserMessages(messages, "RECRUITER_MESSAGE"),
         maxOutputTokens: await this.settings.limit("recruiterMaxOutputTokens"),
       });
       await this.chats.touch(granted.id);

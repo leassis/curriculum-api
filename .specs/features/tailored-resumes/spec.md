@@ -159,3 +159,9 @@ For each application the Owner wants a Career Body tailored to a Job Description
 ## Success Criteria
 
 - [ ] Roadmap Phase 4 "done when" holds, except the recruiter link part (owned by `recruiter-chat`).
+
+---
+
+## Addendum 2026-11-22: prompt hardening (branch feat/prompt-hardening)
+
+Approved ACs above are unchanged. The tailor input is `Today's date: YYYY-MM-DD` plus the Job Description in a `<<<JOB_DESCRIPTION_START/END>>>` block (marker runs stripped). The default tailor prompt forbids introducing a skill, tool, employer, title, date, certification or metric absent from the CV, keeps requirements without evidence out, mirrors only synonyms or categories, forbids copying JD phrasing, keeps every role (compress bullets), and bans tables, emoji, meta-commentary and control tokens. Proof: `test/unit/prompt-hardening.test.ts`, `test/unit/llm/default-prompts.test.ts`.
