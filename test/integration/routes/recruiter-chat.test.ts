@@ -120,7 +120,12 @@ describe("recruiter chat with database", () => {
   it("keeps working with the master cv after the linked resume is deleted", async () => {
     const s = await setup();
     const resumes = new ResumeRepository(db);
-    const resume = await resumes.insert({ title: "R", company: null, jobDescription: "jd" });
+    const resume = await resumes.insert({
+      title: "R",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
     await resumes.update(resume.id, { content: "Resume-only text." });
     const chat = await s.create({ tailoredResumeId: resume.id });
     const cookie = await s.cookieFor(chat.id);

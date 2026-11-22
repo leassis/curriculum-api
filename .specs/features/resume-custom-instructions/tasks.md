@@ -116,13 +116,14 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Integration test: insert stores the value, update replaces it, update without it keeps it
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
-- [ ] Test count: T1 count + 1 pass
+- [x] Integration test: insert stores the value, update replaces it, update without it keeps it
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Test count: T1 count + 1 pass
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(resumes): persist custom instructions in the repository`
+**Status**: ✅ Complete
 
 ---
 

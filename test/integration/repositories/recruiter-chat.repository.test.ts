@@ -131,7 +131,12 @@ describe("recruiter chat repository", () => {
   });
 
   it("reads the linked resume content and lists resume titles", async () => {
-    const resume = await resumes.insert({ title: "Backend", company: null, jobDescription: "jd" });
+    const resume = await resumes.insert({
+      title: "Backend",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
     await resumes.update(resume.id, { content: "Tailored text" });
     expect(await repo.resumeContent(resume.id)).toBe("Tailored text");
     expect(await repo.resumeContent(null)).toBeNull();

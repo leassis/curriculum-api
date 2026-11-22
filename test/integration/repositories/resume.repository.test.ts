@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { recruiterChats } from "../../../src/db/schema";
+import { recruiterChats, tailoredResumes } from "../../../src/db/schema";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { resetDb, testDb } from "../../support/db";
 
 const db = testDb();
 const repo = new ResumeRepository(db);
 
-const input = (title: string) => ({ title, company: null, jobDescription: `jd ${title}` });
+const input = (title: string) => ({
+  title,
+  company: null,
+  jobDescription: `jd ${title}`,
+  customInstructions: "",
+});
 
 describe("resume repository", () => {
   beforeEach(async () => {
@@ -21,7 +26,12 @@ describe("resume repository", () => {
   });
 
   it("inserts, finds, updates and deletes a resume", async () => {
-    const created = await repo.insert({ title: "T", company: "Acme", jobDescription: "JD" });
+    const created = await repo.insert({
+      title: "T",
+      company: "Acme",
+      jobDescription: "JD",
+      customInstructions: "",
+    });
     expect(created).toMatchObject({
       title: "T",
       company: "Acme",
@@ -44,9 +54,22 @@ describe("resume repository", () => {
   });
 
   it("reads custom instructions as empty by default", async () => {
-    const created = await repo.insert(input("default"));
-    expect(created.customInstructions).toBe("");
-    expect((await repo.find(created.id))?.customInstructions).toBe("");
+    // Inserted without the field, as a row from before the migration would be.
+    const [row] = await db
+      .insert(tailoredResumes)
+      .values({ title: "old", jobDescription: "jd" })
+      .returning();
+    expect(row?.customInstructions).toBe("");
+    expect((await repo.find(row?.id ?? ""))?.customInstructions).toBe("");
+  });
+
+  it("stores and updates custom instructions", async () => {
+    const created = await repo.insert({ ...input("ci"), customInstructions: "One page" });
+    expect(created.customInstructions).toBe("One page");
+    const replaced = await repo.update(created.id, { customInstructions: "Lead with platform" });
+    expect(replaced?.customInstructions).toBe("Lead with platform");
+    const kept = await repo.update(created.id, { content: "# Body" });
+    expect(kept).toMatchObject({ content: "# Body", customInstructions: "Lead with platform" });
   });
 
   it("stores null and array header fields", async () => {

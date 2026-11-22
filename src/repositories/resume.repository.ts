@@ -7,10 +7,12 @@ export interface ResumeInsert {
   title: string;
   company: string | null;
   jobDescription: string;
+  customInstructions: string;
 }
 export interface ResumePatch {
   content?: string;
   model?: string | null;
+  customInstructions?: string;
   /** `null` stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;
 }

@@ -82,7 +82,7 @@ export class ResumeService {
     const title = required("title", "Title", input.title);
     const jobDescription = required("jobDescription", "Job Description", input.jobDescription);
     const company = input.company?.trim() || null;
-    return this.resumes.insert({ title, company, jobDescription });
+    return this.resumes.insert({ title, company, jobDescription, customInstructions: "" });
   }
 
   async delete(id: string): Promise<void> {
