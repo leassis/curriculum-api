@@ -249,7 +249,7 @@ Proof: run unit | ✓ startTestBranch > deletes the branch when migration fails
 Proof: run unit | ✓ repo layout > compose runs Neon Local only
 
 **C18** - `cli migrate` reaches the Neon Local branch through `neon-http` (DEV-02, AC 2)
-Proof: `docker compose up -d --wait && pnpm tsx --env-file=.env src/cli.ts migrate`
+Proof: `docker compose --env-file .env.local up -d --wait && DATABASE_URL=postgres://neon:npg@localhost:5432/neondb DATABASE_URL_UNPOOLED= pnpm tsx --env-file=.env src/cli.ts migrate`
 
 **C19** - No `postgres:17`, `local-neon-http-proxy`, `docker/initdb.sql` or `db.localtest.me` routing remains (DEV-04, AC 4)
 Proof: run unit | ✓ repo layout > has no local Postgres stack
@@ -264,7 +264,7 @@ Proof: run unit | ✓ repo layout > docs describe Neon, not the old Postgres sta
 
 ## Handoff
 
-**Settled mid-build:** 2026-11-22 - user: "use .env.local for now.. is there a way?" -> T4 `globalSetup` loads `.env.local` as well as `.env` (neither overrides a variable already set; `.env` first, so it wins). Neon variables currently live in `.env.local`.
+**Settled mid-build:** 2026-11-22 - user: "can you use .env.local?" -> C18 proof reads Neon variables from `.env.local` and overrides `DATABASE_URL` with the Neon Local URL. Earlier: 2026-11-22 - user: "use .env.local for now.. is there a way?" -> T4 `globalSetup` loads `.env.local` as well as `.env` (neither overrides a variable already set; `.env` first, so it wins). Neon variables currently live in `.env.local`.
 **Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker returned (48aaf94); T4 worker returned (8f5167a); T5 worker returned (a9b5e96); T6 worker returned (baf52a8); T7 worker returned (one sub-agent per task, run in order)
 **Walked:** none
 
