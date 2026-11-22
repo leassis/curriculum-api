@@ -9,6 +9,7 @@ import { chatsRouter } from "./chats.js";
 import { dashboardRouter } from "./dashboard.js";
 import { ErrorFragment } from "./error-fragment.js";
 import { loginRouter } from "./login.js";
+import { messagesRouter } from "./messages.js";
 import { personalInfoRouter } from "./personal-info.js";
 import { printRouter } from "./print.js";
 import { profileRouter } from "./profile.js";
@@ -63,6 +64,7 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
   admin.route("/", settingsRouter);
   admin.route("/", personalInfoRouter);
   admin.route("/", chatsRouter);
+  admin.route("/", messagesRouter);
   admin.route("/", resumesRouter);
   admin.route("/", printRouter);
   return admin;
