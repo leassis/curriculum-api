@@ -1,6 +1,6 @@
 # recruiter-chat proofs
 
-**HEAD**: 8c751be
+**HEAD**: bef15f9
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 60 pass, 0 fail
@@ -93,19 +93,19 @@ PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1456ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1264ms
- ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1133ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 425ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 590ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 325ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 615ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 896ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 657ms
- ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 418ms
+ ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1445ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1252ms
+ ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1151ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 428ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 589ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 310ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 614ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 898ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 662ms
+ ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 405ms
 
  Test Files  21 passed (21)
       Tests  51 passed (51)
-   Start at  04:34:41
-   Duration  73.78s (tests 92%, import 8%)
+   Start at  04:37:49
+   Duration  73.80s (tests 92%, import 8%)
 ```
