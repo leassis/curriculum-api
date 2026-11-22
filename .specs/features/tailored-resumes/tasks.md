@@ -146,13 +146,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-07, RES-08
 
 **Done when**:
-- [ ] Unit tests cover header selection, headers, page size, banner, empty and download
-- [ ] Full gate passes
+- [x] Unit tests cover header selection, headers, page size, banner, empty and download
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(resumes): add print view and markdown download`
-**Status**: pending
+**Status**: done
 
 ---
 
