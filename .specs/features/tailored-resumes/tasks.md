@@ -127,13 +127,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-02..RES-06
 
 **Done when**:
-- [ ] Unit tests cover editor, generate success and failures, preview XSS, save and PII refusal
-- [ ] Full gate passes
+- [x] Unit tests cover editor, generate success and failures, preview XSS, save and PII refusal
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(resumes): add editor, generate, preview and save`
-**Status**: pending
+**Status**: done
 
 ---
 
