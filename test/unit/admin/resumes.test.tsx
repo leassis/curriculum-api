@@ -1,0 +1,185 @@
+import { describe, expect, it } from "vitest";
+import { failingFactory, resumeApp } from "../../support/resumes";
+
+const MISSING = "00000000-0000-4000-8000-00000000ffff";
+const ids = [MISSING, "not-a-uuid"];
+const newResume = { title: "Backend at Acme", company: "Acme", jobDescription: "Build things" };
+
+describe("admin resumes", () => {
+  it("lists resumes newest first with links, company, model and date", async () => {
+    const { get, resumes, repo } = await resumeApp();
+    const first = await resumes.create({ ...newResume, title: "Older <b>one</b>" });
+    const second = await resumes.create({ ...newResume, title: "Newer", company: "Globex" });
+    await repo.update(second.id, { model: "vendor/tailor" });
+    const html = await (await get("/admin/resumes")).text();
+    expect(html.indexOf("Newer")).toBeGreaterThan(-1);
+    expect(html.indexOf("Newer")).toBeLessThan(html.indexOf("Older"));
+    expect(html).toContain(`href="/admin/resumes/${second.id}"`);
+    expect(html).toContain(`href="/admin/resumes/${first.id}"`);
+    expect(html).toContain("Globex");
+    expect(html).toContain("vendor/tailor");
+    expect(html).toContain("2026-01-01");
+    expect(html).toContain("Older &lt;b&gt;one&lt;/b&gt;");
+    expect(html).not.toContain("No tailored resumes yet");
+  });
+
+  it("shows the empty state", async () => {
+    const { get } = await resumeApp();
+    const res = await get("/admin/resumes");
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("No tailored resumes yet");
+  });
+
+  it("creates a resume and redirects with 303", async () => {
+    const { post, repo } = await resumeApp();
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    expect(repo.rows).toHaveLength(1);
+    expect(repo.rows[0]).toMatchObject({ title: "Backend at Acme", content: "", company: "Acme" });
+    expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}`);
+  });
+
+  it("answers 400 naming the empty field and creates nothing", async () => {
+    const { post, repo } = await resumeApp();
+    const noTitle = await post("/admin/resumes", { ...newResume, title: " " });
+    expect(noTitle.status).toBe(400);
+    expect(await noTitle.text()).toContain("Title is required");
+    const noJd = await post("/admin/resumes", { ...newResume, jobDescription: "" });
+    expect(noJd.status).toBe(400);
+    expect(await noJd.text()).toContain("Job Description is required");
+    expect(repo.rows).toHaveLength(0);
+  });
+
+  it("deletes a resume and asks for confirmation", async () => {
+    const { get, del, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create({ ...newResume, title: 'Acme "A"' });
+    const html = await (await get("/admin/resumes")).text();
+    expect(html).toContain(`hx-confirm="Delete Acme &quot;A&quot;?"`);
+    expect(html).toContain(`hx-delete="/admin/resumes/${id}"`);
+    const res = await del(`/admin/resumes/${id}`);
+    expect(res.status).toBe(200);
+    expect(repo.rows).toHaveLength(0);
+    expect(await (await get("/admin/resumes")).text()).toContain("No tailored resumes yet");
+  });
+
+  it("answers 404 on every id route for unknown or malformed ids", async () => {
+    const { get, post, put, del } = await resumeApp();
+    for (const id of ids) {
+      const base = `/admin/resumes/${id}`;
+      const statuses = [
+        (await get(base)).status,
+        (await del(base)).status,
+        (await put(base, { content: "x" })).status,
+        (await post(`${base}/generate`)).status,
+        (await post(`${base}/preview`, { content: "x" })).status,
+        (await get(`${base}/print`)).status,
+        (await get(`${base}/download.md`)).status,
+      ];
+      expect(statuses).toEqual([404, 404, 404, 404, 404, 404, 404]);
+    }
+  });
+
+  it("renders the editor with fields, checkboxes and buttons", async () => {
+    const { get, resumes, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const { id } = await resumes.create({ ...newResume, jobDescription: "Needs <Rust>" });
+    await resumes.save(id, "## Hello", ["EMAIL"]);
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    expect(html).toContain("Backend at Acme");
+    expect(html).toContain("Acme");
+    expect(html).toContain("Needs &lt;Rust&gt;");
+    expect(html).toMatch(/<textarea[^>]*name="content"[^>]*>## Hello<\/textarea>/);
+    expect(html).toMatch(/<input[^>]*name="headerFields"[^>]*value="EMAIL"[^>]*checked/);
+    expect(html).not.toMatch(/<input[^>]*value="PHONE"[^>]*checked/);
+    for (const label of ["Generate", "Save", "Print", "Download .md"]) {
+      expect(html).toContain(label);
+    }
+    expect(html).toContain(`href="/admin/resumes/${id}/download.md"`);
+    expect(html).toContain("<h2>Hello</h2>");
+  });
+
+  it("generate returns the editor fragment with the new content", async () => {
+    const { post, resumes, repo } = await resumeApp({ mock: { text: "## Fresh <b>body</b>" } });
+    const { id } = await resumes.create(newResume);
+    const res = await post(`/admin/resumes/${id}/generate`);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html.startsWith('<div id="editor">')).toBe(true);
+    expect(html).not.toContain("<html");
+    expect(html).toContain("## Fresh &lt;b&gt;body&lt;/b&gt;</textarea>");
+    expect(repo.rows[0]).toMatchObject({ content: "## Fresh <b>body</b>", model: "vendor/tailor" });
+  });
+
+  it("generate button has an indicator, is disabled while running and confirms replacement", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const empty = await (await get(`/admin/resumes/${id}`)).text();
+    const button = (html: string) =>
+      html.match(/<button[^>]*hx-post="[^"]*\/generate"[^>]*>/)?.[0] ?? "";
+    expect(button(empty)).toContain('hx-indicator="#generate-indicator"');
+    expect(button(empty)).toContain('hx-disabled-elt="this"');
+    expect(button(empty)).not.toContain("hx-confirm");
+    expect(empty).toContain('id="generate-indicator"');
+    await resumes.save(id, "edited", []);
+    const filled = await (await get(`/admin/resumes/${id}`)).text();
+    expect(button(filled)).toContain('hx-confirm="Replace the current content?"');
+  });
+
+  it("generate answers 502 with the failure text and keeps the content", async () => {
+    const { post, resumes, repo } = await resumeApp({ factory: failingFactory });
+    const { id } = await resumes.create(newResume);
+    await resumes.save(id, "my edits", []);
+    const res = await post(`/admin/resumes/${id}/generate`);
+    expect(res.status).toBe(502);
+    expect(await res.text()).toContain("Generation failed, try again");
+    expect(repo.rows[0]?.content).toBe("my edits");
+  });
+
+  it("generate answers 400 with the master cv text", async () => {
+    const { post, resumes, calls } = await resumeApp({ cv: "" });
+    const { id } = await resumes.create(newResume);
+    const res = await post(`/admin/resumes/${id}/generate`);
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain("Fill the master CV first");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("preview returns sanitized html", async () => {
+    const { post, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const res = await post(`/admin/resumes/${id}/preview`, {
+      content:
+        "<script>alert(1)</script>**x** <img src=x onerror=alert(1)> [l](javascript:alert(1))",
+    });
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("<strong>x</strong>");
+    expect(html).not.toMatch(/<script|<img|javascript:/i);
+  });
+
+  it("saves content and header fields and answers Saved", async () => {
+    const { put, resumes, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const { id } = await resumes.create(newResume);
+    const res = await put(`/admin/resumes/${id}`, { content: "# Mine", headerFields: ["PHONE"] });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Saved");
+    expect(repo.rows[0]).toMatchObject({ content: "# Mine", headerFields: ["PHONE"] });
+    await put(`/admin/resumes/${id}`, { content: "# Mine", headerFields: ["EMAIL", "PHONE"] });
+    expect(repo.rows[0]?.headerFields).toBeNull();
+  });
+
+  it("refuses to save content with a personal info value", async () => {
+    const { put, resumes, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const { id } = await resumes.create(newResume);
+    const res = await put(`/admin/resumes/${id}`, { content: "mail ada@example.com" });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain(
+      "Your Email is in the body — keep contact data in Personal info",
+    );
+    expect(repo.rows[0]?.content).toBe("");
+  });
+});
