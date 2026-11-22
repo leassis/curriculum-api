@@ -11,7 +11,8 @@ export type PooledDb = NodePgDatabase & { $client: Pool };
 /** Kept small: the pooled (PgBouncer) connection string multiplexes server connections. */
 const POOL_MAX = 5;
 const CONNECT_TIMEOUT_MS = 5_000;
-const STATEMENT_TIMEOUT_MS = 30_000;
+/** Client-side: PgBouncer (Neon pooled and Neon Local) rejects the `statement_timeout` startup parameter. */
+const QUERY_TIMEOUT_MS = 30_000;
 
 /** Builds the pool lazily: no connection is opened until the first query. */
 export function createDb(url: string): PooledDb {
@@ -19,7 +20,7 @@ export function createDb(url: string): PooledDb {
     connectionString: url,
     max: POOL_MAX,
     connectionTimeoutMillis: CONNECT_TIMEOUT_MS,
-    statement_timeout: STATEMENT_TIMEOUT_MS,
+    query_timeout: QUERY_TIMEOUT_MS,
   });
   // An idle client can be dropped by the server or the pooler; without a listener that crashes the process.
   pool.on("error", (error) => console.error("postgres pool error:", error.message));
