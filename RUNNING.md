@@ -29,6 +29,7 @@ pnpm tsx --env-file=.env src/cli.ts migrate
 pnpm tsx --env-file=.env src/cli.ts seed
 pnpm dev                           # http://localhost:3001
 ```
+`pnpm dev` first rebuilds the admin page scripts (`pnpm build:js`) so the generated files match their sources. To edit a page script (`src/admin/<page>/client.ts`), run `pnpm dev:assets` in a second terminal (rebuilds on save; reload the browser), then commit the regenerated `src/admin/static/*-js.generated.ts`. `pnpm build:assets` rebuilds CSS and scripts; `pnpm lint` fails when a generated script is stale.
 After `pnpm build` the same commands exist as `node dist/cli.js <migrate|seed|hash-password|cleanup>`.
 
 ## URLs (port 3001)
