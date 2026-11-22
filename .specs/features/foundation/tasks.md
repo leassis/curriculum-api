@@ -112,12 +112,13 @@ T33 → T34 → T35
 **Requirement**: FND-01, FND-02
 
 **Done when**:
-- [ ] `pnpm install` writes `pnpm-lock.yaml`; installed `ai` major recorded in design Risks row
-- [ ] Setup gate passes; `dist/index.js`, `dist/index.d.ts`, `dist/cli.js` exist
+- [x] `pnpm install` writes `pnpm-lock.yaml`; installed `ai` major recorded in design Risks row
+- [x] Setup gate passes; `dist/index.js`, `dist/index.d.ts`, `dist/cli.js` exist
 
 **Tests**: none
 **Gate**: Setup
 **Commit**: `chore: scaffold package, tsconfig and tsup build`
+**Status**: done
 
 ---
 

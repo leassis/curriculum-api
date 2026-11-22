@@ -1,0 +1,67 @@
+{
+  "name": "curriculum-api",
+  "version": "0.0.0",
+  "description": "Hono backend for a personal curriculum site: public chat, recruiter chat and admin",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.5.2",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "curriculum-api": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "drizzle",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check . && tsx scripts/check-architecture.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "dev": "tsx --env-file=.env examples/node/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "vendor:htmx": "tsx scripts/vendor-htmx.ts"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "1.6.3",
+    "@neondatabase/serverless": "1.2.1",
+    "@openrouter/ai-sdk-provider": "3.1.0",
+    "ai": "7.0.179",
+    "bcryptjs": "3.0.3",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.19",
+    "jose": "6.2.18",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "@hono/node-server": "2.1.11",
+    "@types/node": "26.6.6",
+    "drizzle-kit": "0.31.11",
+    "htmx.org": "2.0.11",
+    "tsup": "9.0.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.1.1",
+    "yaml": "2.9.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
