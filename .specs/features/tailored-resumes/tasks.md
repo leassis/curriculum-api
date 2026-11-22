@@ -51,13 +51,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-05
 
 **Done when**:
-- [ ] Raw HTML is text, only allowlisted tags and http/https/mailto hrefs survive
-- [ ] Full gate passes
+- [x] Raw HTML is text, only allowlisted tags and http/https/mailto hrefs survive
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(resumes): add sanitized markdown renderer`
-**Status**: pending
+**Status**: done
 
 ---
 
