@@ -129,13 +129,13 @@ T2 → T4 → T5
 **Requirement**: REC-05..REC-08
 
 **Done when**:
-- [ ] Tests for this layer cover its checks
-- [ ] Full gate passes
+- [x] Tests for this layer cover its checks
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `test(recruiter): prove the flow on the real database`
-**Status**: pending
+**Status**: done
 
 ---
 
