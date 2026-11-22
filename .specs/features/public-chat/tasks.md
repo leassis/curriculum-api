@@ -171,10 +171,10 @@ Proof: run unit | ✓ public chat service > calls the llm with area public, the 
 Proof: run unit | ✓ public chat service > tells the model the cv is empty
 
 **C13** - LlmUnavailableError releases the use and answers 502 llm_unavailable (PUB-05 AC 7)
-Proof: run unit | ✓ public chat service > releases the use when the llm is unavailable
+Proof: run unit | ✓ public chat route > answers 502 llm_unavailable and releases the use
 
 **C14** - PiiLeakError releases the use and answers 500 internal_error (PUB-05 AC 8)
-Proof: run unit | ✓ public chat service > releases the use when the pii guard blocks the call
+Proof: run unit | ✓ public chat route > answers 500 internal_error and releases the use when the pii guard blocks
 
 **C15** - A Settings Override of the limit applies to the next request (PUB-03 AC 9)
 Proof: run unit | ✓ public chat service > applies a settings override of the limit to the next request
@@ -189,7 +189,7 @@ Proof: run unit | ✓ public chat service > answers not_found without touching t
 Proof: run unit | ✓ public chat route > answers 404 not_found when the profile is not seeded
 
 **C19** - The usage row stores the hashed IP, never the raw one (PUB-03 AC 10)
-Proof: run unit | ✓ public chat service > stores the ip hash and never the raw ip
+Proof: run unit | ✓ public chat route > stores only the hashed ip
 
 **C20** - The `public_usage` table has only the hash, day and used columns (PUB-03 AC 10)
 Proof: run int | ✓ public usage repository > stores the ip hash only

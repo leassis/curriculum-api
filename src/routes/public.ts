@@ -59,7 +59,7 @@ publicRouter.post("/chat", requireSession("public"), async (c) => {
     messages.length > maxHistory ||
     last?.role !== "user" ||
     last.content === "" ||
-    last.content.length > maxChars
+    [...last.content].length > maxChars
   ) {
     throw new ValidationError("Invalid request body");
   }

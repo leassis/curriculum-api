@@ -130,6 +130,7 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 ## Edge Cases
 
+- `maxQuestionChars` counts Unicode code points of the last message only; earlier history messages are not length-bounded (an assistant reply may exceed it), and the history size is capped by `maxHistoryMessages`.
 - IF the request body is not JSON THEN the app SHALL answer 400 `{ "error": "validation_error" }`.
 - IF the session cookie is valid but has scope `recruiter` THEN `POST /api/public/chat` SHALL answer 401 `{ "error": "unauthorized" }`.
 - WHEN the limit Settings Override is lowered below today's `used` for an IP THEN that IP's next request SHALL answer 429.

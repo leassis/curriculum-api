@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { hashIp } from "../../../src/security/ip";
 import { signSession, verifySession } from "../../../src/security/session";
 import { publicChatSetup } from "../../support/public-chat";
 import { createTestApp } from "../../support/test-app";
@@ -10,6 +11,15 @@ const post = (path: string, body: unknown, headers: Record<string, string> = {})
     headers: { "content-type": "application/json", ...headers },
     body: typeof body === "string" ? body : JSON.stringify(body),
   },
+});
+
+const servicesOf = (s: Awaited<ReturnType<typeof publicChatSetup>>) => ({
+  config: s.config,
+  profile: s.profile,
+  settings: s.settings,
+  personalInfo: s.personalInfo,
+  llm: s.llm,
+  publicChat: s.publicChat,
 });
 
 async function appWith(verify: boolean) {
@@ -159,6 +169,8 @@ describe("public chat route", () => {
     expect(setup.usage.acquires).toBe(0);
     const edge = await chat(app, cookie, { messages: [u("x".repeat(1000))] });
     expect(edge.status).toBe(200);
+    const emoji = await chat(app, cookie, { messages: [u("😀".repeat(1000))] });
+    expect(emoji.status).toBe(200);
   });
 
   it("answers 400 validation_error for a body that is not json", async () => {
@@ -205,5 +217,41 @@ describe("public chat route", () => {
     const profile = await app.request("/api/public/profile");
     expect(profile.status).toBe(404);
     expect((await profile.json()).error).toBe("not_found");
+  });
+
+  it("answers 502 llm_unavailable and releases the use", async () => {
+    const mock = { failBeforeFirstChunk: true };
+    const setup = await publicChatSetup({ mock });
+    const { app } = createTestApp({ services: servicesOf(setup) });
+    const res = await chat(app, await SESSION(setup), valid);
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe("llm_unavailable");
+    expect(setup.usage.usedBy(await hashIp("203.0.113.9", setup.config.ipHashSalt))).toBe(0);
+  });
+
+  it("answers 500 internal_error and releases the use when the pii guard blocks", async () => {
+    const setup = await publicChatSetup();
+    await setup.personalInfo.create({
+      key: "EMAIL",
+      label: "Email",
+      value: "ada@example.com",
+      visibility: "public",
+    });
+    const current = await setup.profile.get();
+    await setup.profile.update({ ...current, masterCv: "Mail ada@example.com" });
+    const { app } = createTestApp({ services: servicesOf(setup) });
+    const res = await chat(app, await SESSION(setup), valid);
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("internal_error");
+    expect(setup.usage.usedBy(await hashIp("203.0.113.9", setup.config.ipHashSalt))).toBe(0);
+  });
+
+  it("stores only the hashed ip", async () => {
+    const { app, setup } = await appWith(true);
+    await (await chat(app, await SESSION(setup), valid)).text();
+    const hash = await hashIp("203.0.113.9", setup.config.ipHashSalt);
+    expect([...setup.usage.rows.keys()]).toEqual([`${hash}|2026-01-01`]);
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify([...setup.usage.rows.keys()])).not.toContain("203.0.113.9");
   });
 });
