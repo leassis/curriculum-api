@@ -47,13 +47,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-02, ADM-08
 
 **Done when**:
-- [ ] Parallel failures sum exactly; windows and ip hashes are isolated
-- [ ] Full gate passes
+- [x] Parallel failures sum exactly; windows and ip hashes are isolated
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(admin): add login attempt repository`
-**Status**: pending
+**Status**: done
 
 ---
 
