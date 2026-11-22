@@ -55,7 +55,12 @@ export function redactPii(text: string, fields: PiiField[]): string {
     if (value.length < MIN_LENGTH) continue;
     if (kindOf(value) === "phone") {
       const digits = digitsOf(value);
-      out = out.replace(DIGIT_RUN, (run) => (digitsOf(run).includes(digits) ? "[redacted]" : run));
+      out = out.replace(DIGIT_RUN, (run) => {
+        if (!digitsOf(run).includes(digits)) return run;
+        const lead = run.match(/^\s*/)?.[0] ?? "";
+        const trail = run.match(/\s*$/)?.[0] ?? "";
+        return `${lead}[redacted]${trail}`;
+      });
     } else {
       out = out.replace(new RegExp(escapeRegExp(value), "gi"), "[redacted]");
     }

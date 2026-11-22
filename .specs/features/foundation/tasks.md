@@ -588,12 +588,13 @@ T33 → T34 → T35
 **Requirement**: FND-22, FND-23
 
 **Done when**:
-- [ ] Unit tests prove C56, C57, C58, C59, C60
-- [ ] Build gate passes (end of phase)
+- [x] Unit tests prove C56, C57, C58, C59, C60
+- [x] Build gate passes (end of phase)
 
 **Tests**: unit
 **Gate**: Build
 **Commit**: `feat(llm): add llm service gateway`
+**Status**: done
 
 ---
 
