@@ -2,11 +2,12 @@
  * Print stylesheet for the resume and Master CV print views. Typography and
  * page-break rules follow the reference layout of `curriculum-ai/styles/print.css`.
  * Plain system fonts and a single column keep the PDF text selectable and ATS friendly.
+ * Hyphenation is off so keywords are never split in the PDF text layer.
  */
 export function printCss(pageSize: "A4" | "Letter"): string {
   return `
 @page { size: ${pageSize}; margin: 16mm 18mm; }
-body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.35; color: #000; background: #fff; margin: 0 auto; max-width: 48rem; padding: 1rem; text-align: justify; hyphens: auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.35; color: #000; background: #fff; margin: 0 auto; max-width: 48rem; padding: 1rem; text-align: left; hyphens: manual; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 h1 { font-size: 22pt; font-weight: bold; line-height: 1.15; color: #2c3e50; text-align: center; margin: 0 0 5pt; }
 header { margin-bottom: 16pt; }
 ul.contact { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.25rem; font-size: 10pt; color: #555555; text-align: center; }
