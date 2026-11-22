@@ -56,13 +56,13 @@ Sequential: all three tasks edit the same stylesheet and page.
 **Requirement**: PDF-05..PDF-07
 
 **Done when**:
-- [ ] Tests for PDF-05..PDF-07 pass
-- [ ] Full gate passes
+- [x] Tests for PDF-05..PDF-07 pass
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(print): keep entries together across page breaks`
-**Status**: pending
+**Status**: done
 
 ---
 

@@ -13,10 +13,11 @@ async function withResume() {
   return { ...setup, id };
 }
 
-/** The declaration block of the first rule whose selector is exactly `selector`. */
+/** The declarations of every top-level rule whose selector is exactly `selector`, joined. */
 function rule(css: string, selector: string): string {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return css.match(new RegExp(`(?:^|\\n)${escaped} \\{([^}]*)\\}`))?.[1] ?? "";
+  const re = new RegExp(`(?:^|\\n)${escaped} \\{([^}]*)\\}`, "g");
+  return [...css.matchAll(re)].map((m) => m[1]).join(" ");
 }
 
 describe("admin print style", () => {
@@ -72,5 +73,29 @@ describe("admin print style", () => {
     for (const url of pages) {
       expect(await (await get(url)).text()).toContain("@page { size: Letter; margin: 16mm 18mm; }");
     }
+  });
+
+  it("keeps headings with the content after them", async () => {
+    const { css } = await printCss();
+    expect(rule(css, "h1, h2, h3, h4, h5, h6")).toContain("break-after: avoid");
+    const date = rule(css, "h3 + p");
+    expect(date).toContain("break-before: avoid");
+    expect(date).toContain("break-after: avoid");
+  });
+
+  it("never splits a block and keeps three lines at page edges", async () => {
+    const { css } = await printCss();
+    const blocks = rule(css, "p, li, ul, ol, table, tr, blockquote, pre, img");
+    expect(blocks).toContain("break-inside: avoid");
+    const paragraph = rule(css, "p");
+    expect(paragraph).toContain("orphans: 3");
+    expect(paragraph).toContain("widows: 3");
+  });
+
+  it("asks the browser to print colours exactly", async () => {
+    const { css } = await printCss();
+    const body = rule(css, "body");
+    expect(body).toContain("print-color-adjust: exact");
+    expect(body).toContain("-webkit-print-color-adjust: exact");
   });
 });
