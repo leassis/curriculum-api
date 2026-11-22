@@ -91,13 +91,13 @@ T2 → T4 → T5
 **Requirement**: REC-03..REC-08
 
 **Done when**:
-- [ ] Tests for this layer cover its checks
-- [ ] Full gate passes
+- [x] Tests for this layer cover its checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(recruiter): add recruiter link, session and chat routes`
-**Status**: pending
+**Status**: done
 
 ---
 
