@@ -199,13 +199,14 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Unit tests C3, C20, C21 pass
-- [ ] Walk: create a resume with instructions, edit them, Generate - recorded in `## Handoff`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C3, C20, C21 pass
+- [x] Walk: create a resume with instructions, edit them, Generate - recorded in `## Handoff`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(admin): edit custom instructions on resumes`
+**Status**: ✅ Complete
 
 ---
 
@@ -305,7 +306,7 @@ Proof: run int | ✓ resumes with database > generates with custom instructions 
 
 **Settled mid-build:** none
 **Dispatched:** batch worker T1-T7 (single batch, inline-equivalent), branch feat/resume-custom-instructions
-**Walked:** none
+**Walked:** NOT a browser walk (no browser available to this worker). Verified through rendered HTML and route tests on the test app (fake repo) plus one real-database route test: POST /admin/resumes with customInstructions stores it; GET /admin/resumes shows the optional "Custom instructions" textarea (name `customInstructions`) in New resume; GET /admin/resumes/:id shows the textarea (`id="custom-instructions"`, inside `#resume-form`) holding the stored value; PUT saves it and answers "Saved"; the Generate button carries `hx-include="#custom-instructions"` and POST generate saves the posted value and sends it to the recording mock model; after generate, a reload shows it. Reach the states: sign in at /admin, open Resumes, create, open the resume. Not verified in a real browser: htmx actually serialising the textarea on click, and layout.
 
 ---
 

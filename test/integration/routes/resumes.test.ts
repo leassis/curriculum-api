@@ -149,6 +149,8 @@ describe("resumes with database", () => {
     for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {
       expect(calls[0]?.prompt).not.toContain(secret);
     }
+    const reloaded = await (await send("GET", `/admin/resumes/${id}`)).text();
+    expect(reloaded).toContain("Write in Portuguese and keep it to one page</textarea>");
     const [row] = await db.select().from(tailoredResumes);
     expect(row?.customInstructions).toBe("Write in Portuguese and keep it to one page");
   });

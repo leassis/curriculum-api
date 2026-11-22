@@ -263,4 +263,46 @@ describe("admin resumes custom instructions", () => {
     expect(repo.rows[0]?.customInstructions).toBe("Write in Portuguese");
     expect(calls[1]?.prompt).toContain("Write in Portuguese");
   });
+
+  it("new resume form has an optional custom instructions textarea", async () => {
+    const { get } = await resumeApp();
+    const html = await (await get("/admin/resumes")).text();
+    const form = html.slice(html.indexOf("New resume"));
+    expect(form).toMatch(
+      /<label[^>]*for="customInstructions"[^>]*>\s*Custom instructions\s*<\/label>/,
+    );
+    const textarea = form.match(/<textarea[^>]*name="customInstructions"[^>]*>/)?.[0] ?? "";
+    expect(textarea).not.toBe("");
+    expect(textarea).toContain('id="customInstructions"');
+    expect(textarea).not.toContain("required");
+  });
+
+  it("editor shows the stored custom instructions", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create({
+      ...newResume,
+      customInstructions: "Lead with <b>platform</b> work",
+    });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    expect(html).toMatch(
+      /<label[^>]*for="custom-instructions"[^>]*>\s*Custom instructions\s*<\/label>/,
+    );
+    expect(html).toMatch(
+      /<textarea[^>]*id="custom-instructions"[^>]*name="customInstructions"[^>]*>Lead with &lt;b&gt;platform&lt;\/b&gt; work<\/textarea>/,
+    );
+    const form = html.slice(
+      html.indexOf('id="resume-form"'),
+      html.indexOf("</form>", html.indexOf('id="resume-form"')),
+    );
+    expect(form).toContain('id="custom-instructions"');
+  });
+
+  it("generate button includes the custom instructions textarea", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const button = html.match(/<button[^>]*hx-post="[^"]*\/generate"[^>]*>/)?.[0] ?? "";
+    expect(button).toContain('hx-include="#custom-instructions"');
+    expect(html.match(/id="custom-instructions"/g)).toHaveLength(1);
+  });
 });

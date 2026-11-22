@@ -11,6 +11,7 @@ export interface ResumeView {
   updatedAt: Date;
   jobDescription: string;
   content: string;
+  customInstructions: string;
   headerFields: string[] | null;
 }
 
@@ -100,6 +101,12 @@ export const ResumesPage = ({ basePath, resumes }: { basePath: string; resumes: 
         </label>
         <textarea class="input" id="jobDescription" name="jobDescription" rows={12} required />
       </div>
+      <div class="field">
+        <label class="field-label" for="customInstructions">
+          Custom instructions
+        </label>
+        <textarea class="input" id="customInstructions" name="customInstructions" rows={4} />
+      </div>
       <div class="actions">
         <button type="submit" class="btn">
           Create
@@ -149,6 +156,14 @@ export const Editor = ({
                 {resume.content}
               </textarea>
             </div>
+            <div class="field">
+              <label class="field-label" for="custom-instructions">
+                Custom instructions
+              </label>
+              <textarea class="input" id="custom-instructions" name="customInstructions" rows={4}>
+                {resume.customInstructions}
+              </textarea>
+            </div>
             <fieldset class="checks">
               <legend>Personal header</legend>
               {options.map((o) => (
@@ -172,6 +187,7 @@ export const Editor = ({
                 hx-swap="outerHTML"
                 hx-indicator="#generate-indicator"
                 hx-disabled-elt="this"
+                hx-include="#custom-instructions"
                 hx-confirm={
                   resume.content.trim() === "" ? undefined : "Replace the current content?"
                 }
