@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type CliIo, runCli } from "../../src/cli";
+import { type CliIo, hostOf, runCli } from "../../src/cli";
 import { migrate } from "../../src/db/migrate";
 
 vi.mock("../../src/db/migrate", () => ({ migrate: vi.fn(async () => {}) }));
@@ -61,5 +61,12 @@ describe("cli", () => {
       expect(err).toEqual(["DATABASE_URL is required"]);
       expect(migrate).not.toHaveBeenCalled();
     });
+  });
+
+  it("hostOf shows host and database but never credentials", () => {
+    expect(hostOf("postgres://user:secret@ep-x-pooler.neon.tech/prod?sslmode=require")).toBe(
+      "ep-x-pooler.neon.tech/prod",
+    );
+    expect(hostOf("not a url")).toBe("(unparseable url)");
   });
 });
