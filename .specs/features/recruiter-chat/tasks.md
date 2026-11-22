@@ -110,13 +110,13 @@ T2 → T4 → T5
 **Requirement**: REC-01, REC-02
 
 **Done when**:
-- [ ] Tests for this layer cover its checks
-- [ ] Full gate passes
+- [x] Tests for this layer cover its checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(recruiter): add admin chat management`
-**Status**: pending
+**Status**: done
 
 ---
 
