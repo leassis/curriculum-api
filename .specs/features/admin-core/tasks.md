@@ -161,13 +161,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-08
 
 **Done when**:
-- [ ] Integration test shows 2 / 3 / 4 and zeros
-- [ ] Full gate passes
+- [x] Integration test shows 2 / 3 / 4 and zeros
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(admin): add dashboard page`
-**Status**: pending
+**Status**: done
 
 ---
 
