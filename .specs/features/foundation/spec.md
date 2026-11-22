@@ -1,6 +1,7 @@
 # Foundation Specification
 
 **Approved**: 2026-11-22 - user: "approve foundation, write the design and tasks"
+**Verified**: 2026-11-22 - independent verifier, `verification.md` PASS (80 proofs green, gate exit 0)
 
 ## Problem Statement
 
