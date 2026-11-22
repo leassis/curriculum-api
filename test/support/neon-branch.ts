@@ -44,6 +44,13 @@ export async function startTestBranch(deps: TestBranchDeps): Promise<TestBranch>
   const parentId =
     deps.env.TEST_PARENT_BRANCH_ID || required("PARENT_BRANCH_ID", deps.env.PARENT_BRANCH_ID);
 
+  // Messages may quote a connection string or the key (a driver error, a Neon message).
+  const scrub = (text: string): string =>
+    text
+      .split(apiKey)
+      .join("[redacted]")
+      .replace(/postgres(?:ql)?:\/\/\S+/gi, "[redacted]");
+
   async function neon<T>(method: string, path: string, body?: unknown): Promise<T> {
     const res = await deps.fetch(`${API}${path}`, {
       method,
@@ -59,7 +66,7 @@ export async function startTestBranch(deps: TestBranchDeps): Promise<TestBranch>
         .json()
         .then((e: { message?: unknown }) => (typeof e.message === "string" ? `: ${e.message}` : ""))
         .catch(() => "");
-      throw new Error(`Neon API ${method} ${path} returned ${res.status}${detail}`);
+      throw new Error(scrub(`Neon API ${method} ${path} returned ${res.status}${detail}`));
     }
     return (await res.json()) as T;
   }
@@ -97,8 +104,9 @@ export async function startTestBranch(deps: TestBranchDeps): Promise<TestBranch>
   const stop = async (): Promise<void> => {
     try {
       await deleteBranch(branchId);
-    } catch {
-      deps.log(`could not delete test branch ${branchId}`);
+    } catch (err) {
+      const reason = err instanceof Error ? `: ${scrub(err.message)}` : "";
+      deps.log(`could not delete test branch ${branchId}${reason}`);
     }
   };
 
@@ -110,6 +118,7 @@ export async function startTestBranch(deps: TestBranchDeps): Promise<TestBranch>
     return { url, branchId, stop };
   } catch (err) {
     await stop();
-    throw err;
+    // Rethrow a copy: the original may carry the connection string in its message or cause.
+    throw new Error(scrub(err instanceof Error ? err.message : String(err)));
   }
 }

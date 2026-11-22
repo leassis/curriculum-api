@@ -16,6 +16,7 @@ interface Call {
 interface FakeOptions {
   createStatus?: number;
   deleteStatus?: number;
+  pollStatus?: number;
   pollsBeforeFinished?: number;
 }
 
@@ -46,6 +47,7 @@ function fakeNeon(options: FakeOptions = {}) {
       });
     }
     if (method === "GET" && path.includes("/operations/")) {
+      if (options.pollStatus) return reply(options.pollStatus, { message: "upstream down" });
       polls += 1;
       const done = polls > (options.pollsBeforeFinished ?? 0);
       return reply(200, { operation: { id: "op-1", status: done ? "finished" : "running" } });
@@ -77,6 +79,11 @@ function setup(env: Record<string, string | undefined> = {}, options: FakeOption
     fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
       const res = await neon.fetch(input, init);
       order.push(`${init?.method ?? "GET"} ${String(input).slice(API.length)}`);
+      if (init?.method === "DELETE") {
+        // The delete only counts as finished once this later tick passes.
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        order.push("DELETE finished");
+      }
       return res;
     }) as typeof fetch,
     migrate: async (url: string) => {
@@ -98,6 +105,15 @@ function setup(env: Record<string, string | undefined> = {}, options: FakeOption
       migrateError = e;
     },
   };
+}
+
+// Marks the moment startTestBranch rejected, then proves the delete had already finished.
+function expectDeleteFinishedFirst(t: { order: string[] }, outcome: unknown) {
+  t.order.push("rejected");
+  expect(outcome).toBeInstanceOf(Error);
+  const finished = t.order.indexOf("DELETE finished");
+  expect(finished, "delete finished before the run failed").toBeGreaterThanOrEqual(0);
+  expect(finished).toBeLessThan(t.order.indexOf("rejected"));
 }
 
 describe("startTestBranch", () => {
@@ -152,7 +168,7 @@ describe("startTestBranch", () => {
   it("reports a failed Neon call with method, path, status and message", async () => {
     const t = setup({}, { createStatus: 422 });
     await expect(startTestBranch(t.deps)).rejects.toThrow(
-      "Neon API POST /projects/proj-1/branches returned 422: branch limit reached",
+      new Error("Neon API POST /projects/proj-1/branches returned 422: branch limit reached"),
     );
     expect(t.migrated).toEqual([]);
   });
@@ -166,15 +182,24 @@ describe("startTestBranch", () => {
     const err = await startTestBranch(failing.deps).catch((e: Error) => e);
 
     const migrateFails = setup();
-    migrateFails.failMigrate(new Error("boom"));
-    await startTestBranch(migrateFails.deps).catch(() => {});
+    migrateFails.failMigrate(new Error(`connect failed ${URI} using ${KEY}`));
+    const migrateErr = await startTestBranch(migrateFails.deps).catch((e: Error) => e);
+    expect(migrateErr).toBeInstanceOf(Error);
 
-    const text = [...t.logs, ...failing.logs, ...migrateFails.logs, (err as Error).message].join(
-      "\n",
-    );
+    const text = [
+      ...t.logs,
+      ...failing.logs,
+      ...migrateFails.logs,
+      (err as Error).message,
+      (migrateErr as Error).message,
+      String((migrateErr as Error).cause ?? ""),
+      (migrateErr as Error).stack ?? "",
+    ].join("\n");
     expect(text).not.toContain(KEY);
     expect(text).not.toContain("s3cret");
     expect(text).not.toContain("ep-test-123");
+    expect(text).not.toContain(URI);
+    expect((migrateErr as Error).message).toContain("connect failed");
   });
 
   it("deletes the branch on stop", async () => {
@@ -195,10 +220,29 @@ describe("startTestBranch", () => {
     expect(t.logs.join("\n")).toContain("could not delete test branch br-new");
   });
 
+  it("reports a failed poll with method, path, status and message", async () => {
+    const t = setup({}, { pollStatus: 502 });
+    await expect(startTestBranch(t.deps)).rejects.toThrow(
+      new Error("Neon API GET /projects/proj-1/operations/op-1 returned 502: upstream down"),
+    );
+    expect(t.migrated).toEqual([]);
+  });
+
+  it("reports a failed delete with method, path, status and message, without secrets", async () => {
+    const t = setup({}, { deleteStatus: 403 });
+    const branch = await startTestBranch(t.deps);
+    await branch.stop();
+    expect(t.logs).toEqual([
+      "could not delete test branch br-new: Neon API DELETE /projects/proj-1/branches/br-new returned 403: denied [redacted] [redacted]",
+    ]);
+  });
+
   it("deletes the branch when migration fails", async () => {
     const t = setup();
     t.failMigrate(new Error("migration exploded"));
-    await expect(startTestBranch(t.deps)).rejects.toThrow("migration exploded");
+    const outcome = await startTestBranch(t.deps).catch((e: Error) => e);
+    expectDeleteFinishedFirst(t, outcome);
+    expect((outcome as Error).message).toBe("migration exploded");
     expect(t.calls.at(-1)).toMatchObject({
       method: "DELETE",
       path: "/projects/proj-1/branches/br-new",
