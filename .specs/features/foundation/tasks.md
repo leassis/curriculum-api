@@ -531,12 +531,13 @@ T33 → T34 → T35
 **Requirement**: FND-21
 
 **Done when**:
-- [ ] Unit tests prove C51, C52, C53; integration test proves C50
-- [ ] Build gate passes (end of phase)
+- [x] Unit tests prove C51, C52, C53; integration test proves C50
+- [x] Build gate passes (end of phase)
 
 **Tests**: integration
 **Gate**: Build
 **Commit**: `feat(service): add personal info service`
+**Status**: done
 
 ---
 
