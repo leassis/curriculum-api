@@ -3,6 +3,14 @@
   "version": "0.0.0",
   "description": "Hono backend for a personal curriculum site: public chat, recruiter chat and admin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leassis/curriculum-api.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -11,7 +19,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "curriculum-api": "./dist/cli.js"
+    "curriculum-api": "dist/cli.js"
   },
   "exports": {
     ".": {
@@ -23,7 +31,8 @@
     "dist",
     "drizzle",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!dist/.claude-repo.tgz"
   ],
   "scripts": {
     "build": "tsup",
