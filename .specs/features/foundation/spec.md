@@ -246,34 +246,34 @@ The repository is empty. Four feature tracks (`public-chat`, `admin-core`, `recr
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| FND-01 | P1: Folder structure and tooling (AC 1-2) | Design | Pending |
-| FND-02 | P1: Folder structure and tooling (AC 3-4, 7-8) | Design | Pending |
-| FND-03 | P1: Folder structure and tooling (AC 5-6 layering/portability lint) | Design | Pending |
-| FND-04 | P1: Drizzle config and schema (AC 1-2, 10) | Design | Pending |
-| FND-05 | P1: Drizzle config and schema (AC 3-5 migrate) | Design | Pending |
-| FND-06 | P1: Drizzle config and schema (AC 6-9 constraints) | Design | Pending |
-| FND-07 | P1: Drizzle config and schema (AC 11-12 seed) | Design | Pending |
-| FND-08 | P1: Drizzle config and schema (AC 13 local proxy) | Design | Pending |
-| FND-09 | P1: Config, app factory (AC 1-4) | Design | Pending |
-| FND-10 | P1: Config, app factory (AC 5-6 health, basePath) | Design | Pending |
-| FND-11 | P1: Config, app factory (AC 7-8 error mapping) | Design | Pending |
-| FND-12 | P1: Config, app factory (AC 9 OpenAPI) | Design | Pending |
-| FND-13 | P1: Config, app factory (AC 10-11 mount points, container) | Design | Pending |
-| FND-14 | P1: Security primitives (AC 1-4, 11 sessions, cookies, requireSession) | Design | Pending |
-| FND-15 | P1: Security primitives (AC 5-6 IP) | Design | Pending |
-| FND-16 | P1: Security primitives (AC 7 Turnstile) | Design | Pending |
-| FND-17 | P1: Security primitives (AC 8-9 crypto) | Design | Pending |
-| FND-18 | P1: Security primitives (AC 10 headers) | Design | Pending |
-| FND-19 | P1: Shared services (AC 1-2 profile) | Design | Pending |
-| FND-20 | P1: Shared services (AC 3-6 settings) | Design | Pending |
-| FND-21 | P1: Shared services (AC 7-10 personal info) | Design | Pending |
-| FND-22 | P1: LLM gateway and PII Guard (AC 1-4) | Design | Pending |
-| FND-23 | P1: LLM gateway and PII Guard (AC 5-9) | Design | Pending |
-| FND-24 | P1: Admin shell (AC 1-2, 7) | Design | Pending |
-| FND-25 | P1: Admin shell (AC 3-6 guard, CSRF, errors) | Design | Pending |
-| FND-26 | P2: CLI and local runner | Design | Pending |
+| FND-01 | P1: Folder structure and tooling (AC 1-2) | Design | Implemented |
+| FND-02 | P1: Folder structure and tooling (AC 3-4, 7-8) | Design | Implemented |
+| FND-03 | P1: Folder structure and tooling (AC 5-6 layering/portability lint) | Design | Implemented |
+| FND-04 | P1: Drizzle config and schema (AC 1-2, 10) | Design | Implemented |
+| FND-05 | P1: Drizzle config and schema (AC 3-5 migrate) | Design | Implemented |
+| FND-06 | P1: Drizzle config and schema (AC 6-9 constraints) | Design | Implemented |
+| FND-07 | P1: Drizzle config and schema (AC 11-12 seed) | Design | Implemented |
+| FND-08 | P1: Drizzle config and schema (AC 13 local proxy) | Design | Implemented |
+| FND-09 | P1: Config, app factory (AC 1-4) | Design | Implemented |
+| FND-10 | P1: Config, app factory (AC 5-6 health, basePath) | Design | Implemented |
+| FND-11 | P1: Config, app factory (AC 7-8 error mapping) | Design | Implemented |
+| FND-12 | P1: Config, app factory (AC 9 OpenAPI) | Design | Implemented |
+| FND-13 | P1: Config, app factory (AC 10-11 mount points, container) | Design | Implemented |
+| FND-14 | P1: Security primitives (AC 1-4, 11 sessions, cookies, requireSession) | Design | Implemented |
+| FND-15 | P1: Security primitives (AC 5-6 IP) | Design | Implemented |
+| FND-16 | P1: Security primitives (AC 7 Turnstile) | Design | Implemented |
+| FND-17 | P1: Security primitives (AC 8-9 crypto) | Design | Implemented |
+| FND-18 | P1: Security primitives (AC 10 headers) | Design | Implemented |
+| FND-19 | P1: Shared services (AC 1-2 profile) | Design | Implemented |
+| FND-20 | P1: Shared services (AC 3-6 settings) | Design | Implemented |
+| FND-21 | P1: Shared services (AC 7-10 personal info) | Design | Implemented |
+| FND-22 | P1: LLM gateway and PII Guard (AC 1-4) | Design | Implemented |
+| FND-23 | P1: LLM gateway and PII Guard (AC 5-9) | Design | Implemented |
+| FND-24 | P1: Admin shell (AC 1-2, 7) | Design | Implemented |
+| FND-25 | P1: Admin shell (AC 3-6 guard, CSRF, errors) | Design | Implemented |
+| FND-26 | P2: CLI and local runner | Design | Implemented |
 
-**Coverage:** 26 total, 0 mapped to tasks, 26 unmapped ⚠️ (tasks not written yet)
+**Coverage:** 26 total, 26 implemented by T1-T35; independent verification pending
 
 ---
 

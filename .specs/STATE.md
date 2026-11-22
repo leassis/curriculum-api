@@ -35,3 +35,9 @@
 - **Status**: active
 
 ## Handoff
+
+- **Feature**: `foundation`, Execute phase: T1-T35 done, one commit each on `main` (local, nothing pushed).
+- **Gate at HEAD**: `pnpm build && pnpm typecheck && pnpm lint && pnpm test` green; `check_proofs.py foundation` 80 pass, 0 fail (`proofs.md`).
+- **Next**: dispatch the Verifier (validate.md) over HEAD, fix findings in one pass, rerun `check_proofs.py`, then `validate_verification.py foundation`. No captures cited, so no screens sub-agent.
+- **Notes**: `ai` major 7 (`MockLanguageModelV4`); `typescript` pinned 6.0.3 because tsup dts breaks on TypeScript 7; vitest output is rewritten by the RTK hook, use `rtk proxy pnpm vitest ... --reporter=verbose` for raw lines.
+- **Blockers**: none.
