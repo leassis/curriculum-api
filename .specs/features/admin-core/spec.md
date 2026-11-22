@@ -1,6 +1,6 @@
 # Admin Core Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/admin/login.tsx`, `src/admin/dashboard.tsx`, `src/admin/profile.tsx`, `src/admin/settings.tsx`, `src/admin/personal-info.tsx`, `src/security/admin-auth.ts`, `src/repositories/admin-login-attempt.repository.ts`, their tests.
 
@@ -10,9 +10,9 @@ The Owner needs to sign in and manage the Profile (name, headline, Master CV, pr
 
 ## Goals
 
-- [ ] The Owner edits CV, prompts, settings and personal info only through the admin.
-- [ ] A Master CV containing the Owner's email is rejected on save.
-- [ ] A 6th wrong password within 15 minutes is refused even when correct.
+- [x] The Owner edits CV, prompts, settings and personal info only through the admin.
+- [x] A Master CV containing the Owner's email is rejected on save.
+- [x] A 6th wrong password within 15 minutes is refused even when correct.
 
 ## Out of Scope
 
@@ -147,16 +147,16 @@ The Owner needs to sign in and manage the Profile (name, headline, Master CV, pr
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| ADM-01 | P1: Sign in and out (AC 1-3, 5) | Design | Pending |
-| ADM-02 | P1: Sign in and out (AC 4, 6 throttle) | Design | Pending |
-| ADM-03 | P1: Edit the Profile (AC 1-3, 5) | Design | Pending |
-| ADM-04 | P1: Edit the Profile (AC 4 PII Guard on save) | Design | Pending |
-| ADM-05 | P1: Manage Personal Info Fields (AC 1-4, 9) | Design | Pending |
-| ADM-06 | P1: Manage Personal Info Fields (AC 5-8) | Design | Pending |
-| ADM-07 | P1: Settings Overrides | Design | Pending |
-| ADM-08 | P2: Dashboard | Design | Pending |
+| ADM-01 | P1: Sign in and out (AC 1-3, 5) | Design | Verified |
+| ADM-02 | P1: Sign in and out (AC 4, 6 throttle) | Design | Verified |
+| ADM-03 | P1: Edit the Profile (AC 1-3, 5) | Design | Verified |
+| ADM-04 | P1: Edit the Profile (AC 4 PII Guard on save) | Design | Verified |
+| ADM-05 | P1: Manage Personal Info Fields (AC 1-4, 9) | Design | Verified |
+| ADM-06 | P1: Manage Personal Info Fields (AC 5-8) | Design | Verified |
+| ADM-07 | P1: Settings Overrides | Design | Verified |
+| ADM-08 | P2: Dashboard | Design | Verified |
 
-**Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️ (tasks not written yet)
+**Coverage:** 8 total, 8 mapped to tasks T1-T7 (see tasks.md)
 
 ---
 
@@ -171,4 +171,4 @@ The Owner needs to sign in and manage the Profile (name, headline, Master CV, pr
 
 ## Success Criteria
 
-- [ ] Every Phase 2 "done when" item of the roadmap holds.
+- [x] Every Phase 2 "done when" item of the roadmap holds.
