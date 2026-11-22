@@ -127,10 +127,10 @@ T5 → T6 → T7
 
 **Done when**:
 
-- [ ] `test/unit/support/global-setup.test.ts`: setup provides the branch URL; the returned teardown calls `stop`
-- [ ] `test/integration/db/isolation.test.ts`: the injected URL host ends in `.neon.tech` and differs from `DATABASE_URL`'s host; `current_database()` answers on it
-- [ ] `test/unit/repo-layout.test.ts`: no file under `test/` reads `process.env.DATABASE_URL` or `TEST_DATABASE_URL`
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int` (all existing integration files green on the branch)
+- [x] `test/unit/support/global-setup.test.ts`: setup provides the branch URL; the returned teardown calls `stop`
+- [x] `test/integration/db/isolation.test.ts`: the injected URL host ends in `.neon.tech` and differs from `DATABASE_URL`'s host; `current_database()` answers on it
+- [x] `test/unit/repo-layout.test.ts`: no file under `test/` reads `process.env.DATABASE_URL` or `TEST_DATABASE_URL`
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int` (all existing integration files green on the branch)
 
 **Tests**: integration
 **Gate**: full
@@ -264,8 +264,8 @@ Proof: run unit | ✓ repo layout > docs describe Neon, not the old Postgres sta
 
 ## Handoff
 
-**Settled mid-build:** none
-**Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker (one sub-agent per task, run in order)
+**Settled mid-build:** 2026-11-22 - user: "use .env.local for now.. is there a way?" -> T4 `globalSetup` loads `.env.local` as well as `.env` (neither overrides a variable already set; `.env` first, so it wins). Neon variables currently live in `.env.local`.
+**Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker returned (48aaf94); T4 worker (one sub-agent per task, run in order)
 **Walked:** none
 
 ---

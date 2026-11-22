@@ -186,4 +186,17 @@ describe("repo layout", () => {
     expect(journal.entries).toHaveLength(3);
     expect(JSON.parse(read("package.json")).files).toContain("drizzle");
   });
+
+  it("keeps test files off DATABASE_URL and TEST_DATABASE_URL", () => {
+    // isolation.test.ts must read DATABASE_URL to prove the run's branch is a different host.
+    const allowed = "test/integration/db/isolation.test.ts";
+    const self = "test/unit/repo-layout.test.ts";
+    const files = (readdirSync(join(root, "test"), { recursive: true }) as string[])
+      .map((f) => `test/${f}`)
+      .filter((f) => /\.tsx?$/.test(f) && f !== allowed && f !== self);
+    const offenders = files.filter((f) =>
+      /process\.env(\.|\[["'])(TEST_)?DATABASE_URL/.test(read(f)),
+    );
+    expect(offenders).toEqual([]);
+  });
 });

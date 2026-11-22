@@ -1,9 +1,10 @@
 import { sql } from "drizzle-orm";
+import { inject } from "vitest";
 import { createDb, type Db } from "../../src/db/client";
 
+/** The run's throwaway Neon branch (integration only); unit tests never query. */
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://postgres:postgres@db.localtest.me:5432/curriculum_test";
+  inject("testDatabaseUrl") ?? "postgres://unused@unused.invalid/unused";
 
 export function testDb(): Db {
   return createDb(TEST_DATABASE_URL);
