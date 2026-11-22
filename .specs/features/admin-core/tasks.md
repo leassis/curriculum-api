@@ -123,13 +123,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-07
 
 **Done when**:
-- [ ] Unit tests cover AC 1-3; integration proves the next public LLM call uses the new model
-- [ ] Full gate passes
+- [x] Unit tests cover AC 1-3; integration proves the next public LLM call uses the new model
+- [x] Full gate passes
 
 **Tests**: unit, integration
 **Gate**: Full
 **Commit**: `feat(admin): add settings page`
-**Status**: pending
+**Status**: done
 
 ---
 
