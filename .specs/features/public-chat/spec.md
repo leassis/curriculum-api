@@ -1,6 +1,6 @@
 # Public Chat Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/routes/public.ts`, `src/services/public-chat.service.ts`, `src/repositories/public-usage.repository.ts`, their tests. `requireSession` comes from `foundation` (FND-14).
 
@@ -29,11 +29,11 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
-| Day boundary for the per-IP limit | Database `current_date` in UTC | One clock (the DB) for the atomic statement | n |
-| Profile not seeded | `GET /api/public/profile` and `POST /api/public/chat` answer 404 `{ "error": "not_found" }` | `profileService.get()` throws `NotFoundError` (foundation) | n |
-| Session cookie reuse | A valid `public` session is reused for its whole TTL; the per-IP limit is the quota, not the session | 01-curriculum-api.md §6 | n |
-| Message roles accepted | `user` and `assistant` only; any other role → 400 | A client-sent `system` role would be prompt injection | n |
-| Empty Master CV | Chat still runs; the prompt tells the model the CV is empty | Owner may test before filling the CV | n |
+| Day boundary for the per-IP limit | Database `current_date` in UTC | One clock (the DB) for the atomic statement | y (default, orchestrator) |
+| Profile not seeded | `GET /api/public/profile` and `POST /api/public/chat` answer 404 `{ "error": "not_found" }` | `profileService.get()` throws `NotFoundError` (foundation) | y (default, orchestrator) |
+| Session cookie reuse | A valid `public` session is reused for its whole TTL; the per-IP limit is the quota, not the session | 01-curriculum-api.md §6 | y (default, orchestrator) |
+| Message roles accepted | `user` and `assistant` only; any other role → 400 | A client-sent `system` role would be prompt injection | y (default, orchestrator) |
+| Empty Master CV | Chat still runs; the prompt tells the model the CV is empty | Owner may test before filling the CV | y (default, orchestrator) |
 
 **Open questions:** none - all resolved or logged above.
 
@@ -128,8 +128,17 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 ---
 
+### P1: History size is bounded (added by Verifier) ⭐ MVP
+
+**Acceptance Criteria**:
+
+1. IF the total code points of all request messages exceed `maxQuestionChars * maxHistoryMessages` THEN the app SHALL answer 400 `{ "error": "validation_error" }` and SHALL not touch the usage counter.
+
+---
+
 ## Edge Cases
 
+- `maxQuestionChars` counts Unicode code points of the last message only; earlier history messages are not bounded one by one (an assistant reply may exceed it) but the total is bounded by PUB-09, and the history size is capped by `maxHistoryMessages`.
 - IF the request body is not JSON THEN the app SHALL answer 400 `{ "error": "validation_error" }`.
 - IF the session cookie is valid but has scope `recruiter` THEN `POST /api/public/chat` SHALL answer 401 `{ "error": "unauthorized" }`.
 - WHEN the limit Settings Override is lowered below today's `used` for an IP THEN that IP's next request SHALL answer 429.
@@ -148,6 +157,7 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 | PUB-06 | P1: Limit holds under concurrency | Design | Pending |
 | PUB-07 | P1: Public profile and contact | Design | Pending |
 | PUB-08 | P1: No personal data reaches the model | Design | Pending |
+| PUB-09 | P1: History size is bounded | Verify | Pending |
 
 **Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️ (tasks not written yet)
 
