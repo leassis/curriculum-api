@@ -137,13 +137,14 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Unit tests C1, C4, C5, C6, C7, C8 (service rows) pass
-- [ ] Every existing `resume service` test passes unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C1, C4, C5, C6, C7, C8 (service rows) pass
+- [x] Every existing `resume service` test passes unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(resumes): validate and save custom instructions`
+**Status**: ✅ Complete
 
 ---
 

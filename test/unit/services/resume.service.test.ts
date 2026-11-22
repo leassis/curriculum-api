@@ -174,3 +174,87 @@ describe("resume service pii", () => {
     }
   });
 });
+
+describe("resume service custom instructions", () => {
+  it("stores the trimmed custom instructions on create and empty when absent", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const withText = await resumes.create({ ...draft, customInstructions: "  One page  \n" });
+    expect(withText.customInstructions).toBe("One page");
+    expect(repo.rows[0]?.customInstructions).toBe("One page");
+    const without = await resumes.create(draft);
+    expect(without.customInstructions).toBe("");
+  });
+
+  it("saves the trimmed custom instructions with content and header fields", async () => {
+    const { resumes, repo, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com");
+    const { id } = await resumes.create(draft);
+    const saved = await resumes.save(id, "# Body", ["EMAIL"], "  Lead with platform work ");
+    expect(saved).toMatchObject({
+      content: "# Body",
+      headerFields: null,
+      customInstructions: "Lead with platform work",
+    });
+    expect(repo.rows[0]?.customInstructions).toBe("Lead with platform work");
+  });
+
+  it("stores whitespace-only custom instructions as empty", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const created = await resumes.create({ ...draft, customInstructions: " \n\t " });
+    expect(created.customInstructions).toBe("");
+    await resumes.save(created.id, "body", [], "keep");
+    expect(repo.rows[0]?.customInstructions).toBe("keep");
+    await resumes.save(created.id, "body", [], "   ");
+    expect(repo.rows[0]?.customInstructions).toBe("");
+  });
+
+  it("accepts 2000 characters and rejects 2001 on create, save and generate without changes", async () => {
+    const { resumes, repo, calls } = await resumeSetup();
+    const message = "Custom instructions must be at most 2000 characters";
+    const max = "a".repeat(2000);
+    const tooLong = "a".repeat(2001);
+    const created = await resumes.create({ ...draft, customInstructions: ` ${max} ` });
+    expect(created.customInstructions).toBe(max);
+    const { id } = created;
+    await expect(resumes.save(id, "x", [], max)).resolves.toMatchObject({
+      customInstructions: max,
+    });
+
+    await expect(resumes.create({ ...draft, customInstructions: tooLong })).rejects.toMatchObject({
+      status: 400,
+      message,
+    });
+    expect(repo.rows).toHaveLength(1);
+
+    await resumes.save(id, "before", [], "kept");
+    await expect(resumes.save(id, "after", [], tooLong)).rejects.toMatchObject({
+      status: 400,
+      message,
+    });
+    await expect(resumes.generate(id, tooLong)).rejects.toMatchObject({ status: 400, message });
+    expect(repo.rows[0]).toMatchObject({ content: "before", customInstructions: "kept" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("rejects a personal info value on create, save and generate without calling the llm", async () => {
+    const { resumes, repo, calls, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com");
+    const message = "Your Email is in the custom instructions — keep contact data in Personal info";
+    const leak = "Reach me at ada@example.com";
+    await expect(resumes.create({ ...draft, customInstructions: leak })).rejects.toMatchObject({
+      status: 400,
+      message,
+    });
+    expect(repo.rows).toHaveLength(0);
+
+    const { id } = await resumes.create({ ...draft, customInstructions: "kept" });
+    await resumes.save(id, "before", [], "kept");
+    await expect(resumes.save(id, "after", [], leak)).rejects.toMatchObject({
+      status: 400,
+      message,
+    });
+    await expect(resumes.generate(id, leak)).rejects.toMatchObject({ status: 400, message });
+    expect(repo.rows[0]).toMatchObject({ content: "before", customInstructions: "kept" });
+    expect(calls).toHaveLength(0);
+  });
+});

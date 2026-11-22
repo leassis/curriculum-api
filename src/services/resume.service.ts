@@ -1,6 +1,6 @@
 import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock } from "../llm/data-block.js";
-import { findPii } from "../llm/pii-guard.js";
+import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
 import { NotFoundError, ValidationError } from "./errors.js";
 import type { LlmService } from "./llm.service.js";
@@ -16,6 +16,7 @@ import type { PageSize } from "./settings-keys.js";
 export type Resume = ResumeRow;
 
 export const TAILOR_MAX_OUTPUT_TOKENS = 4000;
+export const CUSTOM_INSTRUCTIONS_MAX = 2000;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,6 +24,7 @@ export interface ResumeInput {
   title: string;
   company?: string;
   jobDescription: string;
+  customInstructions?: string;
 }
 
 /** Everything a Print View needs, already resolved and sanitized. */
@@ -82,7 +84,11 @@ export class ResumeService {
     const title = required("title", "Title", input.title);
     const jobDescription = required("jobDescription", "Job Description", input.jobDescription);
     const company = input.company?.trim() || null;
-    return this.resumes.insert({ title, company, jobDescription, customInstructions: "" });
+    const customInstructions = this.checkInstructions(
+      input.customInstructions ?? "",
+      await this.personalInfo.allValues(),
+    );
+    return this.resumes.insert({ title, company, jobDescription, customInstructions });
   }
 
   async delete(id: string): Promise<void> {
@@ -96,11 +102,18 @@ export class ResumeService {
   }
 
   /** Tailors the Master CV to the Job Description. The model sees only those two texts. */
-  async generate(id: string): Promise<Resume> {
-    const resume = await this.get(id);
+  async generate(id: string, customInstructions?: string): Promise<Resume> {
+    let resume = await this.get(id);
+    const instructions =
+      customInstructions === undefined
+        ? undefined
+        : this.checkInstructions(customInstructions, await this.personalInfo.allValues());
     const profile = await this.loadProfile();
     if (!profile || profile.masterCv.trim() === "") {
       throw new ValidationError("Fill the master CV first");
+    }
+    if (instructions !== undefined) {
+      resume = await this.update(id, { customInstructions: instructions });
     }
     const { text, model } = await this.llm.generate({
       area: "tailor",
@@ -113,9 +126,18 @@ export class ResumeService {
   }
 
   /** Saves the markdown and the selected header keys after the PII Guard. */
-  async save(id: string, content: string, headerKeys: string[]): Promise<Resume> {
+  async save(
+    id: string,
+    content: string,
+    headerKeys: string[],
+    customInstructions?: string,
+  ): Promise<Resume> {
     await this.get(id);
     const fields = await this.personalInfo.allValues();
+    const instructions =
+      customInstructions === undefined
+        ? undefined
+        : this.checkInstructions(customInstructions, fields);
     const found = findPii(content, fields)[0];
     if (found) {
       throw new ValidationError(
@@ -125,7 +147,11 @@ export class ResumeService {
     const existing = fields.map((f) => f.key);
     const kept = [...new Set(headerKeys)].filter((k) => existing.includes(k));
     const all = existing.every((k) => kept.includes(k));
-    return this.update(id, { content, headerFields: all ? null : kept });
+    return this.update(id, {
+      content,
+      headerFields: all ? null : kept,
+      ...(instructions === undefined ? {} : { customInstructions: instructions }),
+    });
   }
 
   async printData(id: string): Promise<PrintData> {
@@ -150,6 +176,25 @@ export class ResumeService {
       filename: `${slugify(resume.title)}.md`,
       text: `${lines.join("\n")}\n\n${resume.content}`,
     };
+  }
+
+  /** Trims, bounds and PII-checks Custom Instructions; returns the value to store. */
+  private checkInstructions(value: string, fields: PiiField[]): string {
+    const trimmed = value.trim();
+    if (trimmed.length > CUSTOM_INSTRUCTIONS_MAX) {
+      throw new ValidationError(
+        `Custom instructions must be at most ${CUSTOM_INSTRUCTIONS_MAX} characters`,
+        { customInstructions: "is too long" },
+      );
+    }
+    const found = findPii(trimmed, fields)[0];
+    if (found) {
+      throw new ValidationError(
+        `Your ${found.label} is in the custom instructions — keep contact data in Personal info`,
+        { customInstructions: "contains personal info" },
+      );
+    }
+    return trimmed;
   }
 
   private async update(id: string, patch: Parameters<ResumeRepo["update"]>[1]): Promise<Resume> {
