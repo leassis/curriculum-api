@@ -14,6 +14,7 @@
       "!curriculum-specs",
       "!docs",
       "!pnpm-lock.yaml",
+      "!CHANGELOG.md",
       "!src/admin/static/htmx.generated.ts",
       "!design-system",
       "!src/admin/static/admin-css.generated.ts",
