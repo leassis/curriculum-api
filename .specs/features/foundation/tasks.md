@@ -417,12 +417,13 @@ T33 → T34 → T35
 **Requirement**: FND-17
 
 **Done when**:
-- [ ] Unit tests prove C40, C41
-- [ ] Build gate passes (end of phase)
+- [x] Unit tests prove C40, C41
+- [x] Build gate passes (end of phase)
 
 **Tests**: unit
 **Gate**: Build
 **Commit**: `feat(security): encrypt personal info values`
+**Status**: done
 
 ---
 
