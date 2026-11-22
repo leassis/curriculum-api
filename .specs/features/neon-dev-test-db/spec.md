@@ -34,7 +34,7 @@ Local development and integration tests share one Docker Postgres, and the only 
 | Parent branch of the test branch | `TEST_PARENT_BRANCH_ID`, falling back to `PARENT_BRANCH_ID` (same shape as curriculum-ai's `GATE_PARENT_BRANCH_ID`) | Lets tests fork a different branch than Neon Local without forcing a second variable | y - spec approved |
 | Test branch lifetime safety net | Branch created with `expires_at` 1 hour ahead, so Neon deletes it if teardown never runs | Same value as curriculum-ai's `BRANCH_TTL_MS` | y - spec approved |
 | `TEST_DATABASE_URL` | No longer set by the developer; `globalSetup` produces the URL of the branch and hands it to test files | The source (01-curriculum-api.md §488) allows "a Neon branch"; a developer-set URL is what let tests hit the dev DB | y - spec approved |
-| Env file | Neon variables live in `.env`; `docker compose` reads it, and the integration run loads it | curriculum-api scripts already use `--env-file=.env` | y - spec approved |
+| Env file | Neon variables live in `.env`; `docker compose` reads it, and the integration run loads `.env` then `.env.local`, never overriding a variable already set (user decision 2026-11-22, see tasks.md Handoff) | curriculum-api scripts already use `--env-file=.env` | y - spec approved; `.env.local` added by user decision |
 | Neon Local + `neon-http` driver | `src/db/client.ts` routes the Neon Local host to its HTTP `/sql` endpoint; exact host, port and TLS settings settled in Design against Neon Local docs | Not confirmed yet from documentation; Design verifies before Tasks | y - spec approved |
 | AD-002 | New AD-005 supersedes the Docker Postgres part of AD-002 (`neon-http` everywhere stays) | Records the change of decision | y - spec approved |
 
