@@ -94,14 +94,15 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Migration adds the column with default `''` in schema `curriculum_api`
-- [ ] Integration test: a resume inserted without the field reads `customInstructions === ""`
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
-- [ ] Test count: existing integration tests + 1 pass (no silent deletions)
+- [x] Migration adds the column with default `''` in schema `curriculum_api`
+- [x] Integration test: a resume inserted without the field reads `customInstructions === ""`
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Test count: existing integration tests + 1 pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(db): add custom_instructions to tailored_resumes`
+**Status**: ✅ Complete
 
 ---
 

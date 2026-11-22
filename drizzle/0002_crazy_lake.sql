@@ -1,0 +1,1 @@
+ALTER TABLE "curriculum_api"."tailored_resumes" ADD COLUMN "custom_instructions" text DEFAULT '' NOT NULL;

@@ -55,6 +55,7 @@ export const tailoredResumes = curriculum.table("tailored_resumes", {
   company: text(),
   jobDescription: text().notNull(),
   content: text().notNull().default(""),
+  customInstructions: text().notNull().default(""),
   headerFields: text().array(),
   model: text(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

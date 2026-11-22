@@ -15,6 +15,13 @@
       "when": 1795341525979,
       "tag": "0001_demonic_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795360434032,
+      "tag": "0002_crazy_lake",
+      "breakpoints": true
     }
   ]
 }

@@ -43,6 +43,12 @@ describe("resume repository", () => {
     expect(await repo.list()).toEqual([]);
   });
 
+  it("reads custom instructions as empty by default", async () => {
+    const created = await repo.insert(input("default"));
+    expect(created.customInstructions).toBe("");
+    expect((await repo.find(created.id))?.customInstructions).toBe("");
+  });
+
   it("stores null and array header fields", async () => {
     const created = await repo.insert(input("h"));
     expect(
