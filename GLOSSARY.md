@@ -50,6 +50,10 @@ _Avoid_: Account, settings
 A Career Body rewritten by the tailor model for one Job Description, editable by the Owner.
 _Avoid_: Custom CV, variant
 
+**Custom Instructions**:
+Owner-written steering text of one Tailored Resume, sent to the tailor model; never a source of facts.
+_Avoid_: Prompt, custom prompt
+
 **Job Description**:
 Text pasted by the Owner describing a role; input to tailoring and optional context of a Recruiter Chat.
 _Avoid_: JD (in UI), vacancy

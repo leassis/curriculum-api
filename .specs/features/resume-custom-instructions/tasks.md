@@ -220,12 +220,13 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Entry present next to **Tailored Resume**
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Entry present next to **Tailored Resume**
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: none
 **Gate**: build
 **Commit**: `docs(glossary): define custom instructions`
+**Status**: ✅ Complete
 
 ---
 
