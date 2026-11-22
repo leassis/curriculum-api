@@ -569,12 +569,13 @@ T33 → T34 → T35
 **Requirement**: FND-23
 
 **Done when**:
-- [ ] Unit test proves C62
-- [ ] Quick gate passes
+- [x] Unit test proves C62
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(llm): add provider factory and recording mock`
+**Status**: done
 
 ---
 
