@@ -49,6 +49,8 @@ describe("public session", () => {
     expect(res.status).toBe(204);
     const cookie = res.headers.get("set-cookie") ?? "";
     expect(cookie).toContain("curr_session=");
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Strict");
     expect(cookie).toContain(`Max-Age=${config.limits.sessionTtlMinutes * 60}`);
     const token = /curr_session=([^;]+)/.exec(cookie)?.[1] ?? "";
     expect(await verifySession(token, config.sessionSecret)).toEqual({ scope: "public" });
@@ -225,7 +227,7 @@ describe("public chat route", () => {
     const { app } = createTestApp({ services: servicesOf(setup) });
     const res = await chat(app, await SESSION(setup), valid);
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("llm_unavailable");
+    expect(await res.json()).toEqual({ error: "llm_unavailable" });
     expect(setup.usage.usedBy(await hashIp("203.0.113.9", setup.config.ipHashSalt))).toBe(0);
   });
 
@@ -242,8 +244,21 @@ describe("public chat route", () => {
     const { app } = createTestApp({ services: servicesOf(setup) });
     const res = await chat(app, await SESSION(setup), valid);
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe("internal_error");
+    expect(await res.json()).toEqual({ error: "internal_error" });
     expect(setup.usage.usedBy(await hashIp("203.0.113.9", setup.config.ipHashSalt))).toBe(0);
+  });
+
+  it("caps the total size of the history", async () => {
+    const { app, setup } = await appWith(true);
+    const cookie = await SESSION(setup);
+    const big = (role: string, n: number) => ({ role, content: "y".repeat(n) });
+    const over = { messages: [big("assistant", 9001), big("user", 1000)] };
+    const res = await chat(app, cookie, over);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("validation_error");
+    expect(setup.usage.acquires).toBe(0);
+    const edge = await chat(app, cookie, { messages: [big("assistant", 9000), big("user", 1000)] });
+    expect(edge.status).toBe(200);
   });
 
   it("stores only the hashed ip", async () => {

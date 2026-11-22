@@ -54,12 +54,14 @@ publicRouter.post("/chat", requireSession("public"), async (c) => {
     services.settings.limit("maxQuestionChars"),
   ]);
   const last = messages.at(-1);
+  const total = messages.reduce((sum, m) => sum + [...m.content].length, 0);
   if (
     messages.length < 1 ||
     messages.length > maxHistory ||
     last?.role !== "user" ||
     last.content === "" ||
-    [...last.content].length > maxChars
+    [...last.content].length > maxChars ||
+    total > maxChars * maxHistory
   ) {
     throw new ValidationError("Invalid request body");
   }
