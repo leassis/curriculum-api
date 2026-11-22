@@ -1,6 +1,6 @@
 # admin-core proofs
 
-**HEAD**: 1652ca3
+**HEAD**: 8e23b97
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 39 pass, 0 fail
@@ -52,41 +52,41 @@
 `Run unit` - exit 0
 
 ```
- ✓ |unit| test/unit/llm/pii-guard.test.ts > pii guard > redacts every occurrence 1ms
- ✓ |unit| test/unit/cli.test.ts > cli > unknown command prints usage and exits 1 1ms
- ✓ |unit| test/unit/services/errors.test.ts > domain errors > each class carries its code and status 3ms
+ ✓ |unit| test/unit/cli.test.ts > cli > unknown command prints usage and exits 1 2ms
+ ✓ |unit| test/unit/services/profile.service.test.ts > ProfileService > get returns the row or throws NotFoundError 2ms
+ ✓ |unit| test/unit/services/profile.service.test.ts > ProfileService > update upserts row 1 0ms
+ ✓ |unit| test/unit/services/errors.test.ts > domain errors > each class carries its code and status 2ms
  ✓ |unit| test/unit/services/errors.test.ts > domain errors > PiiLeakError names the field key and ConfigError lists every field 0ms
- ✓ |unit| test/unit/app/openapi.test.ts > openapi > lists api routes and no admin route 19ms
- ✓ |unit| test/unit/db/schema.test.ts > drizzle config > targets curriculum_api with snake_case 1ms
+ ✓ |unit| test/unit/db/schema.test.ts > drizzle config > targets curriculum_api with snake_case 2ms
  ✓ |unit| test/unit/db/schema.test.ts > schema > declares seven tables in curriculum_api 1ms
- ✓ |unit| test/unit/db/client.test.ts > db client > routes db.localtest.me to the local proxy 1ms
  ✓ |unit| test/unit/container.test.ts > container > constructs every repository and service without io 4ms
+ ✓ |unit| test/unit/db/client.test.ts > db client > routes db.localtest.me to the local proxy 1ms
  ✓ |unit| test/unit/examples/node-server.test.ts > node example > uses port 3001 and insecure cookies 1ms
 
  Test Files  32 passed (32)
       Tests  93 passed (93)
-   Start at  03:22:30
-   Duration  2.35s (import 70%, tests 22%, transform 7%, worker 1%)
+   Start at  03:24:30
+   Duration  2.30s (import 70%, tests 22%, transform 6%, worker 1%)
 ```
 
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1450ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1250ms
- ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1135ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 414ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 599ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 313ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 616ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 888ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 655ms
- ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 420ms
+ ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1448ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1264ms
+ ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1130ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 428ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 596ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 309ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 617ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 893ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 658ms
+ ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 414ms
 
  Test Files  15 passed (15)
       Tests  25 passed (25)
-   Start at  03:22:33
-   Duration  29.76s (tests 86%, import 14%)
+   Start at  03:24:33
+   Duration  29.68s (tests 86%, import 14%)
 ```
 
 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` - exit 0
@@ -97,14 +97,14 @@ CLI Using tsup config: /Users/leassis/workspace/curriculum-api/tsup.config.ts
 CLI Target: node22
 CLI Cleaning output folder
 ESM Build start
-ESM dist/cli.js            3.00 KB
-ESM dist/chunk-NY6RKQJR.js 6.13 KB
 ESM dist/chunk-JM7MLCCK.js 9.53 KB
-ESM dist/index.js          19.50 KB
+ESM dist/cli.js            3.00 KB
 ESM dist/admin-23LVKXO6.js 75.45 KB
-ESM ⚡️ Build success in 17ms
+ESM dist/chunk-NY6RKQJR.js 6.13 KB
+ESM dist/index.js          19.50 KB
+ESM ⚡️ Build success in 18ms
 DTS Build start
-DTS ⚡️ Build success in 1164ms
+DTS ⚡️ Build success in 1189ms
 DTS dist/index.d.ts 4.39 KB
-Checked 123 files in 48ms. No fixes applied.
+Checked 123 files in 47ms. No fixes applied.
 ```
