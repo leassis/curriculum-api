@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { migrate as runMigrations } from "drizzle-orm/neon-http/migrator";
-import "./client.js"; // routes db.localtest.me to the local proxy
+import "./client.js"; // routes localhost to Neon Local over http
 
 /** `drizzle/` sits next to `dist/` once packaged, and two levels above `src/db/` in source. */
 function migrationsFolder(): string {
