@@ -6,6 +6,8 @@ import { startTestBranch, type TestBranchDeps } from "./neon-branch";
 export interface GlobalSetupDeps extends TestBranchDeps {
   /** Loads an env file into `env`; never overrides a variable that is already set. */
   loadEnvFile?: (path: string) => void;
+  /** Whether an env file exists; defaults to the filesystem. */
+  fileExists?: (path: string) => boolean;
 }
 
 // `.env` first: loadEnvFile never overrides a set variable, so `.env` wins over `.env.local`.
@@ -14,7 +16,8 @@ const ENV_FILES = [".env", ".env.local"];
 export function createGlobalSetup(deps: GlobalSetupDeps) {
   return async function setup({ provide }: Pick<TestProject, "provide">) {
     const load = deps.loadEnvFile ?? ((path: string) => process.loadEnvFile(path));
-    for (const file of ENV_FILES) if (existsSync(file)) load(file);
+    const exists = deps.fileExists ?? existsSync;
+    for (const file of ENV_FILES) if (exists(file)) load(file);
     const branch = await startTestBranch(deps);
     provide("testDatabaseUrl", branch.url);
     return branch.stop;
