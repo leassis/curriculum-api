@@ -379,12 +379,13 @@ T33 → T34 → T35
 **Requirement**: FND-15
 
 **Done when**:
-- [ ] Unit tests prove C37, C38
-- [ ] Quick gate passes
+- [x] Unit tests prove C37, C38
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(security): extract and hash client ip`
+**Status**: done
 
 ---
 
