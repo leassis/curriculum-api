@@ -1,7 +1,7 @@
 # Public Chat verification
 
 **Verdict**: PASS
-**Proofs**: `proofs.md` at 972af3f
+**Proofs**: `proofs.md` at eeaca49 (code identical at HEAD; later commits are .specs only)
 **Verifier**: independent sub-agent (author != verifier) - re-verified from scratch; the implementer's earlier PASS was not trusted
 
 ## Checks
