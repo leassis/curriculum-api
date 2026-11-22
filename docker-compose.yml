@@ -1,0 +1,12 @@
+# Neon Local: proxies to a branch of your Neon cloud project.
+# Requires NEON_API_KEY and NEON_PROJECT_ID (see .env.example).
+services:
+  db:
+    image: neondatabase/neon_local:latest
+    ports:
+      - "5432:5432"
+    environment:
+      NEON_API_KEY: ${NEON_API_KEY}
+      NEON_PROJECT_ID: ${NEON_PROJECT_ID}
+      PARENT_BRANCH_ID: ${PARENT_BRANCH_ID:-}
+      DELETE_BRANCH: ${DELETE_BRANCH:-true}

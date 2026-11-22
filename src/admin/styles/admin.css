@@ -1,0 +1,388 @@
+/*
+ * Admin design system (generic look). Tailwind CSS v4.
+ * Source of truth for the admin's look; `pnpm build:css` compiles it into
+ * `src/admin/static/admin-css.generated.ts`, served at `<basePath>/admin/static/admin.css`.
+ * Tokens: see design-system/tokens.json.
+ */
+@import "tailwindcss" source(none);
+
+@source "../";
+@source not "../static";
+
+/* Self-hosted (the admin CSP only allows same-origin fonts). Served from ./fonts/. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("fonts/inter.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("fonts/space-grotesk.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url("fonts/jetbrains-mono.woff2") format("woff2-variations");
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-page: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-subtle: #f1f1f4;
+  --color-row-hover: #fafafa;
+  --color-line: #e4e4e9;
+  --color-ink: #18181b;
+  --color-muted: #5f5f6b;
+  --color-placeholder: #71717a;
+
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-strong: #312e81;
+  --color-primary-soft: #eef2ff;
+  --color-on-primary: #ffffff;
+
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+
+  --radius-bar: 4px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  --shadow-button: 0 1px 2px rgba(24, 24, 27, 0.12);
+  --shadow-raised: 0 8px 24px rgba(24, 24, 27, 0.06);
+
+  --text-eyebrow: 12px;
+  --text-eyebrow--letter-spacing: 1px;
+  --text-h1: 34px;
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: 20px;
+  --text-h2--line-height: 1.3;
+
+  --spacing-control: 44px;
+  --spacing-sidebar: 240px;
+}
+
+@layer base {
+  html {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+  }
+  body {
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+  a {
+    color: var(--color-primary-hover);
+  }
+  a:hover {
+    color: var(--color-primary-strong);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  ::placeholder {
+    color: var(--color-placeholder);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+}
+
+@layer components {
+  /* ---------- Shell ---------- */
+  .app-shell {
+    @apply flex min-h-screen flex-wrap bg-page text-ink;
+  }
+  .sidebar {
+    @apply flex max-w-full flex-[1_1_var(--spacing-sidebar)] flex-col gap-8 border-r border-line bg-surface px-[18px] py-7;
+  }
+  .main {
+    @apply min-w-0 flex-[999_1_640px] px-[clamp(20px,4vw,48px)] pt-10 pb-16;
+  }
+  .main-inner {
+    @apply mx-auto flex max-w-[1120px] flex-col gap-8;
+  }
+
+  .brand {
+    @apply flex items-center gap-3 px-1.5;
+  }
+  .logo-tile {
+    @apply flex size-9 items-center justify-center rounded-control bg-primary font-display text-[15px] font-bold text-on-primary;
+  }
+
+  /* Nav links stay plain <a href>; styled here, active state from body[data-section]. */
+  .sidebar nav {
+    @apply flex flex-col gap-1;
+  }
+  .sidebar nav a {
+    @apply flex min-h-control items-center rounded-control px-3.5 text-[15px] font-medium text-muted no-underline hover:bg-subtle hover:text-ink;
+  }
+  body[data-section="dashboard"] .sidebar nav a[href$="/admin"],
+  body[data-section="profile"] .sidebar nav a[href$="/admin/profile"],
+  body[data-section="settings"] .sidebar nav a[href$="/admin/settings"],
+  body[data-section="personal-info"] .sidebar nav a[href$="/admin/personal-info"],
+  body[data-section="resumes"] .sidebar nav a[href$="/admin/resumes"],
+  body[data-section="chats"] .sidebar nav a[href$="/admin/chats"] {
+    @apply bg-subtle font-semibold text-ink shadow-[inset_3px_0_0_0_var(--color-primary)];
+  }
+  .sidebar-foot {
+    @apply mt-auto flex flex-col gap-3 border-t border-line px-1.5 pt-4;
+  }
+
+  /* ---------- Page header ---------- */
+  .page-header {
+    @apply flex flex-wrap items-end justify-between gap-5;
+  }
+  .page-header-text {
+    @apply flex min-w-0 flex-col gap-2.5;
+  }
+  .eyebrow {
+    @apply font-mono text-eyebrow text-success uppercase;
+  }
+  .page-title {
+    @apply m-0 font-display text-h1 font-bold;
+  }
+  .page-sub {
+    @apply m-0 text-base text-muted;
+  }
+  .section-title {
+    @apply m-0 font-display text-h2 font-semibold;
+  }
+  .back-link {
+    @apply inline-flex items-center gap-1.5 text-sm no-underline;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex min-h-control cursor-pointer items-center justify-center gap-2 rounded-control border-0 bg-primary px-[18px] font-sans text-[15px] font-semibold text-on-primary no-underline shadow-button transition hover:bg-primary-hover hover:text-on-primary active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex min-h-control cursor-pointer items-center justify-center gap-2 rounded-control border border-line bg-surface px-4 font-sans text-[15px] font-medium text-ink no-underline hover:bg-subtle hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply min-h-9 px-3 text-sm;
+  }
+  .btn-danger {
+    @apply text-danger hover:bg-danger-soft hover:text-danger;
+  }
+  .actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  /* ---------- Forms ---------- */
+  .form {
+    @apply flex flex-col gap-5;
+  }
+  .form-grid {
+    @apply grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4;
+  }
+  .field {
+    @apply flex flex-col gap-2;
+  }
+  .field-label {
+    @apply text-[13px] font-semibold text-ink;
+  }
+  .field-help {
+    @apply m-0 text-[13px] text-muted;
+  }
+  .input {
+    @apply box-border min-h-control w-full rounded-control border border-line bg-page px-3.5 py-2.5 font-sans text-[15px] text-ink;
+  }
+  textarea.input {
+    @apply resize-y leading-normal;
+  }
+  textarea.input.mono {
+    @apply font-mono text-[13px];
+  }
+  .checks {
+    @apply m-0 flex flex-wrap gap-x-5 gap-y-2 rounded-control border border-line p-4;
+  }
+  .checks legend {
+    @apply px-1 text-[13px] font-semibold;
+  }
+  .check {
+    @apply inline-flex items-center gap-2 text-sm;
+  }
+  .check input {
+    @apply size-4 accent-primary;
+  }
+
+  /* ---------- Surfaces ---------- */
+  .card {
+    @apply rounded-card border border-line bg-surface;
+  }
+  .card-pad {
+    @apply flex flex-col gap-5 rounded-card border border-line bg-surface p-6;
+  }
+  .empty-state {
+    @apply m-0 rounded-card border border-dashed border-line bg-surface px-8 py-12 text-center text-muted;
+  }
+
+  /* Stat tiles: a <dl> of dt/dd pairs */
+  .stats {
+    @apply m-0 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4;
+  }
+  .stat {
+    @apply flex flex-col-reverse gap-2 rounded-card border border-line bg-surface p-6;
+  }
+  .stat dt {
+    @apply text-sm text-muted;
+  }
+  .stat dd {
+    @apply m-0 font-display text-[36px] leading-none font-bold;
+  }
+
+  /* ---------- Tables (real <table>, markup kept plain) ---------- */
+  .table-wrap {
+    @apply overflow-x-auto rounded-card border border-line bg-surface;
+  }
+  .table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .table th {
+    @apply px-4 py-3 font-mono text-xs font-normal tracking-[0.5px] whitespace-nowrap text-muted uppercase;
+  }
+  .table td {
+    @apply border-t border-line px-4 py-3 align-middle;
+  }
+  .table tbody tr:hover {
+    @apply bg-row-hover;
+  }
+  .table td:last-child {
+    @apply text-right;
+  }
+  .table .input {
+    @apply min-h-9 py-1.5;
+  }
+
+  /* ---------- Feedback ---------- */
+  .error {
+    @apply rounded-control border border-danger bg-danger-soft px-4 py-3 text-sm text-danger;
+  }
+  .status {
+    @apply m-0 min-h-5 text-sm text-success;
+  }
+  .htmx-indicator {
+    @apply hidden;
+  }
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    @apply inline-flex;
+  }
+  .muted {
+    @apply text-muted;
+  }
+  .mono {
+    @apply font-mono;
+  }
+
+  /* ---------- Resume editor ---------- */
+  .editor-grid {
+    @apply grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] items-start gap-6;
+  }
+  .transcript pre {
+    @apply font-sans text-[15px];
+  }
+  details.disclosure {
+    @apply rounded-control border border-line bg-surface px-4 py-3;
+  }
+  details.disclosure summary {
+    @apply cursor-pointer text-sm font-semibold;
+  }
+  details.disclosure pre {
+    @apply mt-3 mb-0 font-sans text-sm whitespace-pre-wrap text-muted;
+  }
+  .paper {
+    @apply rounded-card border border-line bg-surface px-10 py-9 text-sm leading-relaxed shadow-raised;
+  }
+  .paper h1 {
+    @apply mt-0 text-2xl;
+  }
+  .paper h2 {
+    @apply mt-6 mb-2 border-b border-line pb-1 text-base;
+  }
+  .paper h3 {
+    @apply mt-4 mb-1 text-sm;
+  }
+  .paper ul {
+    @apply pl-5;
+  }
+
+  /* ---------- Messages / chat ---------- */
+  .transcript {
+    @apply m-0 flex list-none flex-col gap-3 p-0;
+  }
+  .transcript li {
+    @apply rounded-card border border-line bg-surface px-5 py-4;
+  }
+  .transcript li[data-role="user"] {
+    @apply border-primary-soft bg-primary-soft;
+  }
+  .transcript strong {
+    @apply text-sm;
+  }
+  .transcript time {
+    @apply font-mono text-xs text-muted;
+  }
+
+  #log.chat-log {
+    @apply min-h-40 rounded-card border border-line bg-surface px-5 py-4;
+  }
+  .chat-log .msg {
+    @apply my-2 whitespace-pre-wrap;
+  }
+  .chat-log .msg.user {
+    @apply font-semibold;
+  }
+
+  /* Empty htmx targets take no space until something is swapped in */
+  .status:empty,
+  #pi-error:empty,
+  #created:empty {
+    @apply hidden;
+  }
+  .table .actions {
+    @apply flex-nowrap;
+  }
+  .btn,
+  .btn-ghost {
+    @apply whitespace-nowrap;
+  }
+  .table td.mono {
+    @apply whitespace-nowrap;
+  }
+  .paper h1,
+  .paper h2,
+  .paper h3 {
+    @apply font-semibold;
+  }
+  .paper ul {
+    @apply list-disc;
+  }
+  .paper ol {
+    @apply list-decimal pl-5;
+  }
+}
