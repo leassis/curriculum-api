@@ -96,6 +96,13 @@ const FILES = [
   "package.json",
 ];
 
+/** True when code reads a database URL variable from an env object (dot, bracket or destructuring). */
+function readsDatabaseUrl(code: string): boolean {
+  const access = /\benv\s*(\?\.|\.|\[\s*["'`])\s*(TEST_)?DATABASE_URL\b/;
+  const destructure = /\{[^}]*\b(TEST_)?DATABASE_URL\b[^}]*\}\s*=\s*[\w.]*\benv\b/;
+  return access.test(code) || destructure.test(code);
+}
+
 describe("repo layout", () => {
   it("contains every foundation file", () => {
     const missing = FILES.filter((f) => !existsSync(join(root, f)));
@@ -162,6 +169,9 @@ describe("repo layout", () => {
       "PARENT_BRANCH_ID",
     ]);
     expect(db.environment.DELETE_BRANCH).toMatch(/^\$\{DELETE_BRANCH:-true\}$/);
+    for (const name of ["NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
+      expect(db.environment[name], name).toMatch(new RegExp(`^\\$\\{${name}(:-)?\\}$`));
+    }
   });
 
   it("has no local Postgres stack", () => {
@@ -218,6 +228,24 @@ describe("repo layout", () => {
     expect(JSON.parse(read("package.json")).files).toContain("drizzle");
   });
 
+  it("catches every spelling of an environment read of the database URL", () => {
+    for (const code of [
+      "process.env.DATABASE_URL",
+      'process.env["TEST_DATABASE_URL"]',
+      "process.env['DATABASE_URL']",
+      "process.env?.DATABASE_URL",
+      "import.meta.env.DATABASE_URL",
+      'import.meta.env["DATABASE_URL"]',
+      "const { DATABASE_URL } = process.env;",
+      "const { A, TEST_DATABASE_URL: url } = import.meta.env;",
+      "const env = process.env; env.DATABASE_URL",
+      "deps.env.DATABASE_URL",
+    ]) {
+      expect(readsDatabaseUrl(code), code).toBe(true);
+    }
+    expect(readsDatabaseUrl('{ DATABASE_URL: "x" }')).toBe(false);
+  });
+
   it("keeps test files off DATABASE_URL and TEST_DATABASE_URL", () => {
     // isolation.test.ts must read DATABASE_URL to prove the run's branch is a different host.
     const allowed = "test/integration/db/isolation.test.ts";
@@ -225,9 +253,7 @@ describe("repo layout", () => {
     const files = (readdirSync(join(root, "test"), { recursive: true }) as string[])
       .map((f) => `test/${f}`)
       .filter((f) => /\.tsx?$/.test(f) && f !== allowed && f !== self);
-    const offenders = files.filter((f) =>
-      /process\.env(\.|\[["'])(TEST_)?DATABASE_URL/.test(read(f)),
-    );
+    const offenders = files.filter((f) => readsDatabaseUrl(read(f)));
     expect(offenders).toEqual([]);
   });
 
