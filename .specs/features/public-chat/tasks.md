@@ -122,13 +122,13 @@ T1 → T2 → T3 → T4 → T5
 **Requirement**: PUB-06, PUB-08
 
 **Done when**:
-- [ ] 20 parallel requests give exactly 5 accepted; no Personal Info value in any recorded prompt
-- [ ] Full gate passes
+- [x] 20 parallel requests give exactly 5 accepted; no Personal Info value in any recorded prompt
+- [x] Full gate passes
 
 **Tests**: unit, integration
 **Gate**: Full
 **Commit**: `test(public): prove limit under concurrency and pii safety`
-**Status**: pending
+**Status**: done
 
 ---
 
