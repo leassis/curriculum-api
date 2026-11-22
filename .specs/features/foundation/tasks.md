@@ -702,12 +702,13 @@ T33 → T34 → T35
 **Requirement**: FND-13, FND-24, FND-25
 
 **Done when**:
-- [ ] Unit tests prove C31, C64, C67, C68, C69
-- [ ] Build gate passes (end of phase)
+- [x] Unit tests prove C31, C64, C67, C68, C69
+- [x] Build gate passes (end of phase)
 
 **Tests**: unit
 **Gate**: Build
 **Commit**: `feat(admin): add admin shell with layout and csrf`
+**Status**: done
 
 ---
 
