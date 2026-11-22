@@ -221,6 +221,12 @@ Proof: run unit | ✓ public chat pii > keeps the full name out of the system pr
 **C29** - The same PII proof against the real database and app (PUB-08 AC 1)
 Proof: run int | ✓ public chat with database > sends no personal info value to the model
 
+**C30** - The total size of the history is capped at maxQuestionChars x maxHistoryMessages (PUB-09)
+Proof: run unit | ✓ public chat route > caps the total size of the history
+
+**C1b** - The session cookie is HttpOnly and SameSite=Strict (PUB-01 AC 1, hardening)
+Proof: run unit | ✓ public session > sets a public curr_session cookie when turnstile verifies the token
+
 ## Handoff
 
 **Settled mid-build:** none

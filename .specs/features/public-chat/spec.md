@@ -128,9 +128,17 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 ---
 
+### P1: History size is bounded (added by Verifier) ⭐ MVP
+
+**Acceptance Criteria**:
+
+1. IF the total code points of all request messages exceed `maxQuestionChars * maxHistoryMessages` THEN the app SHALL answer 400 `{ "error": "validation_error" }` and SHALL not touch the usage counter.
+
+---
+
 ## Edge Cases
 
-- `maxQuestionChars` counts Unicode code points of the last message only; earlier history messages are not length-bounded (an assistant reply may exceed it), and the history size is capped by `maxHistoryMessages`.
+- `maxQuestionChars` counts Unicode code points of the last message only; earlier history messages are not bounded one by one (an assistant reply may exceed it) but the total is bounded by PUB-09, and the history size is capped by `maxHistoryMessages`.
 - IF the request body is not JSON THEN the app SHALL answer 400 `{ "error": "validation_error" }`.
 - IF the session cookie is valid but has scope `recruiter` THEN `POST /api/public/chat` SHALL answer 401 `{ "error": "unauthorized" }`.
 - WHEN the limit Settings Override is lowered below today's `used` for an IP THEN that IP's next request SHALL answer 429.
@@ -149,6 +157,7 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 | PUB-06 | P1: Limit holds under concurrency | Design | Pending |
 | PUB-07 | P1: Public profile and contact | Design | Pending |
 | PUB-08 | P1: No personal data reaches the model | Design | Pending |
+| PUB-09 | P1: History size is bounded | Verify | Pending |
 
 **Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️ (tasks not written yet)
 
