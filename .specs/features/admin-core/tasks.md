@@ -66,13 +66,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-01, ADM-02
 
 **Done when**:
-- [ ] Unit tests with a fake repo cover ok, invalid, missing password, throttle at 5, window rollover, delay
-- [ ] Full gate passes
+- [x] Unit tests with a fake repo cover ok, invalid, missing password, throttle at 5, window rollover, delay
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(admin): add admin auth service with login throttle`
-**Status**: pending
+**Status**: done
 
 ---
 
