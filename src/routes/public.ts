@@ -1,13 +1,18 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { z } from "zod";
 import type { Env } from "../env.js";
-import { clientIp } from "../security/ip.js";
+import { requireSession } from "../middleware/require-session.js";
+import { clientIp, hashIp } from "../security/ip.js";
 import { setSessionCookie, signSession } from "../security/session.js";
 import { verifyTurnstile } from "../security/turnstile.js";
 import { CaptchaFailedError, ValidationError } from "../services/errors.js";
 
 /** Mounted at `/api/public`. */
 export const publicRouter = new OpenAPIHono<Env>();
+
+const chatBody = z.object({
+  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })),
+});
 
 const sessionBody = z.object({ turnstileToken: z.string() });
 
@@ -39,4 +44,32 @@ publicRouter.get("/profile", async (c) => {
   const contact = await personalInfo.contactFor("public");
   c.header("Cache-Control", "no-store");
   return c.json({ fullName, headline, contact });
+});
+
+publicRouter.post("/chat", requireSession("public"), async (c) => {
+  const { config, services } = c.var;
+  const { messages } = await parseJson(c.req.raw, chatBody);
+  const [maxHistory, maxChars] = await Promise.all([
+    services.settings.limit("maxHistoryMessages"),
+    services.settings.limit("maxQuestionChars"),
+  ]);
+  const last = messages.at(-1);
+  if (
+    messages.length < 1 ||
+    messages.length > maxHistory ||
+    last?.role !== "user" ||
+    last.content === "" ||
+    last.content.length > maxChars
+  ) {
+    throw new ValidationError("Invalid request body");
+  }
+  const ipHash = await hashIp(clientIp(c.req.raw.headers) ?? "unknown", config.ipHashSalt);
+  const { stream, remaining } = await services.publicChat.ask(ipHash, messages);
+  return new Response(stream.pipeThrough(new TextEncoderStream()), {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Remaining": String(remaining),
+    },
+  });
 });

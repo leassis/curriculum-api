@@ -103,13 +103,13 @@ T1 → T2 → T3 → T4 → T5
 **Requirement**: PUB-02, PUB-04
 
 **Done when**:
-- [ ] Unit tests cover chat route checks and the missing-profile mapping
-- [ ] Full gate passes
+- [x] Unit tests cover chat route checks and the missing-profile mapping
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(public): add streamed chat route`
-**Status**: pending
+**Status**: done
 
 ---
 
