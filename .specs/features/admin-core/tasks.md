@@ -85,13 +85,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-01, ADM-02
 
 **Done when**:
-- [ ] Unit tests cover AC 1-5 and the missing-password edge; integration proves the 6th attempt with the right password gets 429
-- [ ] Full gate passes
+- [x] Unit tests cover AC 1-5 and the missing-password edge; integration proves the 6th attempt with the right password gets 429
+- [x] Full gate passes
 
 **Tests**: unit, integration
 **Gate**: Full
 **Commit**: `feat(admin): add login and logout pages`
-**Status**: pending
+**Status**: done
 
 ---
 
