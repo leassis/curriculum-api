@@ -1,6 +1,6 @@
 # recruiter-transcripts proofs
 
-**HEAD**: 44368ea
+**HEAD**: a0f6296
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 24 pass, 0 fail
