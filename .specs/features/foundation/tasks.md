@@ -341,12 +341,13 @@ T33 → T34 → T35
 **Requirement**: FND-14
 
 **Done when**:
-- [ ] Unit tests prove C33, C34, C35, C36
-- [ ] Quick gate passes
+- [x] Unit tests prove C33, C34, C35, C36
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(security): sign and verify session cookies`
+**Status**: done
 
 ---
 
