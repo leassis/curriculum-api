@@ -158,13 +158,14 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Unit tests C9-C15, C17, C18 pass
-- [ ] `resume service > calls the llm with area tailor…` and `prompt-hardening` tests pass unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C9-C15, C17, C18 pass
+- [x] `resume service > calls the llm with area tailor…` and `prompt-hardening` tests pass unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(resumes): send custom instructions to the tailor model`
+**Status**: ✅ Complete
 
 ---
 
