@@ -207,13 +207,14 @@ T33 → T34 → T35
 **Requirement**: FND-08
 
 **Done when**:
-- [ ] `docker compose up -d` healthy
-- [ ] Unit test proves C21
-- [ ] Quick gate passes
+- [x] `docker compose up -d` healthy
+- [x] Unit test proves C21
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(db): add neon-http client with local proxy routing`
+**Status**: done
 
 ---
 
