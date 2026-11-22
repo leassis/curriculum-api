@@ -11,6 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/foundation/design.md`
 **Status**: Approved - aprovado pelo usuário via este prompt (2026-11-22)
 **Approved**: 2026-11-22 - user: "aprovado pelo usuário via este prompt"
+**Review**: 2026-11-22 - coverage matrix checked against spec.md (all ACs of the 8 stories plus the 3 edge cases map to a check C1-C77 with a proof); no gaps. Approval registered: aprovado pelo usuário via este prompt (orquestrador).
 **Build**: `pnpm build; pnpm typecheck; pnpm lint`
 **Run unit**: `pnpm vitest run --project unit --reporter=verbose`
 **Run int**: `pnpm vitest run --project integration --reporter=verbose`
