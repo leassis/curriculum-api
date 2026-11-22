@@ -135,7 +135,7 @@ T1 → T2 → T3 → T4 → T5
 **Tests**: integration
 **Gate**: Full
 **Commit**: `test(recruiter): prove transcripts end to end on postgres`
-**Status**: pending
+**Status**: done
 
 ---
 
