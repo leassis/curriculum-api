@@ -169,12 +169,13 @@ T33 → T34 → T35
 **Requirement**: FND-02
 
 **Done when**:
-- [ ] Workflow YAML parses (`pnpm dlx yaml-lint .github/workflows/ci.yml` or equivalent) and lists the five steps
-- [ ] Build gate passes
+- [x] Workflow YAML parses (`pnpm dlx yaml-lint .github/workflows/ci.yml` or equivalent) and lists the five steps
+- [x] Build gate passes
 
 **Tests**: none
 **Gate**: Build
 **Commit**: `ci: run lint, typecheck, test and build on pull requests`
+**Status**: done
 
 ---
 

@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5432/curriculum_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5432/curriculum_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # postgres:17 + local-neon-http-proxy, the same services as local development
+      - name: Start database services
+        run: docker compose up -d --wait
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: Migrate with the packaged CLI
+        run: node dist/cli.js migrate
