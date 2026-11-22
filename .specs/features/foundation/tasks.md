@@ -493,12 +493,13 @@ T33 → T34 → T35
 **Requirement**: FND-19
 
 **Done when**:
-- [ ] Unit tests prove C44, C76
-- [ ] Quick gate passes
+- [x] Unit tests prove C44, C76
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(service): add profile service`
+**Status**: done
 
 ---
 
