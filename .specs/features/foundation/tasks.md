@@ -664,12 +664,13 @@ T33 → T34 → T35
 **Requirement**: FND-24
 
 **Done when**:
-- [ ] `pnpm vendor:htmx` regenerates the file byte-identically
-- [ ] Build gate passes
+- [x] `pnpm vendor:htmx` regenerates the file byte-identically
+- [x] Build gate passes
 
 **Tests**: none
 **Gate**: Build
 **Commit**: `chore(admin): vendor htmx`
+**Status**: done
 
 ---
 
