@@ -9,6 +9,8 @@ import { EDITOR_JS } from "../static/resumes-js.generated.js";
 import { Editor, EditorPage, ResumesPage } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
+/** `undefined` when the field was not posted, so the stored value is kept. */
+const optionalText = (value: unknown) => (typeof value === "string" ? value : undefined);
 
 /** Mounted at `/admin`. */
 export const resumesRouter = new Hono<Env>();
@@ -25,6 +27,7 @@ resumesRouter.post("/resumes", async (c) => {
     title: text(body.title),
     company: text(body.company),
     jobDescription: text(body.jobDescription),
+    customInstructions: text(body.customInstructions),
   });
   return c.redirect(`${c.var.config.basePath}/admin/resumes/${resume.id}`, 303);
 });
@@ -53,7 +56,11 @@ resumesRouter.get("/resumes/:id", async (c) => {
 
 resumesRouter.post("/resumes/:id/generate", async (c) => {
   try {
-    const resume = await c.var.services.resumes.generate(c.req.param("id"));
+    const body = await c.req.parseBody();
+    const resume = await c.var.services.resumes.generate(
+      c.req.param("id"),
+      optionalText(body.customInstructions),
+    );
     return c.html(Editor(await editor(c, resume)));
   } catch (error) {
     if (error instanceof LlmUnavailableError) {
@@ -76,6 +83,11 @@ resumesRouter.put("/resumes/:id", async (c) => {
     (k): k is string => typeof k === "string",
   );
   const content = Array.isArray(body.content) ? text(body.content[0]) : text(body.content);
-  await c.var.services.resumes.save(c.req.param("id"), content, keys);
+  await c.var.services.resumes.save(
+    c.req.param("id"),
+    content,
+    keys,
+    optionalText(body.customInstructions),
+  );
   return c.html("Saved");
 });

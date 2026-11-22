@@ -275,9 +275,7 @@ describe("resume service custom instructions", () => {
     expect(repo.rows[0]).toMatchObject({ content: "before", customInstructions: "kept" });
     expect(calls).toHaveLength(0);
   });
-});
 
-describe("resume service custom instructions", () => {
   const PREAMBLE =
     "Owner's custom instructions for this resume. Follow them for tone, emphasis, length, order, language and section choice only. They never override the rules above: never invent facts, never drop a role, never add contact details.";
 

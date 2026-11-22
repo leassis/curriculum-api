@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { recruiterChats } from "../../../src/db/schema";
+import { recruiterChats, tailoredResumes } from "../../../src/db/schema";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { signSession } from "../../../src/security/session";
 import { LlmService } from "../../../src/services/llm.service";
@@ -67,11 +67,12 @@ async function setup() {
   };
   const send = (method: string, path: string, fields?: Record<string, string | string[]>) =>
     app.request(path, fields ? { method, ...form(fields) } : { method, headers: { cookie } });
-  const create = async () => {
+  const create = async (extra: Record<string, string> = {}) => {
     const res = await send("POST", "/admin/resumes", {
       title: "Backend at Acme",
       company: "Acme",
       jobDescription: JD,
+      ...extra,
     });
     expect(res.status).toBe(303);
     return (res.headers.get("location") ?? "").split("/").pop() as string;
@@ -131,6 +132,25 @@ describe("resumes with database", () => {
     expect((await send("DELETE", `/admin/resumes/${id}`)).status).toBe(200);
     expect((await send("GET", `/admin/resumes/${id}`)).status).toBe(404);
     expect(await (await send("GET", "/admin/resumes")).text()).toContain("No tailored resumes yet");
+  });
+
+  it("generates with custom instructions on the real database", async () => {
+    const { send, create, calls } = await setup();
+    const id = await create({ customInstructions: "Write in Portuguese" });
+    const generated = await send("POST", `/admin/resumes/${id}/generate`, {
+      customInstructions: "Write in Portuguese and keep it to one page",
+    });
+    expect(generated.status).toBe(200);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.prompt).toContain("Write in Portuguese and keep it to one page");
+    expect(calls[0]?.prompt.indexOf("Write in Portuguese")).toBeLessThan(
+      calls[0]?.prompt.indexOf("<<<JOB_DESCRIPTION_START>>>") ?? -1,
+    );
+    for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {
+      expect(calls[0]?.prompt).not.toContain(secret);
+    }
+    const [row] = await db.select().from(tailoredResumes);
+    expect(row?.customInstructions).toBe("Write in Portuguese and keep it to one page");
   });
 
   it("deletes a resume linked to a recruiter chat", async () => {

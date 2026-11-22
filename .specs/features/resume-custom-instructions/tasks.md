@@ -179,12 +179,13 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Unit route tests C2, C16 (route rows) pass; integration test C19 passes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Unit route tests C2, C16 (route rows) pass; integration test C19 passes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(admin): accept custom instructions on resume routes`
+**Status**: ✅ Complete
 
 ---
 

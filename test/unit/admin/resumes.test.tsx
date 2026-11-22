@@ -183,3 +183,84 @@ describe("admin resumes", () => {
     expect(repo.rows[0]?.content).toBe("");
   });
 });
+
+describe("admin resumes custom instructions", () => {
+  it("create stores the posted custom instructions", async () => {
+    const { post, repo } = await resumeApp();
+    const res = await post("/admin/resumes", { ...newResume, customInstructions: "  One page  " });
+    expect(res.status).toBe(303);
+    expect(repo.rows[0]?.customInstructions).toBe("One page");
+    await post("/admin/resumes", newResume);
+    expect(repo.rows[1]?.customInstructions).toBe("");
+  });
+
+  it("put saves custom instructions and answers Saved", async () => {
+    const { put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const res = await put(`/admin/resumes/${id}`, {
+      content: "# Mine",
+      customInstructions: " Lead with platform work ",
+    });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Saved");
+    expect(repo.rows[0]).toMatchObject({
+      content: "# Mine",
+      customInstructions: "Lead with platform work",
+    });
+    await put(`/admin/resumes/${id}`, { content: "# Again" });
+    expect(repo.rows[0]?.customInstructions).toBe("Lead with platform work");
+  });
+
+  it("answers 400 with the length and personal info messages", async () => {
+    const { post, put, resumes, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const length = "Custom instructions must be at most 2000 characters";
+    const pii = "Your Email is in the custom instructions — keep contact data in Personal info";
+    const tooLong = "a".repeat(2001);
+    const leak = "Write to ada@example.com";
+
+    for (const [customInstructions, message] of [
+      [tooLong, length],
+      [leak, pii],
+    ] as const) {
+      const created = await post("/admin/resumes", { ...newResume, customInstructions });
+      expect(created.status).toBe(400);
+      expect(await created.text()).toContain(message);
+    }
+    expect(repo.rows).toHaveLength(0);
+
+    const { id } = await resumes.create(newResume);
+    for (const [customInstructions, message] of [
+      [tooLong, length],
+      [leak, pii],
+    ] as const) {
+      const saved = await put(`/admin/resumes/${id}`, { content: "x", customInstructions });
+      expect(saved.status).toBe(400);
+      expect(await saved.text()).toContain(message);
+      const generated = await post(`/admin/resumes/${id}/generate`, { customInstructions });
+      expect(generated.status).toBe(400);
+      expect(await generated.text()).toContain(message);
+    }
+    expect(repo.rows[0]).toMatchObject({ content: "", customInstructions: "" });
+  });
+
+  it("generate saves the posted custom instructions", async () => {
+    const { post, resumes, repo, calls } = await resumeApp({ mock: { text: "## Fresh" } });
+    const { id } = await resumes.create(newResume);
+    const res = await post(`/admin/resumes/${id}/generate`, {
+      customInstructions: " Write in Portuguese ",
+    });
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html.startsWith('<div id="editor">')).toBe(true);
+    expect(repo.rows[0]).toMatchObject({
+      content: "## Fresh",
+      customInstructions: "Write in Portuguese",
+    });
+    expect(calls[0]?.prompt).toContain("Write in Portuguese");
+
+    await post(`/admin/resumes/${id}/generate`);
+    expect(repo.rows[0]?.customInstructions).toBe("Write in Portuguese");
+    expect(calls[1]?.prompt).toContain("Write in Portuguese");
+  });
+});
