@@ -5,7 +5,7 @@ import { renderMarkdown } from "../../lib/markdown.js";
 import { LlmUnavailableError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
 import { ErrorFragment } from "../error-fragment.js";
-import { EDITOR_JS } from "./script.js";
+import { EDITOR_JS } from "../static/resumes-js.generated.js";
 import { Editor, EditorPage, ResumesPage } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");

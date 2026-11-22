@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../../env.js";
-import { CHATS_JS } from "./script.js";
+import { CHATS_JS } from "../static/chats-js.generated.js";
 import { ChatRow, ChatsPage, Created, Rows } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
