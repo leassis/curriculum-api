@@ -436,12 +436,13 @@ T33 → T34 → T35
 **Requirement**: FND-19
 
 **Done when**:
-- [ ] Integration test proves C45
-- [ ] Full gate passes
+- [x] Integration test proves C45
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(repo): add profile repository`
+**Status**: done
 
 ---
 
