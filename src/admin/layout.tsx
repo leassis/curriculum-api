@@ -1,22 +1,25 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
+import { ADMIN_CSS_VERSION } from "./static/admin-css.generated.js";
 
-const CSS = `
-body { font-family: system-ui, sans-serif; margin: 0; color: #1a1a1a; background: #fafafa; }
-header { display: flex; gap: 1rem; align-items: center; padding: 0.75rem 1.5rem; background: #fff; border-bottom: 1px solid #ddd; }
-nav { display: flex; gap: 1rem; flex: 1; }
-nav a { color: #1a1a1a; text-decoration: none; }
-nav a:hover { text-decoration: underline; }
-main { max-width: 56rem; margin: 1.5rem auto; padding: 0 1.5rem; }
-.error { padding: 0.75rem 1rem; border: 1px solid #c0392b; background: #fdecea; color: #7b241c; }
-`;
+export type Section = "dashboard" | "profile" | "settings" | "personal-info" | "resumes" | "chats";
 
 export interface LayoutProps {
   title: string;
   /** The package `basePath`, so links stay under it. */
   basePath: string;
+  /** Highlights the matching nav link (styled from `body[data-section]`). */
+  section?: Section;
+  /** Renders only the content (no sidebar or logout); for pages shown before sign-in. */
+  bare?: boolean;
 }
 
-export const Layout: FC<PropsWithChildren<LayoutProps>> = ({ title, basePath, children }) => {
+export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
+  title,
+  basePath,
+  section,
+  bare,
+  children,
+}) => {
   const admin = `${basePath}/admin`;
   return (
     <html lang="en">
@@ -24,25 +27,58 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({ title, basePath, ch
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
-        <style>{CSS}</style>
+        <link rel="stylesheet" href={`${admin}/static/admin.css?v=${ADMIN_CSS_VERSION}`} />
         <script src={`${admin}/static/htmx.min.js`} />
       </head>
-      <body>
-        <header>
-          <nav>
-            <a href={admin}>Dashboard</a>
-            <a href={`${admin}/profile`}>Profile</a>
-            <a href={`${admin}/settings`}>Settings</a>
-            <a href={`${admin}/personal-info`}>Personal info</a>
-            <a href={`${admin}/resumes`}>Resumes</a>
-            <a href={`${admin}/chats`}>Chats</a>
-          </nav>
-          <form method="post" action={`${admin}/logout`}>
-            <button type="submit">Logout</button>
-          </form>
-        </header>
-        <main>{children}</main>
+      <body data-section={section}>
+        <div class="app-shell">
+          {bare ? null : (
+            <aside class="sidebar">
+              <div class="brand">
+                <div class="logo-tile" aria-hidden="true">
+                  CV
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-display text-base font-semibold">Career Chat</span>
+                  <span class="text-xs text-muted">Admin</span>
+                </div>
+              </div>
+              <nav aria-label="Admin">
+                <a href={admin}>Dashboard</a>
+                <a href={`${admin}/profile`}>Profile</a>
+                <a href={`${admin}/settings`}>Settings</a>
+                <a href={`${admin}/personal-info`}>Personal info</a>
+                <a href={`${admin}/resumes`}>Resumes</a>
+                <a href={`${admin}/chats`}>Chats</a>
+              </nav>
+              <div class="sidebar-foot">
+                <form method="post" action={`${admin}/logout`}>
+                  <button type="submit" class="btn-ghost w-full">
+                    Logout
+                  </button>
+                </form>
+              </div>
+            </aside>
+          )}
+          <main class="main">
+            <div class={bare ? "main-inner justify-center" : "main-inner"}>{children}</div>
+          </main>
+        </div>
       </body>
     </html>
   );
 };
+
+/** Title block at the top of every admin page. */
+export const PageHeader: FC<
+  PropsWithChildren<{ eyebrow: string; title: string; sub?: string }>
+> = ({ eyebrow, title, sub, children }) => (
+  <header class="page-header">
+    <div class="page-header-text">
+      <span class="eyebrow">{eyebrow}</span>
+      <h1 class="page-title">{title}</h1>
+      {sub ? <p class="page-sub">{sub}</p> : null}
+    </div>
+    {children ? <div class="actions">{children}</div> : null}
+  </header>
+);

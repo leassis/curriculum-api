@@ -1,4 +1,4 @@
-import { Layout } from "../layout.js";
+import { Layout, PageHeader } from "../layout.js";
 
 /** The slice of a Personal Info Field the page shows; the value never reaches a view. */
 export interface PersonalInfoField {
@@ -26,10 +26,10 @@ export const Row = ({
         <code>{field.key}</code>
       </td>
       <td>
-        <input type="text" name="label" value={field.label} aria-label="Label" />
+        <input class="input" type="text" name="label" value={field.label} aria-label="Label" />
       </td>
       <td>
-        <select name="visibility" aria-label="Visibility">
+        <select class="input" name="visibility" aria-label="Visibility">
           {visibilities.map((v) => (
             <option value={v} selected={v === field.visibility}>
               {v}
@@ -39,25 +39,30 @@ export const Row = ({
       </td>
       <td>
         <input
+          class="input w-20"
           type="number"
           name="sortOrder"
           value={String(field.sortOrder)}
           aria-label="Sort order"
-          size={4}
         />
       </td>
       <td>
-        <span id={`value-${field.key}`}>{MASK}</span>{" "}
-        <button
-          type="button"
-          hx-get={`${url}/reveal`}
-          hx-target={`#value-${field.key}`}
-          hx-swap="innerHTML"
-        >
-          Reveal
-        </button>
-        <br />
+        <div class="mb-1.5 flex items-center gap-2">
+          <span id={`value-${field.key}`} class="mono">
+            {MASK}
+          </span>{" "}
+          <button
+            type="button"
+            class="btn-ghost btn-sm"
+            hx-get={`${url}/reveal`}
+            hx-target={`#value-${field.key}`}
+            hx-swap="innerHTML"
+          >
+            Reveal
+          </button>
+        </div>
         <input
+          class="input"
           type="text"
           name="value"
           placeholder="New value (empty keeps current)"
@@ -66,24 +71,28 @@ export const Row = ({
         />
       </td>
       <td>
-        <button
-          type="button"
-          hx-put={url}
-          hx-include="closest tr"
-          hx-target="closest tr"
-          hx-swap="outerHTML"
-        >
-          Save
-        </button>{" "}
-        <button
-          type="button"
-          hx-delete={url}
-          hx-confirm={`Delete ${field.label}?`}
-          hx-target="closest tr"
-          hx-swap="outerHTML"
-        >
-          Delete
-        </button>
+        <div class="actions justify-end">
+          <button
+            type="button"
+            class="btn-ghost btn-sm"
+            hx-put={url}
+            hx-include="closest tr"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+          >
+            Save
+          </button>{" "}
+          <button
+            type="button"
+            class="btn-ghost btn-sm btn-danger"
+            hx-delete={url}
+            hx-confirm={`Delete ${field.label}?`}
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+          >
+            Delete
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -100,25 +109,27 @@ export const List = ({
 }) => (
   <div id="pi-list">
     {fields.length === 0 ? (
-      <p>No personal info yet</p>
+      <p class="empty-state">No personal info yet</p>
     ) : (
-      <table>
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Label</th>
-            <th>Visibility</th>
-            <th>Sort order</th>
-            <th>Value</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {fields.map((f) => (
-            <Row base={base} field={f} visibilities={visibilities} />
-          ))}
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Label</th>
+              <th>Visibility</th>
+              <th>Sort order</th>
+              <th>Value</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map((f) => (
+              <Row base={base} field={f} visibilities={visibilities} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     )}
   </div>
 );
@@ -134,36 +145,57 @@ export const PersonalInfoPage = ({
 }) => {
   const base = `${basePath}/admin/personal-info`;
   return (
-    <Layout title="Personal info" basePath={basePath}>
-      <h1>Personal info</h1>
+    <Layout title="Personal info" basePath={basePath} section="personal-info">
+      <PageHeader
+        eyebrow="Personal info"
+        title="Personal info"
+        sub="Contact data for the resume header. Encrypted, and never sent to the AI."
+      />
       <div id="pi-error" />
       <List base={base} fields={fields} visibilities={visibilities} />
-      <h2>Add field</h2>
-      <form hx-post={base} hx-target="#pi-list" hx-swap="outerHTML">
-        <p>
-          <label for="new-key">Key</label>{" "}
-          <input id="new-key" type="text" name="key" placeholder="EMAIL" />
-        </p>
-        <p>
-          <label for="new-label">Label</label> <input id="new-label" type="text" name="label" />
-        </p>
-        <p>
-          <label for="new-value">Value</label>{" "}
-          <input id="new-value" type="text" name="value" autocomplete="off" />
-        </p>
-        <p>
-          <label for="new-visibility">Visibility</label>{" "}
-          <select id="new-visibility" name="visibility">
-            {visibilities.map((v) => (
-              <option value={v}>{v}</option>
-            ))}
-          </select>
-        </p>
-        <p>
-          <label for="new-sort">Sort order</label>{" "}
-          <input id="new-sort" type="number" name="sortOrder" value="0" />
-        </p>
-        <button type="submit">Add</button>
+      <form class="card-pad" hx-post={base} hx-target="#pi-list" hx-swap="outerHTML">
+        <h2 class="section-title">Add field</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label" for="new-key">
+              Key
+            </label>
+            <input class="input" id="new-key" type="text" name="key" placeholder="EMAIL" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="new-label">
+              Label
+            </label>
+            <input class="input" id="new-label" type="text" name="label" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="new-value">
+              Value
+            </label>
+            <input class="input" id="new-value" type="text" name="value" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="new-visibility">
+              Visibility
+            </label>
+            <select class="input" id="new-visibility" name="visibility">
+              {visibilities.map((v) => (
+                <option value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label" for="new-sort">
+              Sort order
+            </label>
+            <input class="input" id="new-sort" type="number" name="sortOrder" value="0" />
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn">
+            Add
+          </button>
+        </div>
       </form>
       <script src={`${base}/ui.js`} />
     </Layout>

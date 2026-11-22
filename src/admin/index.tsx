@@ -16,7 +16,23 @@ import { printRouter } from "./print/routes.js";
 import { profileRouter } from "./profile/routes.js";
 import { resumesRouter } from "./resumes/routes.js";
 import { settingsRouter } from "./settings/routes.js";
+import adminCss from "./static/admin-css.generated.js";
+import { FONTS } from "./static/fonts.generated.js";
 import htmx from "./static/htmx.generated.js";
+
+const decodedFonts = new Map<string, Uint8Array<ArrayBuffer>>();
+
+/** Decodes a vendored font once per instance. */
+function fontBytes(name: string): Uint8Array<ArrayBuffer> | undefined {
+  const base64 = FONTS[name];
+  if (base64 === undefined) return undefined;
+  let bytes = decodedFonts.get(name);
+  if (!bytes) {
+    bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+    decodedFonts.set(name, bytes);
+  }
+  return bytes;
+}
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -57,6 +73,20 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
       "Cache-Control": "public, max-age=31536000, immutable",
     }),
   );
+  admin.get("/static/admin.css", (c) =>
+    c.body(adminCss, 200, {
+      "Content-Type": "text/css; charset=utf-8",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    }),
+  );
+  admin.get("/static/fonts/:file", (c) => {
+    const bytes = fontBytes(c.req.param("file"));
+    if (!bytes) return c.notFound();
+    return c.body(bytes, 200, {
+      "Content-Type": "font/woff2",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    });
+  });
   admin.use("*", requireAdmin);
 
   admin.route("/", loginRouter);
