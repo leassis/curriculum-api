@@ -11,5 +11,7 @@ Production, local dev, tests and CI all use `drizzle-orm/node-postgres` with a s
 
 - `db.transaction` is available; single-statement atomic rules remain valid and stay as they are.
 - Migrations prefer `DATABASE_URL_UNPOOLED` (direct connection) when set, falling back to `DATABASE_URL`, because DDL does not belong behind PgBouncer.
-- `createDb` opens no connection until the first query. Long-lived servers keep the pool; the CLI and tests close it with `closeDb` so the process can exit.
+- Seed and cleanup use `DATABASE_URL` only; only `migrate` prefers `DATABASE_URL_UNPOOLED`, and it prints the target host so a mismatch is visible.
+- `createApp` builds a pool per call, so a host must build the app once per module (as `examples/node/server.ts` does), not per request.
+- `createDb` opens no connection until the first query. Long-lived servers keep the pool; the CLI closes it with `closeDb` so the process can exit. Tests share one module-level pool per test file and let vitest tear the process down.
 - Repositories stay typed against Drizzle's generic `PgDatabase`.

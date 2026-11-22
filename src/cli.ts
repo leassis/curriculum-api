@@ -23,6 +23,16 @@ Commands:
 
 const BCRYPT_COST = 12;
 
+/** Host and database name only, never credentials. */
+export function hostOf(url: string): string {
+  try {
+    const { host, pathname } = new URL(url);
+    return `${host}${pathname}`;
+  } catch {
+    return "(unparseable url)";
+  }
+}
+
 /** Runs one command and returns the process exit code. */
 export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const [command] = argv;
@@ -38,7 +48,7 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
       const url = databaseUrl(io.env.DATABASE_URL_UNPOOLED);
       if (!url) return 1;
       await migrate(url);
-      io.out("migrations applied");
+      io.out(`migrations applied to ${hostOf(url)}`);
       return 0;
     }
     case "seed": {
