@@ -455,12 +455,13 @@ T33 → T34 → T35
 **Requirement**: FND-20
 
 **Done when**:
-- [ ] Integration test covers get/all/set/delete round trip
-- [ ] Full gate passes
+- [x] Integration test covers get/all/set/delete round trip
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(repo): add settings repository`
+**Status**: done
 
 ---
 
