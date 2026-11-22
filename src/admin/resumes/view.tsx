@@ -1,6 +1,6 @@
 import { raw } from "hono/html";
 import { renderMarkdown } from "../../lib/markdown.js";
-import { Layout } from "../layout.js";
+import { Layout, PageHeader } from "../layout.js";
 
 /** The slice of a tailored resume the pages show. */
 export interface ResumeView {
@@ -26,14 +26,17 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
   return (
     <tr>
       <td>
-        <a href={url}>{resume.title}</a>
+        <a class="font-semibold" href={url}>
+          {resume.title}
+        </a>
       </td>
       <td>{resume.company ?? ""}</td>
-      <td>{resume.model ?? ""}</td>
-      <td>{day(resume.updatedAt)}</td>
+      <td class="mono muted">{resume.model ?? ""}</td>
+      <td class="muted">{day(resume.updatedAt)}</td>
       <td>
         <button
           type="button"
+          class="btn-ghost btn-sm btn-danger"
           hx-delete={url}
           hx-confirm={`Delete ${resume.title}?`}
           hx-target="closest tr"
@@ -47,46 +50,61 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
 };
 
 export const ResumesPage = ({ basePath, resumes }: { basePath: string; resumes: ResumeView[] }) => (
-  <Layout title="Resumes" basePath={basePath}>
-    <h1>Tailored resumes</h1>
+  <Layout title="Resumes" basePath={basePath} section="resumes">
+    <PageHeader
+      eyebrow="Resumes"
+      title="Tailored resumes"
+      sub="One resume per job description, generated from your Master CV."
+    />
     {resumes.length === 0 ? (
-      <p>No tailored resumes yet</p>
+      <p class="empty-state">No tailored resumes yet</p>
     ) : (
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Company</th>
-            <th>Model</th>
-            <th>Updated</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {resumes.map((resume) => (
-            <ResumeRow basePath={basePath} resume={resume} />
-          ))}
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Model</th>
+              <th>Updated</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {resumes.map((resume) => (
+              <ResumeRow basePath={basePath} resume={resume} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     )}
-    <h2>New resume</h2>
-    <form method="post" action={`${basePath}/admin/resumes`}>
-      <p>
-        <label for="title">Title</label>
-        <br />
-        <input id="title" type="text" name="title" size={60} required />
-      </p>
-      <p>
-        <label for="company">Company</label>
-        <br />
-        <input id="company" type="text" name="company" size={60} />
-      </p>
-      <p>
-        <label for="jobDescription">Job Description</label>
-        <br />
-        <textarea id="jobDescription" name="jobDescription" rows={12} cols={80} required />
-      </p>
-      <button type="submit">Create</button>
+    <form class="card-pad" method="post" action={`${basePath}/admin/resumes`}>
+      <h2 class="section-title">New resume</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="title">
+            Title
+          </label>
+          <input class="input" id="title" type="text" name="title" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="company">
+            Company
+          </label>
+          <input class="input" id="company" type="text" name="company" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="jobDescription">
+          Job Description
+        </label>
+        <textarea class="input" id="jobDescription" name="jobDescription" rows={12} required />
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn">
+          Create
+        </button>
+      </div>
     </form>
   </Layout>
 );
@@ -104,77 +122,94 @@ export const Editor = ({
   const selected = resume.headerFields;
   return (
     <div id="editor">
-      <p>
-        <strong>{resume.title}</strong>
-        {resume.company ? ` at ${resume.company}` : ""}
-      </p>
-      <details>
-        <summary>Job Description</summary>
-        <pre style="white-space: pre-wrap">{resume.jobDescription}</pre>
-      </details>
-      <form id="resume-form">
-        <p>
-          <label for="content">Markdown</label>
-          <br />
-          <textarea
-            id="content"
-            name="content"
-            rows={28}
-            cols={80}
-            hx-post={`${url}/preview`}
-            hx-trigger="input changed delay:400ms"
-            hx-target="#preview"
-          >
-            {resume.content}
-          </textarea>
+      <div class="flex flex-col gap-6">
+        <p class="page-sub">
+          <strong class="text-ink">{resume.title}</strong>
+          {resume.company ? ` at ${resume.company}` : ""}
         </p>
-        <fieldset>
-          <legend>Personal header</legend>
-          {options.map((o) => (
-            <label>
-              <input
-                type="checkbox"
-                name="headerFields"
-                value={o.key}
-                checked={selected === null || selected.includes(o.key)}
-              />{" "}
-              {o.label}{" "}
-            </label>
-          ))}
-        </fieldset>
-        <p>
-          <button
-            type="button"
-            hx-post={`${url}/generate`}
-            hx-target="#editor"
-            hx-swap="outerHTML"
-            hx-indicator="#generate-indicator"
-            hx-disabled-elt="this"
-            hx-confirm={resume.content.trim() === "" ? undefined : "Replace the current content?"}
-          >
-            Generate
-          </button>{" "}
-          <span id="generate-indicator" class="htmx-indicator">
-            Generating…
-          </span>{" "}
-          <button
-            type="button"
-            hx-put={url}
-            hx-include="#resume-form"
-            hx-target="#editor-status"
-            hx-swap="innerHTML"
-          >
-            Save
-          </button>{" "}
-          <a href={`${url}/print`} target="_blank" rel="noopener">
-            Print
-          </a>{" "}
-          <a href={`${url}/download.md`}>Download .md</a>
-        </p>
-      </form>
-      <p id="editor-status" role="status" />
-      <h2>Preview</h2>
-      <div id="preview">{raw(renderMarkdown(resume.content))}</div>
+        <details class="disclosure">
+          <summary>Job Description</summary>
+          <pre>{resume.jobDescription}</pre>
+        </details>
+        <div class="editor-grid">
+          <form id="resume-form" class="card-pad">
+            <div class="field">
+              <label class="field-label" for="content">
+                Markdown
+              </label>
+              <textarea
+                class="input mono"
+                id="content"
+                name="content"
+                rows={28}
+                hx-post={`${url}/preview`}
+                hx-trigger="input changed delay:400ms"
+                hx-target="#preview"
+              >
+                {resume.content}
+              </textarea>
+            </div>
+            <fieldset class="checks">
+              <legend>Personal header</legend>
+              {options.map((o) => (
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    name="headerFields"
+                    value={o.key}
+                    checked={selected === null || selected.includes(o.key)}
+                  />{" "}
+                  {o.label}{" "}
+                </label>
+              ))}
+            </fieldset>
+            <div class="actions">
+              <button
+                type="button"
+                class="btn"
+                hx-post={`${url}/generate`}
+                hx-target="#editor"
+                hx-swap="outerHTML"
+                hx-indicator="#generate-indicator"
+                hx-disabled-elt="this"
+                hx-confirm={
+                  resume.content.trim() === "" ? undefined : "Replace the current content?"
+                }
+              >
+                Generate
+              </button>{" "}
+              <span id="generate-indicator" class="htmx-indicator muted">
+                Generating…
+              </span>{" "}
+              <button
+                type="button"
+                class="btn-ghost"
+                hx-put={url}
+                hx-include="#resume-form"
+                hx-target="#editor-status"
+                hx-swap="innerHTML"
+              >
+                Save
+              </button>{" "}
+              <a class="btn-ghost" href={`${url}/print`} target="_blank" rel="noopener">
+                Print
+              </a>{" "}
+              <a class="btn-ghost" href={`${url}/download.md`}>
+                Download .md
+              </a>
+            </div>
+            <p id="editor-status" class="status" role="status" />
+          </form>
+          <section class="flex flex-col gap-3" aria-labelledby="preview-title">
+            <h2 id="preview-title" class="section-title">
+              Preview
+            </h2>
+            <div id="preview" class="paper">
+              {raw(renderMarkdown(resume.content))}
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 };
@@ -184,8 +219,11 @@ export const EditorPage = (p: {
   resume: ResumeView;
   options: HeaderOption[];
 }) => (
-  <Layout title={p.resume.title} basePath={p.basePath}>
-    <h1>Resume</h1>
+  <Layout title={p.resume.title} basePath={p.basePath} section="resumes">
+    <a class="back-link" href={`${p.basePath}/admin/resumes`}>
+      ← Back to resumes
+    </a>
+    <PageHeader eyebrow="Resume" title="Resume" />
     <script src={`${p.basePath}/admin/resumes/editor.js`} />
     <Editor {...p} />
   </Layout>

@@ -1,5 +1,5 @@
 import { ErrorFragment } from "../error-fragment.js";
-import { Layout } from "../layout.js";
+import { Layout, PageHeader } from "../layout.js";
 
 export interface Row {
   key: string;
@@ -22,29 +22,41 @@ export const SettingsPage = ({
   error?: string;
   saved?: boolean;
 }) => (
-  <Layout title="Settings" basePath={basePath}>
-    <h1>Settings</h1>
+  <Layout title="Settings" basePath={basePath} section="settings">
+    <PageHeader
+      eyebrow="Settings"
+      title="Settings"
+      sub="Leave a field empty to remove its override and use the deployment configuration."
+    />
     {error ? <ErrorFragment message={error} /> : null}
-    {saved ? <p role="status">Saved</p> : null}
-    <form method="post" action={`${basePath}/admin/settings`}>
-      {rows.map((r) => (
-        <p>
-          <label for={r.key}>{r.key}</label>
-          <br />
-          <input
-            id={r.key}
-            type="text"
-            name={r.key}
-            value={r.override}
-            placeholder={r.fallback}
-            size={50}
-          />
-        </p>
-      ))}
-      <p>
-        <label for={pageSize.key}>{pageSize.key}</label>
-        <br />
-        <select id={pageSize.key} name={pageSize.key}>
+    {saved ? (
+      <p class="status" role="status">
+        Saved
+      </p>
+    ) : null}
+    <form class="card-pad" method="post" action={`${basePath}/admin/settings`}>
+      <div class="form-grid">
+        {rows.map((r) => (
+          <div class="field">
+            <label class="field-label mono" for={r.key}>
+              {r.key}
+            </label>
+            <input
+              class="input"
+              id={r.key}
+              type="text"
+              name={r.key}
+              value={r.override}
+              placeholder={r.fallback}
+            />
+          </div>
+        ))}
+      </div>
+      <div class="field max-w-xs">
+        <label class="field-label mono" for={pageSize.key}>
+          {pageSize.key}
+        </label>
+        <select class="input" id={pageSize.key} name={pageSize.key}>
           <option value="" selected={pageSize.override === ""}>
             Default ({pageSize.fallback})
           </option>
@@ -54,9 +66,12 @@ export const SettingsPage = ({
             </option>
           ))}
         </select>
-      </p>
-      <p>Leave a field empty to remove its override and use the deployment configuration.</p>
-      <button type="submit">Save</button>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn">
+          Save
+        </button>
+      </div>
     </form>
   </Layout>
 );

@@ -1,5 +1,5 @@
 import { ErrorFragment } from "../error-fragment.js";
-import { Layout } from "../layout.js";
+import { Layout, PageHeader } from "../layout.js";
 
 export const FIELDS = [
   { name: "fullName", label: "Full name", long: false, required: false },
@@ -24,25 +24,43 @@ export const ProfilePage = ({
   error?: string;
   saved?: boolean;
 }) => (
-  <Layout title="Profile" basePath={basePath}>
-    <h1>Profile</h1>
+  <Layout title="Profile" basePath={basePath} section="profile">
+    <PageHeader
+      eyebrow="Profile"
+      title="Profile"
+      sub="Your career history and the prompts the AI follows. Contact data lives in Personal info."
+    />
     {error ? <ErrorFragment message={error} /> : null}
-    {saved ? <p role="status">Saved</p> : null}
-    <form method="post" action={`${basePath}/admin/profile`}>
+    {saved ? (
+      <p class="status" role="status">
+        Saved
+      </p>
+    ) : null}
+    <form class="card-pad" method="post" action={`${basePath}/admin/profile`}>
       {FIELDS.map((f) => (
-        <p>
-          <label for={f.name}>{f.label}</label>
-          <br />
+        <div class="field">
+          <label class="field-label" for={f.name}>
+            {f.label}
+          </label>
           {f.long ? (
-            <textarea id={f.name} name={f.name} rows={f.name === "masterCv" ? 24 : 8} cols={80}>
+            <textarea
+              class={f.name === "masterCv" ? "input mono" : "input"}
+              id={f.name}
+              name={f.name}
+              rows={f.name === "masterCv" ? 24 : 8}
+            >
               {values[f.name]}
             </textarea>
           ) : (
-            <input id={f.name} type="text" name={f.name} value={values[f.name]} size={60} />
+            <input class="input" id={f.name} type="text" name={f.name} value={values[f.name]} />
           )}
-        </p>
+        </div>
       ))}
-      <button type="submit">Save</button>
+      <div class="actions">
+        <button type="submit" class="btn">
+          Save
+        </button>
+      </div>
     </form>
   </Layout>
 );
