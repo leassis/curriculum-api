@@ -607,12 +607,13 @@ T33 → T34 → T35
 **Requirement**: FND-13
 
 **Done when**:
-- [ ] Unit test proves C32
-- [ ] Quick gate passes
+- [x] Unit test proves C32
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(core): wire container with track skeleton`
+**Status**: done
 
 ---
 
