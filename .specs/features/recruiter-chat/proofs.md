@@ -1,6 +1,6 @@
 # recruiter-chat proofs
 
-**HEAD**: a41f066
+**HEAD**: 8c751be
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 60 pass, 0 fail
@@ -73,39 +73,39 @@
 `Run unit` - exit 0
 
 ```
-stderr | test/unit/routes/recruiter.test.ts > recruiter chat > answers 502 llm_unavailable and gives the question back
-LlmUnavailableError: The language model is unavailable
-    at firstChunk (/Users/leassis/workspace/curriculum-api/src/llm/first-chunk.ts:28:57)
-    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:57:20)
-    at RecruiterChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/recruiter-chat.service.ts:201:26)
-    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/recruiter.ts:81:33)
+PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
+    at LlmService.prepare (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:90:13)
+    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:48:45)
+    at PublicChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/public-chat.service.ts:30:26)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:69:33)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at Object.handler (/Users/leassis/workspace/curriculum-api/src/middleware/require-session.ts:15:5)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35) {
-  code: 'llm_unavailable',
-  status: 502
+  fieldKey: 'EMAIL',
+  code: 'internal_error',
+  status: 500
 }
 ```
 
 `Run int` - exit 0
 
 ```
- ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1477ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1572ms
- ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1225ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 461ms
- ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 714ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 335ms
- ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 679ms
- ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 994ms
- ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 699ms
- ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 424ms
+ ✓ |integration| test/integration/admin/settings.test.ts > admin settings with database > applies the model override to the next public call 1456ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 1264ms
+ ✓ |integration| test/integration/services/personal-info.service.test.ts > PersonalInfoService > stores ciphertext only 1133ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > creates the profile row with default prompts 425ms
+ ✓ |integration| test/integration/db/seed.test.ts > seed > leaves an existing profile unchanged 590ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows zero for each count when empty 325ms
+ ✓ |integration| test/integration/admin/dashboard.test.ts > admin dashboard > shows active chats, resumes and usage today 615ms
+ ✓ |integration| test/integration/db/cleanup.test.ts > cleanup > deletes rows older than 30 days 896ms
+ ✓ |integration| test/integration/repositories/profile.repository.test.ts > ProfileRepository > upsert writes row 1 and updated_at 657ms
+ ✓ |integration| test/integration/cli.test.ts > cli > migrate runs and requires DATABASE_URL 418ms
 
  Test Files  21 passed (21)
       Tests  51 passed (51)
-   Start at  04:25:40
-   Duration  75.10s (tests 92%, import 8%)
+   Start at  04:34:41
+   Duration  73.78s (tests 92%, import 8%)
 ```
