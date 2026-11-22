@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   ChatExpiredError,
   ChatRevokedError,
@@ -202,6 +202,14 @@ describe("recruiter chat service", () => {
       code: "llm_unavailable",
     });
     expect(repo.rows[0]).toMatchObject({ used: 0, lastUsedAt: null });
+  });
+
+  it("keeps the question counted when a non-llm error breaks the call", async () => {
+    const { recruiterChat, repo, profile, newChat } = await recruiterSetup();
+    const chat = await newChat();
+    vi.spyOn(profile, "get").mockRejectedValue(new Error("db down"));
+    await expect(recruiterChat.ask(chat, messages)).rejects.toThrow("db down");
+    expect(repo.rows[0]).toMatchObject({ used: 1 });
   });
 
   it("sets last used and reports the remaining questions", async () => {

@@ -8,6 +8,7 @@ import {
   ChatRevokedError,
   ForbiddenError,
   LimitReachedError,
+  LlmUnavailableError,
   NotFoundError,
   ValidationError,
 } from "./errors.js";
@@ -211,7 +212,8 @@ export class RecruiterChatService {
       await this.chats.touch(granted.id);
       return { stream, remaining: granted.maxQuestions - granted.used };
     } catch (error) {
-      await this.chats.release(granted.id);
+      // AC10: only an unavailable LLM gives the question back.
+      if (error instanceof LlmUnavailableError) await this.chats.release(granted.id);
       throw error;
     }
   }
