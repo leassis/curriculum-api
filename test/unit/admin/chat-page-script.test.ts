@@ -189,6 +189,48 @@ describe("recruiter page script", () => {
     expect(page.log()).toEqual(["Q", "ok"]);
   });
 
+  it("disables the form while an answer streams", async () => {
+    let finish: () => void = () => {};
+    const slow = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode("par"));
+          finish = () => controller.close();
+        },
+      }),
+      { status: 200, headers: { "X-Remaining": "1" } },
+    );
+    const page = await loadPage((call) =>
+      call.url.endsWith("/session") ? okSession() : call.url.endsWith("/chat") ? slow : opening(),
+    );
+    page.get("question").value = "Q";
+    (page.get("ask").handlers.submit as (e: { preventDefault(): void }) => void)({
+      preventDefault() {},
+    });
+    await sleep();
+    expect(page.get("send").disabled).toBe(true);
+    expect(page.get("question").disabled).toBe(true);
+    finish();
+    for (let i = 0; i < 50 && page.get("send").disabled; i++) await sleep();
+    expect(page.get("send").disabled).toBe(false);
+    expect(page.log()).toEqual(["Q", "par"]);
+  });
+
+  it("does not loop on a second 401 and shows a specific message", async () => {
+    const page = await loadPage((call) =>
+      call.url.endsWith("/session")
+        ? okSession()
+        : call.url.endsWith("/chat")
+          ? Response.json({ error: "unauthorized" }, { status: 401 })
+          : opening(),
+    );
+    await page.submit("Q");
+    expect(page.calls.filter((c) => c.url.endsWith("/session")).length).toBe(2);
+    expect(page.sent().length).toBe(2);
+    expect(page.get("status").textContent).toContain("not accepted");
+    expect(page.log()).toEqual([]);
+  });
+
   it("uses no html-injecting api", () => {
     for (const banned of [
       "innerHTML",
