@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../../env.js";
 import { setSessionCookie, signSession } from "../../security/session.js";
-import { CHAT_PAGE_JS } from "./script.js";
+import { CHAT_PAGE_JS } from "../static/chat-page-js.generated.js";
 import { ChatPage } from "./view.js";
 
 /** Mounted at `/admin`. An internal chat page for the Owner, behind the admin session. */

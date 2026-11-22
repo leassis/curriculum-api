@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from "../../env.js";
 import { ValidationError } from "../../services/errors.js";
 import { type PersonalInfoUpdate, VISIBILITIES } from "../../services/personal-info.service.js";
-import { UI_JS } from "./script.js";
+import { UI_JS } from "../static/personal-info-js.generated.js";
 import { List, PersonalInfoPage, RevealedValue, Row } from "./view.js";
 
 function text(value: unknown): string {

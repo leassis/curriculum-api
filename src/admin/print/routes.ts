@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../../env.js";
-import { PRINT_JS } from "./script.js";
+import { PRINT_JS } from "../static/print-js.generated.js";
 import { PrintPage } from "./view.js";
 
 const noindex = { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" };
