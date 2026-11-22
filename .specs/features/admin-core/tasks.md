@@ -104,13 +104,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-03, ADM-04
 
 **Done when**:
-- [ ] Unit tests cover AC 1-4 and edge cases; integration proves DB unchanged on rejection and new CV read after save
-- [ ] Full gate passes
+- [x] Unit tests cover AC 1-4 and edge cases; integration proves DB unchanged on rejection and new CV read after save
+- [x] Full gate passes
 
 **Tests**: unit, integration
 **Gate**: Full
 **Commit**: `feat(admin): add profile page with pii guard on save`
-**Status**: pending
+**Status**: done
 
 ---
 
