@@ -246,12 +246,13 @@ T33 → T34 → T35
 **Requirement**: FND-05, FND-06
 
 **Done when**:
-- [ ] Integration tests prove C11-C17
-- [ ] Full gate passes
+- [x] Integration tests prove C11-C17
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(db): add initial migration and migrate()`
+**Status**: done
 
 ---
 
