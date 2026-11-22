@@ -398,12 +398,13 @@ T33 → T34 → T35
 **Requirement**: FND-16
 
 **Done when**:
-- [ ] Unit test proves C39
-- [ ] Quick gate passes
+- [x] Unit test proves C39
+- [x] Quick gate passes
 
 **Tests**: unit
 **Gate**: Quick
 **Commit**: `feat(security): verify turnstile tokens`
+**Status**: done
 
 ---
 
