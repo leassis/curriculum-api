@@ -265,12 +265,13 @@ T33 → T34 → T35
 **Requirement**: FND-07
 
 **Done when**:
-- [ ] Integration tests prove C19, C20
-- [ ] Full gate passes
+- [x] Integration tests prove C19, C20
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(db): add seed with default prompts`
+**Status**: done
 
 ---
 
