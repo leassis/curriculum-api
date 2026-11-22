@@ -1,6 +1,6 @@
 # Tailored Resumes Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/admin/resumes.tsx`, `src/admin/print.tsx`, `src/services/resume.service.ts`, `src/repositories/resume.repository.ts`, `src/lib/markdown.ts`, their tests.
 
@@ -29,13 +29,17 @@ For each application the Owner wants a Career Body tailored to a Job Description
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
-| Markdown renderer | `marked` with raw HTML disabled, output passed through an allowlist sanitizer | §5.3 "never inject raw HTML from the LLM" | n |
-| Print page size setting | Settings Override key `print.pageSize` = `A4` (default) or `Letter`; the key is in foundation's allowlist (FND-20), the admin settings input is in `admin-core` | §5.5 "configurable to Letter in settings" | n |
-| Generate overwrites edits | Generating again replaces `content`; the button asks "Replace the current content?" via `hx-confirm` when content is non-empty | Prevents losing manual edits by one click | n |
-| Download filename | `<slug of title>.md` | Readable, filesystem-safe | n |
-| `headerFields` default | NULL means all fields; saving all checkboxes checked stores NULL | §5.5 "default = all fields" | n |
-| Tailor max output tokens | 4000 | A full resume exceeds the chat limits; no limit named in source | n |
-| Print view name line | `h1` = `profile.fullName`; Personal Info Fields follow in `sortOrder` | §5.5 `h1` name; fullName is UI-only data | n |
+| Markdown renderer | `marked` with raw HTML disabled, output passed through an allowlist sanitizer | §5.3 "never inject raw HTML from the LLM" | y (default, orchestrator) |
+| Print page size setting | Settings Override key `print.pageSize` = `A4` (default) or `Letter`; the key is in foundation's allowlist (FND-20), the admin settings input is in `admin-core` | §5.5 "configurable to Letter in settings" | y (default, orchestrator) |
+| Generate overwrites edits | Generating again replaces `content`; the button asks "Replace the current content?" via `hx-confirm` when content is non-empty | Prevents losing manual edits by one click | y (default, orchestrator) |
+| Download filename | `<slug of title>.md` | Readable, filesystem-safe | y (default, orchestrator) |
+| `headerFields` default | NULL means all fields; saving all checkboxes checked stores NULL | §5.5 "default = all fields" | y (default, orchestrator) |
+| Tailor max output tokens | 4000 | A full resume exceeds the chat limits; no limit named in source | y (default, orchestrator) |
+| Print view name line | `h1` = `profile.fullName`; Personal Info Fields follow in `sortOrder` | §5.5 `h1` name; fullName is UI-only data | y (default, orchestrator) |
+| Raw HTML in markdown | Shown as escaped text, never as elements; the markdown around it still renders | Safe and nothing the Owner typed disappears silently | y (default, orchestrator) |
+| Master CV and Job Description in the tailor call | Master CV is `body` (the LLM service wraps it in `<cv>`), the Job Description is `input` | The only two values the model sees | y (default, orchestrator) |
+| Unknown header keys on save | Keys that are not current Personal Info Fields are dropped; if the kept set equals all fields it is stored as NULL | Keeps `headerFields` consistent with §5.5 | y (default, orchestrator) |
+| Print page script | The "Print / Save as PDF" button is wired by `GET /admin/print/print.js` | Admin CSP is `script-src 'self'`, so no inline handler works | y (default, orchestrator) |
 
 **Open questions:** none - all resolved or logged above.
 
