@@ -760,12 +760,13 @@ T33 → T34 → T35
 **Requirement**: FND-01, FND-02, FND-04
 
 **Done when**:
-- [ ] Unit tests prove C1, C2, C7, C8, C18
-- [ ] Build gate passes
+- [x] Unit tests prove C1, C2, C7, C8, C18
+- [x] Build gate passes
 
 **Tests**: unit
 **Gate**: Build
 **Commit**: `test: assert repository layout and package contract`
+**Status**: done
 
 ---
 
