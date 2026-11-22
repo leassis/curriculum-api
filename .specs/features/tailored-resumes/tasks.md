@@ -70,13 +70,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-01
 
 **Done when**:
-- [ ] Round trips including NULL and array `headerFields`; delete of a resume linked to a recruiter chat nulls the link
-- [ ] Full gate passes
+- [x] Round trips including NULL and array `headerFields`; delete of a resume linked to a recruiter chat nulls the link
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(resumes): add resume repository`
-**Status**: pending
+**Status**: done
 
 ---
 
