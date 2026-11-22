@@ -108,8 +108,8 @@ T5 → T6 → T7
 
 **Done when**:
 
-- [ ] `test/unit/support/neon-branch.test.ts` with a fake `fetch` covers: parent from `TEST_PARENT_BRANCH_ID`, fallback to `PARENT_BRANCH_ID`, `expires_at` = now + 1h, migrate called with the branch URI after operations finish, each missing variable named, non-2xx message, no key or URI in errors/logs, `stop()` deletes, failed delete logged with branch id and not thrown, failed migrate deletes then rethrows
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] `test/unit/support/neon-branch.test.ts` with a fake `fetch` covers: parent from `TEST_PARENT_BRANCH_ID`, fallback to `PARENT_BRANCH_ID`, `expires_at` = now + 1h, migrate called with the branch URI after operations finish, each missing variable named, non-2xx message, no key or URI in errors/logs, `stop()` deletes, failed delete logged with branch id and not thrown, failed migrate deletes then rethrows
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
@@ -265,7 +265,7 @@ Proof: run unit | ✓ repo layout > docs describe Neon, not the old Postgres sta
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** T1 worker returned (c9530e2); T2 worker (one sub-agent per task, run in order)
+**Dispatched:** T1 worker returned (c9530e2); T2 worker returned (23316bf); T3 worker (one sub-agent per task, run in order)
 **Walked:** none
 
 ---
