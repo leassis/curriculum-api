@@ -284,12 +284,13 @@ T33 → T34 → T35
 **Requirement**: FND-26
 
 **Done when**:
-- [ ] Integration test proves C72
-- [ ] Build gate passes (end of phase)
+- [x] Integration test proves C72
+- [x] Build gate passes (end of phase)
 
 **Tests**: integration
 **Gate**: Build
 **Commit**: `feat(db): add retention cleanup`
+**Status**: done
 
 ---
 
