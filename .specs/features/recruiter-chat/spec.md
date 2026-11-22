@@ -1,6 +1,6 @@
 # Recruiter Chat Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/routes/recruiter.ts`, `src/admin/chats.tsx`, `src/services/recruiter-chat.service.ts`, `src/repositories/recruiter-chat.repository.ts`, `src/middleware/require-active-recruiter-chat.ts`, their tests. `requireSession` comes from `foundation` (FND-14).
 
