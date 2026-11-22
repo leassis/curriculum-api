@@ -142,13 +142,13 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7
 **Requirement**: ADM-05, ADM-06
 
 **Done when**:
-- [ ] Unit tests cover AC 1-9
-- [ ] Full gate passes
+- [x] Unit tests cover AC 1-9
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(admin): add personal info page`
-**Status**: pending
+**Status**: done
 
 ---
 
