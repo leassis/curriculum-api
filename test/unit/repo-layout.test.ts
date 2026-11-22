@@ -180,6 +180,7 @@ describe("repo layout", () => {
     const lines = read(".env.example").split("\n");
     const variables = [
       "DATABASE_URL",
+      "DATABASE_URL_UNPOOLED",
       "OPENROUTER_API_KEY",
       "SESSION_SECRET",
       "TURNSTILE_SECRET",
@@ -189,13 +190,20 @@ describe("repo layout", () => {
       "MODEL_PUBLIC",
       "MODEL_TAILOR",
       "MODEL_RECRUITER",
-      "TEST_DATABASE_URL",
+      "NEON_API_KEY",
+      "NEON_PROJECT_ID",
+      "PARENT_BRANCH_ID",
+      "TEST_PARENT_BRANCH_ID",
     ];
     for (const name of variables) {
       const index = lines.findIndex((l) => l.startsWith(`${name}=`));
       expect(index, name).toBeGreaterThan(0);
       expect(lines[index - 1]?.startsWith("# "), `${name} has a comment`).toBe(true);
     }
+    expect(
+      lines.some((l) => l.includes("TEST_DATABASE_URL")),
+      "TEST_DATABASE_URL is gone",
+    ).toBe(false);
   });
 
   it("ships the init migration and the transcripts migration", () => {
