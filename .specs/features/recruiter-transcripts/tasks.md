@@ -78,7 +78,7 @@ T1 → T2 → T3 → T4 → T5
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(recruiter): store and list chat messages in the repository`
-**Status**: pending
+**Status**: done
 
 ---
 

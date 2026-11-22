@@ -1,4 +1,6 @@
 import type {
+  ChatMessageInsert,
+  ChatMessageRow,
   RecruiterChatInsert,
   RecruiterChatRepo,
   RecruiterChatRow,
@@ -11,6 +13,10 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
   /** id -> { title, content }; the Tailored Resumes table. */
   resumes = new Map<string, { title: string; content: string }>();
   acquires = 0;
+  /** chat id -> stored messages, oldest first; deleted with the chat. */
+  transcripts = new Map<string, ChatMessageRow[]>();
+  /** Makes the next `addMessages` fail. */
+  failAddMessages = false;
   private tick = 0;
 
   private view(row: RecruiterChatRow): RecruiterChatRow {
@@ -66,6 +72,7 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
   async delete(id: string): Promise<boolean> {
     const before = this.rows.length;
     this.rows = this.rows.filter((r) => r.id !== id);
+    this.transcripts.delete(id);
     return this.rows.length < before;
   }
 
@@ -98,6 +105,19 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
 
   async resumeOptions(): Promise<ResumeOption[]> {
     return [...this.resumes].map(([id, r]) => ({ id, title: r.title }));
+  }
+
+  async addMessages(chatId: string, messages: ChatMessageInsert[]): Promise<void> {
+    if (this.failAddMessages) throw new Error("database unavailable");
+    const list = this.transcripts.get(chatId) ?? [];
+    for (const m of messages) {
+      list.push({ id: `m-${list.length + 1}`, ...m, createdAt: new Date() });
+    }
+    this.transcripts.set(chatId, list);
+  }
+
+  async messages(chatId: string): Promise<ChatMessageRow[]> {
+    return [...(this.transcripts.get(chatId) ?? [])];
   }
 
   /** What deleting a Tailored Resume does to a chat: the link becomes NULL. */

@@ -1,6 +1,6 @@
-import { and, desc, eq, getTableColumns, gt, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, isNull, lt, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
-import { recruiterChats, tailoredResumes } from "../db/schema.js";
+import { recruiterChatMessages, recruiterChats, tailoredResumes } from "../db/schema.js";
 
 /** A chat row; `expired` is computed by the database clock, never stored. */
 export type RecruiterChatRow = typeof recruiterChats.$inferSelect & { expired: boolean };
@@ -20,6 +20,20 @@ export interface ResumeOption {
   title: string;
 }
 
+export type MessageRole = "user" | "assistant";
+
+export interface ChatMessageInsert {
+  role: MessageRole;
+  content: string;
+}
+
+export interface ChatMessageRow {
+  id: string;
+  role: MessageRole;
+  content: string;
+  createdAt: Date;
+}
+
 export interface RecruiterChatRepo {
   list(): Promise<RecruiterChatRow[]>;
   findByToken(token: string): Promise<RecruiterChatRow | null>;
@@ -37,6 +51,10 @@ export interface RecruiterChatRepo {
   resumeContent(id: string | null): Promise<string | null>;
   resumeExists(id: string): Promise<boolean>;
   resumeOptions(): Promise<ResumeOption[]>;
+  /** Stores messages in one statement, in array order; the chat's messages go with the chat. */
+  addMessages(chatId: string, messages: ChatMessageInsert[]): Promise<void>;
+  /** A chat's messages, oldest first. */
+  messages(chatId: string): Promise<ChatMessageRow[]>;
 }
 
 const expired = sql<boolean>`(${recruiterChats.expiresAt} is not null and ${recruiterChats.expiresAt} <= now())`;
@@ -151,5 +169,24 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
       .select({ id: tailoredResumes.id, title: tailoredResumes.title })
       .from(tailoredResumes)
       .orderBy(desc(tailoredResumes.createdAt), desc(tailoredResumes.id));
+  }
+
+  async addMessages(chatId: string, messages: ChatMessageInsert[]): Promise<void> {
+    if (messages.length === 0) return;
+    await this.db.insert(recruiterChatMessages).values(messages.map((m) => ({ chatId, ...m })));
+  }
+
+  async messages(chatId: string): Promise<ChatMessageRow[]> {
+    const rows = await this.db
+      .select({
+        id: recruiterChatMessages.id,
+        role: recruiterChatMessages.role,
+        content: recruiterChatMessages.content,
+        createdAt: recruiterChatMessages.createdAt,
+      })
+      .from(recruiterChatMessages)
+      .where(eq(recruiterChatMessages.chatId, chatId))
+      .orderBy(asc(recruiterChatMessages.seq));
+    return rows as ChatMessageRow[];
   }
 }
