@@ -2,8 +2,21 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore: &ignore
+      - "**/*.md"
+      - ".specs/**"
+      - "curriculum-specs/**"
+      - "docs/**"
+      - "release-please-config.json"
+      - ".release-please-manifest.json"
   push:
     branches: [main]
+    paths-ignore: *ignore
+
+# One run per ref; a new push cancels the stale one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
