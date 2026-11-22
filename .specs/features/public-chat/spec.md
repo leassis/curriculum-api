@@ -1,6 +1,6 @@
 # Public Chat Specification
 
-**Approved**: pending
+**Approved**: 2026-11-22 - user: "aprovado pelo usuário via prompt do orquestrador; premissas default registradas"
 
 **Depends on**: `foundation` merged (AD-003). Owns: `src/routes/public.ts`, `src/services/public-chat.service.ts`, `src/repositories/public-usage.repository.ts`, their tests. `requireSession` comes from `foundation` (FND-14).
 
@@ -29,11 +29,11 @@ Any Visitor should be able to ask an AI about the Owner's career without the Own
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
-| Day boundary for the per-IP limit | Database `current_date` in UTC | One clock (the DB) for the atomic statement | n |
-| Profile not seeded | `GET /api/public/profile` and `POST /api/public/chat` answer 404 `{ "error": "not_found" }` | `profileService.get()` throws `NotFoundError` (foundation) | n |
-| Session cookie reuse | A valid `public` session is reused for its whole TTL; the per-IP limit is the quota, not the session | 01-curriculum-api.md §6 | n |
-| Message roles accepted | `user` and `assistant` only; any other role → 400 | A client-sent `system` role would be prompt injection | n |
-| Empty Master CV | Chat still runs; the prompt tells the model the CV is empty | Owner may test before filling the CV | n |
+| Day boundary for the per-IP limit | Database `current_date` in UTC | One clock (the DB) for the atomic statement | y (default, orchestrator) |
+| Profile not seeded | `GET /api/public/profile` and `POST /api/public/chat` answer 404 `{ "error": "not_found" }` | `profileService.get()` throws `NotFoundError` (foundation) | y (default, orchestrator) |
+| Session cookie reuse | A valid `public` session is reused for its whole TTL; the per-IP limit is the quota, not the session | 01-curriculum-api.md §6 | y (default, orchestrator) |
+| Message roles accepted | `user` and `assistant` only; any other role → 400 | A client-sent `system` role would be prompt injection | y (default, orchestrator) |
+| Empty Master CV | Chat still runs; the prompt tells the model the CV is empty | Owner may test before filling the CV | y (default, orchestrator) |
 
 **Open questions:** none - all resolved or logged above.
 
