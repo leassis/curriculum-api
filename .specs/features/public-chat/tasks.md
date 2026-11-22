@@ -65,13 +65,13 @@ T1 → T2 → T3 → T4 → T5
 **Requirement**: PUB-03, PUB-04, PUB-05
 
 **Done when**:
-- [ ] Unit tests with a fake repo and the recording model cover the service checks
-- [ ] Full gate passes
+- [x] Unit tests with a fake repo and the recording model cover the service checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(public): add public chat service`
-**Status**: pending
+**Status**: done
 
 ---
 
