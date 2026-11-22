@@ -1,0 +1,196 @@
+/*
+ * Career Chat — Admin design system (generic look)
+ * Tailwind CSS v4. Import this file once as your main stylesheet:
+ *   npx @tailwindcss/cli -i ./theme.css -o ./public/app.css --watch
+ *
+ * Tokens live in @theme (they become utilities: bg-surface, text-muted,
+ * border-line, rounded-control, font-display, shadow-raised …).
+ * Recurring UI pieces live in @layer components (.btn, .card, .field …),
+ * so TSX templates stay short and htmx-swapped fragments look the same.
+ */
+@import "tailwindcss";
+
+/* Scan .tsx templates for class names */
+@source "../**/*.{tsx,ts}";
+
+@theme {
+  /* ---- Fonts ---- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ---- Colours: neutrals ---- */
+  --color-page: #f7f7f8;          /* app background */
+  --color-surface: #ffffff;       /* cards, sidebar, inputs on page */
+  --color-subtle: #f1f1f4;        /* active nav item, hover on ghost buttons */
+  --color-row-hover: #fafafa;     /* table/list row hover */
+  --color-line: #e4e4e9;          /* borders, dividers, empty track of bars */
+  --color-ink: #18181b;           /* body text and headings (17:1 on page) */
+  --color-muted: #5f5f6b;         /* secondary text (6.2:1 on page) */
+  --color-placeholder: #71717a;   /* input placeholders (4.6:1 on white) */
+
+  /* ---- Colours: brand ---- */
+  --color-primary: #4f46e5;       /* primary buttons, active nav bar, focus ring */
+  --color-primary-hover: #4338ca; /* primary hover; also link colour */
+  --color-primary-strong: #312e81;/* link hover */
+  --color-primary-soft: #eef2ff;  /* selected chips, icon tiles */
+  --color-on-primary: #ffffff;
+
+  /* ---- Colours: status ---- */
+  --color-success: #15803d;       /* match >= 80, Active, strong fit */
+  --color-warning: #b45309;       /* match 65–79, gaps */
+  --color-danger: #dc2626;        /* match < 65, Revoked, destructive */
+
+  /* ---- Radii ---- */
+  --radius-bar: 4px;              /* score bars */
+  --radius-control: 8px;          /* buttons, inputs, nav items */
+  --radius-card: 12px;            /* cards, panels, empty states */
+  --radius-pill: 999px;           /* badges, chips */
+
+  /* ---- Shadows ---- */
+  --shadow-button: 0 1px 2px rgba(24, 24, 27, 0.12);
+  --shadow-raised: 0 8px 24px rgba(24, 24, 27, 0.06); /* floating paper, menus */
+
+  /* ---- Type scale ---- */
+  --text-eyebrow: 12px;
+  --text-eyebrow--letter-spacing: 1px;
+  --text-h1: 34px;
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: 20px;
+  --text-h2--line-height: 1.3;
+
+  /* ---- Sizes ---- */
+  --spacing-control: 44px;        /* min height of every control (touch target) */
+  --spacing-sidebar: 240px;
+}
+
+@layer base {
+  html { background: var(--color-page); color: var(--color-ink); font-family: var(--font-sans); }
+  h1, h2, h3 { font-family: var(--font-display); }
+  a { color: var(--color-primary-hover); }
+  a:hover { color: var(--color-primary-strong); }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  ::placeholder { color: var(--color-placeholder); }
+}
+
+@layer components {
+  /* ---------- Layout ---------- */
+  .app-shell { @apply flex min-h-screen flex-wrap bg-page text-ink; }
+  .sidebar {
+    @apply flex max-w-full flex-[1_1_var(--spacing-sidebar)] flex-col gap-8
+           border-r border-line bg-surface px-[18px] py-7;
+  }
+  .main { @apply min-w-0 flex-[999_1_640px] px-[clamp(20px,4vw,48px)] pt-10 pb-16; }
+  .main-inner { @apply mx-auto flex max-w-[1120px] flex-col gap-8; }
+
+  /* ---------- Brand mark ---------- */
+  .logo-tile {
+    @apply flex size-9 items-center justify-center rounded-control bg-primary
+           font-display text-[15px] font-bold text-on-primary;
+  }
+
+  /* ---------- Sidebar nav ---------- */
+  .nav-item {
+    @apply flex min-h-control items-center gap-3 rounded-control px-3.5
+           text-[15px] font-medium text-muted no-underline
+           hover:bg-subtle hover:text-ink;
+  }
+  .nav-item[aria-current="page"] {
+    @apply bg-subtle font-semibold text-ink shadow-[inset_3px_0_0_0_var(--color-primary)];
+  }
+
+  /* ---------- Page header ---------- */
+  .eyebrow { @apply font-mono text-eyebrow text-success uppercase; }
+  .page-title { @apply m-0 font-display text-h1 font-bold; }
+  .page-sub { @apply m-0 text-base text-muted; }
+  .section-title { @apply m-0 font-display text-h2 font-semibold; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex min-h-control cursor-pointer items-center justify-center gap-2
+           rounded-control border-0 bg-primary px-[18px] text-[15px] font-semibold
+           text-on-primary no-underline shadow-button transition
+           hover:bg-primary-hover hover:text-on-primary active:translate-y-px
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex min-h-control cursor-pointer items-center justify-center gap-2
+           rounded-control border border-line bg-transparent px-4 text-[15px] font-medium
+           text-ink no-underline hover:bg-subtle hover:text-ink;
+  }
+  .btn-icon {
+    @apply inline-flex size-control cursor-pointer items-center justify-center
+           rounded-control border border-line bg-transparent text-ink hover:bg-subtle;
+  }
+  .btn-icon-danger { @apply text-danger; } /* use with .btn-icon */
+
+  /* ---------- Forms ---------- */
+  .field { @apply flex flex-col gap-2; }
+  .field-label { @apply text-[13px] font-semibold text-ink; }
+  .field-help { @apply text-[13px] text-muted; }
+  .input {
+    @apply min-h-control w-full rounded-control border border-line bg-page
+           px-3.5 py-2.5 font-sans text-[15px] text-ink;
+  }
+  textarea.input { @apply resize-y leading-normal; }
+  .search {
+    @apply flex items-center gap-2.5 rounded-control border border-line bg-surface
+           px-3.5 text-muted;
+  }
+  .search > input { @apply min-h-control min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink outline-none; }
+
+  /* Toggle chip: <button class="chip" aria-pressed="true|false"> */
+  .chip {
+    @apply min-h-9 cursor-pointer rounded-pill border border-line bg-transparent px-3.5
+           text-sm font-medium text-muted;
+  }
+  .chip[aria-pressed="true"] { @apply border-primary-hover bg-primary-soft font-semibold text-primary-hover; }
+
+  /* ---------- Surfaces ---------- */
+  .card { @apply rounded-card border border-line bg-surface; }
+  .card-pad { @apply flex flex-col gap-5 rounded-card border border-line bg-surface p-6; }
+  .empty-state {
+    @apply flex flex-col items-center gap-4 rounded-card border border-dashed border-line bg-surface px-8 py-14 text-center;
+  }
+  .icon-tile {
+    @apply flex size-14 items-center justify-center rounded-card bg-primary-soft text-primary;
+  }
+  .paper {
+    @apply flex flex-col gap-[18px] rounded-card border border-line bg-surface
+           px-10 py-9 text-ink shadow-raised;
+  }
+
+  /* ---------- Lists / tables ---------- */
+  .list-head { @apply grid gap-5 px-[22px] py-3.5 font-mono text-xs tracking-[0.5px] text-muted uppercase; }
+  .list-row { @apply grid items-center gap-5 border-t border-line px-[22px] py-4 text-ink no-underline hover:bg-row-hover; }
+  .table-scroll { @apply overflow-x-auto rounded-card border border-line bg-surface; }
+
+  /* ---------- Badges ---------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-0.5
+           text-xs font-semibold whitespace-nowrap
+           before:size-1.5 before:bg-current before:content-[''];
+  }
+  .badge-success { @apply border-success text-success; } /* use with .badge */
+  .badge-warning { @apply border-warning text-warning; }
+  .badge-danger { @apply border-danger text-danger; }
+  .badge-neutral { @apply border-muted text-muted; }
+
+  /* ---------- Score bar ---------- */
+  .score { @apply flex min-w-[140px] items-center gap-2.5; }
+  .score-track { @apply h-2 flex-1 rounded-bar bg-line; }
+  .score-fill { @apply h-2 rounded-bar; }
+  .score-fill[data-level="high"] { @apply bg-success; }
+  .score-fill[data-level="mid"] { @apply bg-warning; }
+  .score-fill[data-level="low"] { @apply bg-danger; }
+  .score-value { @apply font-mono text-[13px] text-ink; }
+
+  /* ---------- Feedback ---------- */
+  .status-ok { @apply inline-flex items-center gap-2 text-sm text-success; }
+  .dirty-dot { @apply inline-flex items-center gap-2 text-sm text-warning before:size-2 before:bg-current before:content-['']; }
+
+  /* htmx: show while a request is in flight */
+  .htmx-indicator { @apply hidden; }
+  .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { @apply inline-flex; }
+}
