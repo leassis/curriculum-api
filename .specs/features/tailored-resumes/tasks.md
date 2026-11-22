@@ -89,13 +89,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-01..RES-08
 
 **Done when**:
-- [ ] Unit tests with a fake repo and the recording model cover the service checks
-- [ ] Full gate passes
+- [x] Unit tests with a fake repo and the recording model cover the service checks
+- [x] Full gate passes
 
 **Tests**: unit
 **Gate**: Full
 **Commit**: `feat(resumes): add resume service`
-**Status**: pending
+**Status**: done
 
 ---
 
