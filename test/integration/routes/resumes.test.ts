@@ -1,0 +1,147 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { recruiterChats } from "../../../src/db/schema";
+import { ResumeRepository } from "../../../src/repositories/resume.repository";
+import { signSession } from "../../../src/security/session";
+import { LlmService } from "../../../src/services/llm.service";
+import { ResumeService } from "../../../src/services/resume.service";
+import { resolvedConfig } from "../../support/config";
+import { resetDb, testDb } from "../../support/db";
+import { createRecordingModel } from "../../support/mock-llm";
+import { createTestApp } from "../../support/test-app";
+
+const db = testDb();
+const options = { models: { tailor: "cfg/tailor" } };
+const EMAIL = "ada.private@example.com";
+const PHONE = "+44 20 7946 0958";
+const JD = "Senior backend engineer, Postgres.";
+
+async function setup() {
+  const config = resolvedConfig(options);
+  const base = createTestApp({ config: options });
+  const { services } = base;
+  const { factory, calls } = createRecordingModel({ text: "## Tailored\n\n**Postgres** expert" });
+  const llm = new LlmService(config, services.settings, services.personalInfo, factory, {
+    info: () => {},
+    warn: () => {},
+  });
+  const resumes = new ResumeService(
+    new ResumeRepository(db),
+    services.profile,
+    services.settings,
+    services.personalInfo,
+    llm,
+  );
+  const { app } = createTestApp({ config: options, services: { llm, resumes } });
+  await services.profile.update({
+    fullName: "Ada Lovelace",
+    headline: "Engineer",
+    masterCv: "Ten years of backend work.",
+    publicSystemPrompt: "p",
+    recruiterSystemPrompt: "r",
+    tailorSystemPrompt: "Tailor it.",
+  });
+  await services.personalInfo.create({
+    key: "EMAIL",
+    label: "Email",
+    value: EMAIL,
+    visibility: "print",
+    sortOrder: 1,
+  });
+  await services.personalInfo.create({
+    key: "PHONE",
+    label: "Phone",
+    value: PHONE,
+    visibility: "print",
+    sortOrder: 2,
+  });
+  const cookie = `curr_admin=${await signSession({ scope: "admin" }, config.sessionSecret, 60)}`;
+  const form = (fields: Record<string, string | string[]>) => {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(fields)) {
+      for (const item of Array.isArray(v) ? v : [v]) body.append(k, item);
+    }
+    return {
+      body: body.toString(),
+      headers: { cookie, "content-type": "application/x-www-form-urlencoded" },
+    };
+  };
+  const send = (method: string, path: string, fields?: Record<string, string | string[]>) =>
+    app.request(path, fields ? { method, ...form(fields) } : { method, headers: { cookie } });
+  const create = async () => {
+    const res = await send("POST", "/admin/resumes", {
+      title: "Backend at Acme",
+      company: "Acme",
+      jobDescription: JD,
+    });
+    expect(res.status).toBe(303);
+    return (res.headers.get("location") ?? "").split("/").pop() as string;
+  };
+  return { send, create, calls };
+}
+
+describe("resumes with database", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  it("creates, generates, edits, prints, downloads and deletes on the real database", async () => {
+    const { send, create, calls } = await setup();
+    const id = await create();
+    expect(await (await send("GET", "/admin/resumes")).text()).toContain("Backend at Acme");
+
+    const generated = await send("POST", `/admin/resumes/${id}/generate`);
+    expect(generated.status).toBe(200);
+    expect(await generated.text()).toContain("## Tailored");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.maxOutputTokens).toBe(4000);
+    for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {
+      expect(calls[0]?.prompt).not.toContain(secret);
+    }
+    expect(calls[0]?.prompt).toContain(JD);
+    expect(calls[0]?.prompt).toContain("Ten years of backend work.");
+
+    const saved = await send("PUT", `/admin/resumes/${id}`, {
+      content: "## Edited\n\n<script>alert(1)</script>**safe**",
+      headerFields: ["EMAIL"],
+    });
+    expect(await saved.text()).toBe("Saved");
+
+    const print = await send("GET", `/admin/resumes/${id}/print`);
+    expect(print.headers.get("cache-control")).toBe("no-store");
+    const html = await print.text();
+    expect(html).toContain("<h1>Ada Lovelace</h1>");
+    expect(html).toContain(`Email: ${EMAIL}`);
+    expect(html).not.toContain("Phone:");
+    expect(html).toContain("<strong>safe</strong>");
+    expect(html).not.toContain("<script>alert");
+    expect(calls).toHaveLength(1);
+
+    const download = await send("GET", `/admin/resumes/${id}/download.md`);
+    expect(download.headers.get("content-disposition")).toBe(
+      'attachment; filename="backend-at-acme.md"',
+    );
+    expect(await download.text()).toBe(
+      `# Ada Lovelace\nEmail: ${EMAIL}\n\n## Edited\n\n<script>alert(1)</script>**safe**`,
+    );
+
+    const profilePrint = await (await send("GET", "/admin/profile/print")).text();
+    expect(profilePrint).toContain(`Phone: ${PHONE}`);
+    expect(profilePrint).toContain("Ten years of backend work.");
+
+    expect((await send("DELETE", `/admin/resumes/${id}`)).status).toBe(200);
+    expect((await send("GET", `/admin/resumes/${id}`)).status).toBe(404);
+    expect(await (await send("GET", "/admin/resumes")).text()).toContain("No tailored resumes yet");
+  });
+
+  it("deletes a resume linked to a recruiter chat", async () => {
+    const { send, create } = await setup();
+    const id = await create();
+    await db
+      .insert(recruiterChats)
+      .values({ token: "tok", recruiterName: "R", tailoredResumeId: id });
+    expect((await send("DELETE", `/admin/resumes/${id}`)).status).toBe(200);
+    const rows = await db.select().from(recruiterChats);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.tailoredResumeId).toBeNull();
+  });
+});

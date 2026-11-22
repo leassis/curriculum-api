@@ -165,13 +165,13 @@ T3 → T4 → T5 → T6 → T7
 **Requirement**: RES-01..RES-08
 
 **Done when**:
-- [ ] Create, generate, edit, print, download, delete on Postgres; delete with a linked recruiter chat succeeds
-- [ ] Full gate passes
+- [x] Create, generate, edit, print, download, delete on Postgres; delete with a linked recruiter chat succeeds
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `test(resumes): prove the flow on the real database`
-**Status**: pending
+**Status**: done
 
 ---
 
