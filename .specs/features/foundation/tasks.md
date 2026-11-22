@@ -721,12 +721,13 @@ T33 → T34 → T35
 **Requirement**: FND-26
 
 **Done when**:
-- [ ] Unit tests prove C71, C73; integration test proves C70
-- [ ] Full gate passes
+- [x] Unit tests prove C71, C73; integration test proves C70
+- [x] Full gate passes
 
 **Tests**: integration
 **Gate**: Full
 **Commit**: `feat(cli): add migrate, seed, hash-password and cleanup commands`
+**Status**: done
 
 ---
 
