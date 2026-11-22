@@ -9,8 +9,12 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5432/curriculum_test
-      TEST_DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5432/curriculum_test
+      # Neon Local (docker compose) forks an ephemeral branch of PARENT_BRANCH_ID;
+      # the integration tests create their own throwaway branch through the Neon API.
+      DATABASE_URL: postgres://neon:npg@localhost:5432/neondb
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+      PARENT_BRANCH_ID: ${{ secrets.PARENT_BRANCH_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -19,7 +23,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # postgres:17 + local-neon-http-proxy, the same services as local development
+      # Neon Local, the same service as local development
       - name: Start database services
         run: docker compose up -d --wait
       - name: Lint
