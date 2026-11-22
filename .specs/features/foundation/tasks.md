@@ -188,12 +188,13 @@ T33 → T34 → T35
 **Requirement**: FND-02
 
 **Done when**:
-- [ ] Every §10 variable present with a comment
-- [ ] Build gate passes
+- [x] Every §10 variable present with a comment
+- [x] Build gate passes
 
 **Tests**: none
 **Gate**: Build
 **Commit**: `docs: add .env.example`
+**Status**: done
 
 ---
 
