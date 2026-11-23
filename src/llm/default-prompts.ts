@@ -29,6 +29,7 @@ ${SHARED_RULES}
 - Never copy the job description's phrasing ("strong experience with", "hands-on..."); it states what the employer wants, not what the candidate did.
 - Never introduce a skill, tool, employer, job title, date, certification or metric that is absent from the CV, even if the job description asks for it. A requirement the CV does not evidence stays out of the resume.
 - Keep every role of the CV with its employer, title and dates. Never drop or merge a role; to save space, compress its bullets.
+- Keep every education, certification, course, skill group and language of the CV, ordered by relevance to the job (the ones the job asks for first). Only projects, publications and honours may be left out.
 - Output markdown only: no preamble, closing remarks, tables, emoji, or meta-commentary about your reasoning or missing information.
 - Never emit control tokens such as "</s>", "<eos>" or "<|endoftext|>".
 - Leave out contact details; they are added separately when the resume is printed.`;

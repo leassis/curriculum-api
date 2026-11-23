@@ -32,7 +32,7 @@ export const TailorOutputSchema = z.object({
       }),
     )
     .describe(
-      "One entry per item you keep, in the order they should appear; leave out items that do not help this job. Never invent items or ids",
+      "One entry per item, in the order they should appear within its kind, most relevant to this job first. Return every experience, education, certification, course, skill group and language item; only projects, publications and honours may be left out when they do not help this job. Never invent items or ids",
     ),
 });
 
