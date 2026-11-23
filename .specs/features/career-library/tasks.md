@@ -593,7 +593,7 @@ Proof: browser captures/skills-publications-honours.running.png
 **C4** - A card with items shows the count badge with the item count (CLIB-01, Library AC 2)
 Proof: run unit | ✓ career cards > shows the item count next to a card with items
 
-**C5** - An empty card shows "Nothing here yet." and no count badge (CLIB-01, Library AC 3)
+**C5** - An empty card shows "Nothing here yet." and no count badge, except while its add form is open, when it shows the form and neither (CLIB-01, Library AC 3)
 Proof: run unit | ✓ career cards > shows nothing here yet and no badge for an empty kind
 
 **C6** - An experience meta line is "organisation · location · dates" and a project "organisation · dates", empty parts dropped with their separator (CLIB-01, Library AC 4)
@@ -768,7 +768,7 @@ Proof: run unit | ✓ assemble v2 > sets source id to the library item id
 Proof: run unit | ✓ assemble v2 > restores omitted experience and education after the model items
 
 **C63** - An unknown or duplicate id is rejected, retried once, and a second rejection answers 503 with the document unchanged (CLIB-07, Tailored AC 6)
-Proof: run unit | ✓ resume service v2 generate > retries once then fails leaving the document unchanged
+Proof: run unit | ✓ admin resumes > generate answers 503 after one retry when the model names an unknown id twice
 
 **C64** - Generate with an empty library answers 400 "Add Career Items to your profile before generating" without a model call (CLIB-07, Tailored AC 7)
 Proof: run unit | ✓ resume service v2 generate > rejects an empty library before calling the llm

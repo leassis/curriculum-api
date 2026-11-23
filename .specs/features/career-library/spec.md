@@ -68,7 +68,7 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 
 1. WHEN the Owner opens `/admin/profile` THEN the system SHALL show the Career Library cards in the order Experience, Projects, Education, Certifications, Courses, Skills, Languages, Publications, Honours, laid out as in `.specs/features/career-library/captures/header-experience.png`, `.specs/features/career-library/captures/education-certifications-courses.png` and `.specs/features/career-library/captures/skills-publications-honours.png`.
 2. WHILE a kind has at least one Career Item the system SHALL show the item count badge next to the card title.
-3. WHILE a kind has no Career Item the system SHALL show "Nothing here yet." in its card and no count badge.
+3. WHILE a kind has no Career Item the system SHALL show "Nothing here yet." in its card and no count badge, unless the form is open.
 4. The system SHALL show each experience row as the title over "organisation · location · dates" and each project row as the title over "organisation · dates", omitting an empty part and its separator.
 5. The system SHALL show each education, certification and course row as the title over "organisation · dates".
 6. The system SHALL show each skill group row as the title only, each language row as the title over the level, and each publication and honour row as the title over "organisation · dates".
@@ -222,6 +222,9 @@ Dimensions: input validation - above; failure states - Generate retry (Tailored 
 | --- | --- | --- |
 | Project form without a tech stack; no tech stack on experience | "Tech stack" input under Details on project and experience forms, stored as a list, rendered "Stack: …", copied by code when tailoring | y - AD-011 |
 | Header card with name, headline, contact in the resume JSON | Header card reads name from Profile and contact from Personal Info; the document holds only headline and summary | y - AD-012 |
+| Skills capture shows the Honours card in its window, right after Publications | Honours falls below the capture window: Languages sits between Skills and Publications by the confirmed section order | y - section order |
+| Project-form capture shows Cancel and Save inside its window | Cancel and Save fall below the capture window: the approved Tech stack field makes the form taller | y - AD-011 |
+| Header-experience capture shows a cut `Copy` button at the top right edge | No Copy button is built; Print and Download .md stay in the product toolbar | y - toolbar |
 
 ## Sources
 

@@ -1,15 +1,15 @@
 # career-library proofs
 
-**HEAD**: 73273f3
+**HEAD**: d1b332a
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 72 pass, 4 fail
+**Result**: 73 pass, 3 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
 | C1 | `run unit / ✓ career cards > renders the cards in kind order` | pass |
-| C2 | `browser captures/education-certifications-courses.running.png` | **not judged** (screens.md) |
-| C3 | `browser captures/skills-publications-honours.running.png` | **not judged** (screens.md) |
+| C2 | `browser captures/education-certifications-courses.running.png` | pass |
+| C3 | `browser captures/skills-publications-honours.running.png` | **diverges** (screens.md) |
 | C4 | `run unit / ✓ career cards > shows the item count next to a card with items` | pass |
 | C5 | `run unit / ✓ career cards > shows nothing here yet and no badge for an empty kind` | pass |
 | C6 | `run unit / ✓ display > builds experience and project meta lines without empty parts` | pass |
@@ -18,7 +18,7 @@
 | C9 | `run unit / ✓ display > formats dates and ranges` | pass |
 | C10 | `run unit / ✓ display > ends current experience with present and current certification with no expiry` | pass |
 | C11 | `run unit / ✓ admin profile career > add opens an empty form at the end of the card` | pass |
-| C12 | `browser captures/project-form.running.png` | **not judged** (screens.md) |
+| C12 | `browser captures/project-form.running.png` | **diverges** (screens.md) |
 | C13 | `run unit / ✓ career cards item form > shows the kind fields and its ongoing label` | pass |
 | C14 | `run unit / ✓ career form > splits details into text and bullets and joins them back` | pass |
 | C15 | `run unit / ✓ career form > splits the tech stack on commas and joins it back` | pass |
@@ -69,9 +69,9 @@
 | C60 | `run unit / ✓ assemble v2 > copies typed fields from the library and bodies from the model` | pass |
 | C61 | `run unit / ✓ assemble v2 > sets source id to the library item id` | pass |
 | C62 | `run unit / ✓ assemble v2 > restores omitted experience and education after the model items` | pass |
-| C63 | `run unit / ✓ resume service v2 generate > retries once then fails leaving the document unchanged` | pass |
+| C63 | `run unit / ✓ admin resumes > generate answers 503 after one retry when the model names an unknown id twice` | pass |
 | C64 | `run unit / ✓ resume service v2 generate > rejects an empty library before calling the llm` | pass |
-| C65 | `browser captures/header-experience.running.png` | **not judged** (screens.md) |
+| C65 | `browser captures/header-experience.running.png` | **diverges** (screens.md) |
 | C66 | `run int / ✓ admin resumes career routes > edits the resume copy and leaves the library unchanged` | pass |
 | C67 | `run unit / ✓ resume service items > adds an item with a null source id` | pass |
 | C68 | `run unit / ✓ resume service items > keeps a tailored item whose library item was deleted` | pass |
@@ -89,20 +89,20 @@
 `Run unit` - exit 0
 
 ```
-stderr | test/unit/routes/recruiter.test.ts > recruiter chat > answers 502 llm_unavailable and gives the question back
-LlmUnavailableError: The language model is unavailable
-    at firstChunk (/Users/leassis/workspace/curriculum-api/src/llm/first-chunk.ts:28:57)
-    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:64:20)
-    at RecruiterChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/recruiter-chat.service.ts:214:26)
-    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/recruiter.ts:81:33)
+PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
+    at LlmService.prepare (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:121:13)
+    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:55:45)
+    at PublicChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/public-chat.service.ts:35:26)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:69:33)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at Object.handler (/Users/leassis/workspace/curriculum-api/src/middleware/require-session.ts:15:5)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35) {
-  code: 'llm_unavailable',
-  status: 502
+  fieldKey: 'EMAIL',
+  code: 'internal_error',
+  status: 500
 }
 ```
 
@@ -115,7 +115,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:9857) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:15440) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
