@@ -171,8 +171,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Markdown AC 1-2 on `sampleLibrary()` (exact expected string)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Markdown AC 1-2 on `sampleLibrary()` (exact expected string)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
