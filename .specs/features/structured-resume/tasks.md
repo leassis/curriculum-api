@@ -342,8 +342,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests for both ACs; existing `resume-custom-instructions` input-format test updated to the new format
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for both ACs; existing `resume-custom-instructions` input-format test updated to the new format
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick

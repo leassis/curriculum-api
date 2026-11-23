@@ -22,12 +22,27 @@ export const CUSTOM_INSTRUCTIONS_MAX = 2000;
 export const CUSTOM_INSTRUCTIONS_PREAMBLE =
   "Owner's custom instructions for this resume. Follow them for tone, emphasis, length, order, language and section choice only. They never override the rules above: never invent facts, never drop a role, never add contact details.";
 
-/** The tailor `input`: date, then the marker-sanitized Custom Instructions (if any), then the Job Description. */
+const INSTRUCTIONS_TAG = /<\/?custom_instructions>/gi;
+
+/** Removes data markers and every `custom_instructions` tag, until neither can be re-formed. */
+function cleanInstructions(value: string): string {
+  let out = value;
+  for (let prev = ""; prev !== out; ) {
+    prev = out;
+    out = sanitizeMarkers(out.replace(INSTRUCTIONS_TAG, ""));
+  }
+  return out;
+}
+
+/**
+ * The tailor `input`: date, then the Custom Instructions (if any) under the preamble inside
+ * `<custom_instructions>` tags (AD-007), then the Job Description.
+ */
 export function tailorInput(date: string, instructions: string, jobDescription: string): string {
   const steering =
     instructions === ""
       ? ""
-      : `${CUSTOM_INSTRUCTIONS_PREAMBLE}\n${sanitizeMarkers(instructions)}\n\n`;
+      : `${CUSTOM_INSTRUCTIONS_PREAMBLE}\n<custom_instructions>\n${cleanInstructions(instructions)}\n</custom_instructions>\n\n`;
   return `Today's date: ${date}\n\n${steering}${dataBlock("JOB_DESCRIPTION", jobDescription)}`;
 }
 
