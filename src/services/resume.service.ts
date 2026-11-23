@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
@@ -30,24 +31,34 @@ import type {
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
-import { type AssembleFailure, assemble } from "./tailor/assemble.js";
+import type { Assessment } from "./tailor/assessment.js";
 import {
   parseDocument,
   type ResumeDocument,
   ResumeDocumentSchema,
   type ResumeItem,
 } from "./tailor/document.js";
+import { type FinishResult, finish } from "./tailor/finish.js";
 import { annotate, TailorOutputSchema } from "./tailor/output.js";
+import { TAILOR_ASSESSMENT_RULES } from "./tailor/rubric.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
-export type Resume = Omit<ResumeRow, "structured"> & {
+export type Resume = Omit<
+  ResumeRow,
+  "structured" | "score" | "scoreRationale" | "missingSkills" | "omissions"
+> & {
   /** The parsed Resume Document; null when not generated yet or when the stored value is invalid. */
   document: ResumeDocument | null;
   /** The stored value failed `ResumeDocumentSchema`. */
   invalid: boolean;
+  /** The last generation's assessment; null until the first successful generation. */
+  assessment: Assessment | null;
 };
 
+const StoredOmissions = z.array(z.object({ what: z.string(), reason: z.string() }));
+
 export interface ResumeLogger {
+  info(message: string, data?: unknown): void;
   error(message: string, data?: unknown): void;
   warn(message: string, data?: unknown): void;
 }
@@ -258,7 +269,7 @@ export class ResumeService {
     const ids = annotate(items);
     const request = {
       area: "tailor" as const,
-      system: profile.tailorSystemPrompt,
+      system: `${profile.tailorSystemPrompt}\n\n${TAILOR_ASSESSMENT_RULES}`,
       body: renderCareerBody(profile, items, { ids }),
       input: tailorInput(
         this.now().toISOString().slice(0, 10),
@@ -270,12 +281,28 @@ export class ResumeService {
       schemaName: "tailored_resume",
     };
     for (let attempt = 1; attempt <= TAILOR_ATTEMPTS; attempt++) {
-      let reason: AssembleFailure;
+      let reason: Extract<FinishResult, { ok: false }>["reason"];
       try {
         const { object, model } = await this.llm.generateObject(request);
-        const assembled = assemble(items, ids, object);
-        if (assembled.ok) return this.update(id, { structured: assembled.doc, model });
-        reason = assembled.reason;
+        const finished = finish(items, ids, object, this.now());
+        if (finished.ok) {
+          const { assessment } = finished;
+          if (finished.restored > 0 || finished.collapsed > 0) {
+            this.logger.info("tailor assessment notes", {
+              restored: finished.restored,
+              collapsed: finished.collapsed,
+            });
+          }
+          return this.update(id, {
+            structured: finished.doc,
+            model,
+            score: assessment.score,
+            scoreRationale: assessment.rationale,
+            missingSkills: assessment.missingSkills,
+            omissions: assessment.omissions,
+          });
+        }
+        reason = finished.reason;
       } catch (error) {
         if (!(error instanceof LlmOutputInvalidError)) throw error;
         reason = "schema";
@@ -457,14 +484,24 @@ export class ResumeService {
 
   /** Parses the stored document; an invalid one is logged by id and path, never by content. */
   private toResume(row: ResumeRow): Resume {
-    const { structured, ...rest } = row;
+    const { structured, score, scoreRationale, missingSkills, omissions, ...rest } = row;
+    const parsedOmissions = StoredOmissions.safeParse(omissions);
+    const assessment: Assessment | null =
+      score === null
+        ? null
+        : {
+            score,
+            rationale: scoreRationale,
+            missingSkills,
+            omissions: parsedOmissions.success ? parsedOmissions.data : [],
+          };
     if (structured === null || structured === undefined) {
-      return { ...rest, document: null, invalid: false };
+      return { ...rest, document: null, invalid: false, assessment };
     }
     const parsed = parseDocument(structured);
-    if (parsed.ok) return { ...rest, document: parsed.doc, invalid: false };
+    if (parsed.ok) return { ...rest, document: parsed.doc, invalid: false, assessment };
     this.logger.error("stored resume document invalid", { id: row.id, path: parsed.path });
-    return { ...rest, document: null, invalid: true };
+    return { ...rest, document: null, invalid: true, assessment };
   }
 
   private async loadProfile(): Promise<Profile | null> {

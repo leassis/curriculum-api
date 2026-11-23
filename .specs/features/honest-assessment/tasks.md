@@ -230,8 +230,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: out-of-bounds output twice → `LlmUnavailableError`; no PII value or full name in prompt; stored order and filtered skills; empty lists; unchanged after save options, item edit, Add back, preview; null before first generation; unchanged on failure; replaced on second success; system prompt ends with `TAILOR_ASSESSMENT_RULES` after a blank line; input starts with today's date (C4, C5, C20-C25, C27, C29)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: out-of-bounds output twice → `LlmUnavailableError`; no PII value or full name in prompt; stored order and filtered skills; empty lists; unchanged after save options, item edit, Add back, preview; null before first generation; unchanged on failure; replaced on second success; system prompt ends with `TAILOR_ASSESSMENT_RULES` after a blank line; input starts with today's date (C4, C5, C20-C25, C27, C29)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

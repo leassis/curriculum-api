@@ -62,8 +62,9 @@ export async function resumeSetup(
     info: () => {},
     warn: () => {},
   });
-  const logs: { level: "error" | "warn"; message: string; data: unknown }[] = [];
+  const logs: { level: "info" | "error" | "warn"; message: string; data: unknown }[] = [];
   const logger = {
+    info: (message: string, data?: unknown) => logs.push({ level: "info", message, data }),
     error: (message: string, data?: unknown) => logs.push({ level: "error", message, data }),
     warn: (message: string, data?: unknown) => logs.push({ level: "warn", message, data }),
   };
