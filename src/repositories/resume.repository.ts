@@ -8,6 +8,8 @@ export interface ResumeInsert {
   company: string | null;
   jobDescription: string;
   customInstructions: string;
+  /** `null` or omitted stores NULL, meaning every Personal Info Field. */
+  headerFields?: string[] | null;
 }
 export interface ResumePatch {
   content?: string;
