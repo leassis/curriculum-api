@@ -288,8 +288,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Terms match the spec and UI labels
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Terms match the spec and UI labels
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: none
 **Gate**: build

@@ -70,6 +70,22 @@ _Avoid_: Resume JSON, structured content, resume markdown
 The Career Items of one kind that no item of a Tailored Resume points at through its source id. Shown as a collapsed "Left out (N)" row on that kind's card, where "Add back" copies one to the end of the card; hidden when none.
 _Avoid_: Hidden items, removed items, excluded
 
+**Assessment**:
+What one generation of a Tailored Resume tells the Owner about itself: a Fit Score with its rationale, the Missing Skills, and the Omissions. Stored with the resume, replaced by the next generation, unchanged by edits. Shown in the editor as the panels "Why this score", "Missing skills" and "What was left out".
+_Avoid_: Analysis, review, report
+
+**Fit Score**:
+The whole number from 0 to 100 that rates how well the original Career Library fits a Job Description, not the rewritten resume. Its band label (Strong, Moderate, Partial or Weak match) comes from one code-owned rubric shared by the prompt and the editor.
+_Avoid_: Match percentage, rating, grade
+
+**Missing Skill**:
+A requirement of the Job Description that the Career Library does not show. The model lists them and code drops any that equals a skill of a Career Item, ignoring case.
+_Avoid_: Gap (in code), weakness, keyword
+
+**Omission**:
+One thing the resume does not carry, with a reason: a cut the model reported, an item code restored because its kind is always kept, or a role shortened to one bullet because it ended more than 15 years ago. Distinct from Left out, which lists whole library items missing from the resume.
+_Avoid_: Cut, removal, deletion
+
 **Custom Instructions**:
 Owner-written steering text of one Tailored Resume, sent to the tailor model; never a source of facts.
 _Avoid_: Prompt, custom prompt
