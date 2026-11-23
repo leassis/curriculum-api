@@ -133,8 +133,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests: move skips items of other kinds, first-up and last-down and only-item are no-ops, remove and replace by id, unknown id answers `null`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: move skips items of other kinds, first-up and last-down and only-item are no-ops, remove and replace by id, unknown id answers `null`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
