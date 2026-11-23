@@ -47,6 +47,17 @@ describe("career cards", () => {
     expect(sections(html).find((s) => s.title.startsWith("Experience"))?.html).not.toContain(
       "Nothing here yet.",
     );
+    const adding = render(
+      sampleLibrary().items.filter((i) => i.kind !== "project"),
+      formFor("project"),
+    );
+    const open = sections(adding).find((s) => s.title === "Projects")?.html ?? "";
+    expect(open).toContain('name="title"');
+    expect(open).not.toContain("Nothing here yet.");
+    expect(open).not.toContain('class="badge"');
+    expect(sections(adding).find((s) => s.title === "Publications")?.html).toContain(
+      "Nothing here yet.",
+    );
   });
 
   it("shows each row title over its meta line and one add button per kind", () => {
