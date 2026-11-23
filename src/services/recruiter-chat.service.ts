@@ -19,6 +19,8 @@ import type { ChatMessage, LlmService } from "./llm.service.js";
 import type { ContactItem, PersonalInfoService } from "./personal-info.service.js";
 import type { ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
+import { parseDocument } from "./tailor/document.js";
+import { renderResumeMarkdown } from "./tailor/render.js";
 
 export type { ChatMessageRow, ResumeOption };
 
@@ -204,8 +206,8 @@ export class RecruiterChatService {
     }
     try {
       const profile = await this.profile.get();
-      const resume = await this.chats.resumeContent(granted.tailoredResumeId);
-      const content = resume !== null && resume.trim() !== "" ? resume : profile.masterCv;
+      const resume = await this.resumeMarkdown(granted.tailoredResumeId);
+      const content = resume ?? profile.masterCv;
       const jd = granted.jobDescriptionShort;
       const { stream } = await this.llm.stream({
         area: "recruiter",
@@ -271,6 +273,16 @@ export class RecruiterChatService {
         },
       }),
     );
+  }
+
+  /** The linked resume's document as markdown; null when unlinked, missing, invalid or empty. */
+  private async resumeMarkdown(id: string | null): Promise<string | null> {
+    const stored = await this.chats.resumeDocument(id);
+    if (stored === null) return null;
+    const parsed = parseDocument(stored);
+    if (!parsed.ok) return null;
+    const markdown = renderResumeMarkdown(parsed.doc);
+    return markdown.trim() === "" ? null : markdown;
   }
 
   private found(row: RecruiterChatRow | null): RecruiterChat {

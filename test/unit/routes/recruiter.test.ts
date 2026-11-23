@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { verifySession } from "../../../src/security/session";
 import { COMPANY, EMAIL, PHONE, RECRUITER, recruiterApp } from "../../support/recruiter-chat";
+import { textDocument } from "../../support/resume-document";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -219,7 +220,11 @@ describe("recruiter chat", () => {
   it("keeps working with the master cv after the linked resume is deleted", async () => {
     const s = await recruiterApp();
     const id = "00000000-0000-4000-8000-000000000042";
-    s.repo.resumes.set(id, { title: "R", content: "Resume-only text." });
+    s.repo.resumes.set(id, {
+      title: "R",
+      content: "",
+      structured: textDocument("Resume-only text."),
+    });
     const chat = await s.newChat({ tailoredResumeId: id });
     const cookie = await s.cookieFor(chat.id);
     expect((await s.ask(chat.token, cookie)).status).toBe(200);

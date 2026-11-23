@@ -447,8 +447,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests 1:1 to Outputs AC 4-5
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` (phase end)
+- [x] Unit tests 1:1 to Outputs AC 4-5
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` (phase end)
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: build

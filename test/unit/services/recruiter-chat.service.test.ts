@@ -18,6 +18,7 @@ import {
   RECRUITER_PROMPT,
   recruiterSetup,
 } from "../../support/recruiter-chat";
+import { itemAt, sampleDocument, textDocument } from "../../support/resume-document";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const messages = [{ role: "user" as const, content: "What do you do?" }];
@@ -146,7 +147,11 @@ describe("recruiter chat service", () => {
   it("calls the llm with area recruiter, the prompt, the resume, the job description and the output limit", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const resumeId = "00000000-0000-4000-8000-000000000042";
-    repo.resumes.set(resumeId, { title: "Tailored", content: "Tailored body about Postgres." });
+    repo.resumes.set(resumeId, {
+      title: "Tailored",
+      content: "",
+      structured: textDocument("Tailored body about Postgres."),
+    });
     const chat = await newChat({ tailoredResumeId: resumeId });
     const answer = await recruiterChat.ask(chat, messages);
     expect(await readAll(answer.stream)).toBe("Hello world");
@@ -166,13 +171,60 @@ describe("recruiter chat service", () => {
   it("falls back to the master cv when the resume is missing or empty", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const emptyId = "00000000-0000-4000-8000-000000000043";
-    repo.resumes.set(emptyId, { title: "Empty", content: "  " });
+    repo.resumes.set(emptyId, { title: "Empty", content: "", structured: null });
     const empty = await newChat({ tailoredResumeId: emptyId });
     await recruiterChat.ask(empty, messages);
     const plain = await newChat({ tailoredResumeId: undefined });
     await recruiterChat.ask(plain, messages);
     expect(calls).toHaveLength(2);
     for (const call of calls) expect(call.prompt).toContain(CV);
+  });
+
+  it("sends the linked resume document rendered as markdown", async () => {
+    const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
+    const resumeId = "00000000-0000-4000-8000-000000000044";
+    repo.resumes.set(resumeId, { title: "Tailored", content: "", structured: sampleDocument() });
+    const chat = await newChat({ tailoredResumeId: resumeId });
+    await readAll((await recruiterChat.ask(chat, messages)).stream);
+    const system = calls[0]?.system ?? "";
+    const body = system.slice(system.indexOf("<cv>\n") + 5, system.lastIndexOf("\n</cv>"));
+    expect(body).toBe(
+      [
+        "Backend engineer with 10 years of experience.",
+        "## Experience",
+        "### Staff Engineer — Globex (2020-2024)",
+        "Led the platform team.",
+        "- Cut p99 latency by 40%\n- Mentored **six** engineers",
+        "### Engineer — Initech (2016-2020)",
+        "- Built the billing service",
+        "## Education",
+        "### BSc Computer Science — State University",
+        "2012-2016\n",
+      ].join("\n\n"),
+    );
+    expect(system).not.toContain(CV);
+  });
+
+  it("falls back to the master cv when the linked resume has no document", async () => {
+    const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
+    const broken = sampleDocument();
+    itemAt(broken, 1, 0).heading = "";
+    const cases = [
+      ["00000000-0000-4000-8000-000000000045", null],
+      ["00000000-0000-4000-8000-000000000046", broken],
+      ["00000000-0000-4000-8000-000000000047", { version: 1, sections: [] }],
+    ] as const;
+    for (const [id, structured] of cases) {
+      repo.resumes.set(id, { title: "R", content: "Stale markdown text", structured });
+      const chat = await newChat({ tailoredResumeId: id });
+      await readAll((await recruiterChat.ask(chat, messages)).stream);
+    }
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      expect(call.system).toContain(`<cv>\n${CV}\n</cv>`);
+      expect(call.system).not.toContain("Stale markdown text");
+      expect(call.system).not.toContain("Staff Engineer");
+    }
   });
 
   it("answers revoked, expired or limit reached without calling the llm", async () => {

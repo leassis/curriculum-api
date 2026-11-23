@@ -8,6 +8,7 @@ import { RecruiterChatService } from "../../../src/services/recruiter-chat.servi
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
 import { createRecordingModel } from "../../support/mock-llm";
+import { textDocument } from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -126,7 +127,7 @@ describe("recruiter chat with database", () => {
       jobDescription: "jd",
       customInstructions: "",
     });
-    await resumes.update(resume.id, { content: "Resume-only text." });
+    await resumes.update(resume.id, { structured: textDocument("Resume-only text.") });
     const chat = await s.create({ tailoredResumeId: resume.id });
     const cookie = await s.cookieFor(chat.id);
     expect((await s.ask(chat.token, cookie)).status).toBe(200);
