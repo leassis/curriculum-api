@@ -618,7 +618,7 @@ Proof: run unit | ✓ admin profile career > add opens an empty form at the end 
 Proof: browser captures/project-form.running.png
 
 **C13** - Each kind's form has only its fields, and the ongoing checkbox reads "I currently work here" for experience, "Ongoing" for project and "No expiry" for certification (CLIB-02, Library AC 9b)
-Proof: run unit | ✓ career cards > item form shows the kind fields and its ongoing label
+Proof: run unit | ✓ career cards item form > shows the kind fields and its ongoing label
 
 **C14** - Details lines starting "- " become bullets, other lines text, and the form shows them joined back (CLIB-02, Library AC 9c)
 Proof: run unit | ✓ career form > splits details into text and bullets and joins them back
@@ -808,7 +808,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** T17 added ResumeService.updateOptions(id, headerKeys, customInstructions?) - T23 routes call it; createAndGenerate error codes now generate|empty-library|full-name, T23 admin map must replace master-cv; profilePrintData still uses masterCv until T25; phase 3-4 gate: T14-T22 use partial gate (task tests + lint); v1 admin/print/recruiter tests and admin/resumes/routes.ts typecheck stay red until T23, user-approved 2026-11-23; import route (T22) maps LlmUnavailableError to 503 explicitly (service error is 502); C57 test owed in T20
 **Dispatched:** batches 1-3 (T1-T20) done; batch 4 (T21-T26) -> sonnet sub-agent, 2026-11-23
-**Walked:** none
+**Walked:** Local dev server on a throwaway Neon Local branch (migrate, seed, then a Career Library of 9 experiences, 2 educations, 1 certification, 3 courses, 4 skill groups, profile name and headline, and one Tailored Resume with the same items), signed in at /admin/login with a test password. Education/Certifications/Courses: window 764x859, /admin/profile, scroll to the Education card. Skills/Publications: window 788x699, /admin/profile, scroll to the Skills card (a Languages card sits between Skills and Publications by the confirmed section order, so Honours is below the fold). Project form: window 770x818, /admin/profile, click "Add project" in the Projects card. Header/Experience: window 752x783, /admin/resumes, open the resume, scroll to the Header card. Seen differing from the captures and not a code defect: indigo accent and Space Grotesk headings versus the captures' green and Inter, the Ongoing box square versus round, and the confirmed extra Tech stack field.
 
 ---
 
