@@ -33,7 +33,6 @@ async function setup() {
   await services.profile.update({
     fullName: "Ada Lovelace",
     headline: "Engineer",
-    masterCv: "legacy",
     publicSystemPrompt: "Answer about the candidate.",
     recruiterSystemPrompt: "r",
     tailorSystemPrompt: "t",

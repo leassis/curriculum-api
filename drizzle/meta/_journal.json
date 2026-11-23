@@ -43,6 +43,13 @@
       "when": 1795456000359,
       "tag": "0005_little_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795461427698,
+      "tag": "0006_drop_master_cv",
+      "breakpoints": true
     }
   ]
 }

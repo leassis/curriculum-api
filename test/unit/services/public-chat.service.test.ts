@@ -44,7 +44,6 @@ describe("public chat service", () => {
     expect(body).toBe(renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY));
     expect(body).toContain("### Backend Engineer");
     expect(body).toContain("### Billing rewrite");
-    expect(system).not.toContain("legacy master cv");
   });
 
   it("sends the empty cv body when the library is empty", async () => {

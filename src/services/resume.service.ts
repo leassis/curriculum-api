@@ -393,7 +393,9 @@ export class ResumeService {
   async profilePrintData(): Promise<PrintData> {
     const profile = await this.loadProfile();
     const items = await this.personalInfo.contactFor("print");
-    return this.buildPrint(items, profile?.masterCv ?? "", items, profile);
+    const { items: career } = await this.career.library();
+    const body = profile ? renderCareerBody(profile, career) : "";
+    return this.buildPrint(items, body, items, profile);
   }
 
   async download(id: string): Promise<Download> {

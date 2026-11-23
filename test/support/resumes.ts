@@ -36,7 +36,6 @@ export async function resumeSetup(
   opts: {
     mock?: RecordingModelOptions;
     factory?: ModelFactory;
-    cv?: string;
     items?: unknown[];
     seed?: boolean;
     config?: Partial<CurriculumApiConfig>;
@@ -51,7 +50,6 @@ export async function resumeSetup(
       fullName: FULL_NAME,
       headline: "Backend engineer",
       summary: "Ten years building payment systems.",
-      masterCv: opts.cv ?? "",
       tailorSystemPrompt: TAILOR_PROMPT,
     });
   }

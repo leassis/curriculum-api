@@ -8,7 +8,7 @@ const repo = new ProfileRepository(db);
 const input = {
   fullName: "Ada",
   headline: "Engineer",
-  masterCv: "cv v1",
+  summary: "summary v1",
   publicSystemPrompt: "p",
   recruiterSystemPrompt: "r",
   tailorSystemPrompt: "t",
@@ -24,11 +24,11 @@ describe("ProfileRepository", () => {
 
     const first = await repo.upsert(input);
     expect(first.id).toBe(1);
-    expect(first.masterCv).toBe("cv v1");
+    expect(first.summary).toBe("summary v1");
 
-    const second = await repo.upsert({ ...input, masterCv: "cv v2" });
+    const second = await repo.upsert({ ...input, summary: "summary v2" });
     expect(second.id).toBe(1);
-    expect(second.masterCv).toBe("cv v2");
+    expect(second.summary).toBe("summary v2");
     expect(second.updatedAt.getTime()).toBeGreaterThan(first.updatedAt.getTime());
 
     expect(await repo.find()).toEqual(second);

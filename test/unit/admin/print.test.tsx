@@ -69,8 +69,8 @@ describe("admin print", () => {
     }
   });
 
-  it("prints the master cv with all personal info fields", async () => {
-    const { get } = await withResume({ cv: "## Summary\n\nTen years of backends." });
+  it("prints the career library with all personal info fields", async () => {
+    const { get } = await withResume();
     const res = await get("/admin/profile/print");
     expect(res.status).toBe(200);
     const html = await res.text();
@@ -78,8 +78,10 @@ describe("admin print", () => {
     for (const line of ["Email: ada@example.com", "Phone: +44 20 7946 0958", "City: London"]) {
       expect(html).toContain(line);
     }
-    expect(html).toContain("<h2>Summary</h2>");
-    expect(html).toContain("Ten years of backends.");
+    expect(html).toContain("Ten years building payment systems.");
+    expect(html).toContain("<h2>Experience</h2>");
+    expect(html).toContain("<h3>Staff Engineer</h3>");
+    expect(html).toContain("<h2>Education</h2>");
   });
 
   it("sends no-store and noindex and never calls the llm", async () => {

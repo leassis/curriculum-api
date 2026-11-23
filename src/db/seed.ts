@@ -17,7 +17,6 @@ export async function seed(databaseUrl: string): Promise<"created" | "exists"> {
         fullName: "",
         headline: "",
         summary: "",
-        masterCv: "",
         publicSystemPrompt: DEFAULT_PUBLIC_SYSTEM_PROMPT,
         recruiterSystemPrompt: DEFAULT_RECRUITER_SYSTEM_PROMPT,
         tailorSystemPrompt: DEFAULT_TAILOR_SYSTEM_PROMPT,

@@ -14,7 +14,6 @@ const db = testDb();
 const profileRow = {
   fullName: "Ada",
   headline: "Engineer",
-  masterCv: "cv",
   publicSystemPrompt: "p",
   recruiterSystemPrompt: "r",
   tailorSystemPrompt: "t",

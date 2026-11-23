@@ -17,7 +17,7 @@ describe("seed", () => {
     expect(rows).toHaveLength(1);
     const row = rows[0];
     expect(row?.id).toBe(1);
-    expect([row?.fullName, row?.headline, row?.masterCv]).toEqual(["", "", ""]);
+    expect([row?.fullName, row?.headline]).toEqual(["", ""]);
     for (const prompt of [
       row?.publicSystemPrompt,
       row?.recruiterSystemPrompt,
@@ -40,7 +40,6 @@ describe("seed", () => {
       id: 1,
       fullName: "Ada",
       headline: "Engineer",
-      masterCv: "my cv",
       publicSystemPrompt: "custom public",
       recruiterSystemPrompt: "custom recruiter",
       tailorSystemPrompt: "custom tailor",

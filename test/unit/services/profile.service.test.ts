@@ -16,9 +16,9 @@ describe("ProfileService", () => {
   it("update upserts row 1", async () => {
     const repo = new FakeProfileRepo();
     const service = new ProfileService(repo);
-    const stored = await service.update({ ...profileInput, masterCv: "new cv" });
-    expect(repo.upserts).toEqual([{ ...profileInput, masterCv: "new cv" }]);
-    expect(stored).toMatchObject({ id: 1, masterCv: "new cv" });
+    const stored = await service.update({ ...profileInput, summary: "new summary" });
+    expect(repo.upserts).toEqual([{ ...profileInput, summary: "new summary" }]);
+    expect(stored).toMatchObject({ id: 1, summary: "new summary" });
     expect(repo.row).toEqual(stored);
   });
 

@@ -63,7 +63,7 @@ describe("admin profile career", () => {
     expect(html).toContain("Edit as markdown");
     expect(html).toContain("Import from text");
     expect(html).toContain('src="/admin/profile/career.js"');
-    expect(html).not.toContain('name="masterCv"');
+    expect(html).not.toContain("Master CV");
   });
 
   it("add opens an empty form at the end of the card", async () => {

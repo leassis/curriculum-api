@@ -37,7 +37,6 @@ async function setup(mock: RecordingModelOptions = { chunks: ["Ten ", "years."] 
   await services.profile.update({
     fullName: "Ada Lovelace",
     headline: "Engineer",
-    masterCv: "Ten years of backend work.",
     publicSystemPrompt: "p",
     recruiterSystemPrompt: "Answer for recruiters.",
     tailorSystemPrompt: "t",

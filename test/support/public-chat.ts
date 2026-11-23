@@ -36,7 +36,6 @@ export async function publicChatSetup(
     await profileRepo.upsert({
       ...profileInput,
       fullName: FULL_NAME,
-      masterCv: "legacy master cv",
       publicSystemPrompt: "Answer about the candidate only.",
     });
   }

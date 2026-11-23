@@ -34,7 +34,6 @@ async function setup() {
     fullName: "Ada Lovelace",
     headline: "Engineer",
     summary: "Backend engineer with ten years of experience.",
-    masterCv: "",
     publicSystemPrompt: "p",
     recruiterSystemPrompt: "r",
     tailorSystemPrompt: "Tailor it.",

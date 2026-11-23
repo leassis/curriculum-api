@@ -22,7 +22,6 @@ export class FakeProfileRepo implements ProfileRepo {
 export const profileInput: ProfileInput = {
   fullName: "Ada",
   headline: "Engineer",
-  masterCv: "cv",
   publicSystemPrompt: "p",
   recruiterSystemPrompt: "r",
   tailorSystemPrompt: "t",

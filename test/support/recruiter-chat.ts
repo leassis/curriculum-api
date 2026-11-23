@@ -42,7 +42,6 @@ export async function recruiterSetup(
   await profileRepo.upsert({
     ...profileInput,
     fullName: "Ada Lovelace",
-    masterCv: "legacy master cv",
     recruiterSystemPrompt: RECRUITER_PROMPT,
   });
   const settings = new SettingsService(new FakeSettingsRepo(), config);

@@ -190,7 +190,6 @@ describe("recruiter chat service", () => {
     const system = calls[0]?.system ?? "";
     const body = system.slice(system.indexOf("<cv>\n") + 5, system.lastIndexOf("\n</cv>"));
     expect(body).toBe(renderCareerBody(doc, doc.items));
-    expect(system).not.toContain("legacy master cv");
     expect(system).not.toContain("Backend Engineer");
   });
 

@@ -22,7 +22,6 @@ export const profile = curriculum.table(
     fullName: text().notNull(),
     headline: text().notNull(),
     summary: text().notNull().default(""),
-    masterCv: text().notNull(),
     publicSystemPrompt: text().notNull(),
     recruiterSystemPrompt: text().notNull(),
     tailorSystemPrompt: text().notNull(),

@@ -551,9 +551,9 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Integration test: after migrate, `master_cv` is gone, every `structured` and `model` is NULL, resume rows, inputs and recruiter links kept
-- [ ] `grep -rn "masterCv\|master_cv" src test examples` finds only migration history
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration test: after migrate, `master_cv` is gone, every `structured` and `model` is NULL, resume rows, inputs and recruiter links kept
+- [x] `grep -rn "masterCv\|master_cv" src test examples` finds only migration history
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

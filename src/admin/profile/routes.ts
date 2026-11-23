@@ -128,8 +128,7 @@ profileRouter.post("/profile", async (c) => {
     return reject(`Your ${found.label} is in the body — keep contact data in Personal info`);
 
   try {
-    const existing = await c.var.services.profile.get().catch(() => null);
-    await c.var.services.profile.update({ ...values, masterCv: existing?.masterCv ?? "" });
+    await c.var.services.profile.update(values);
   } catch (error) {
     if (error instanceof ValidationError) return reject(error.message);
     throw error;
