@@ -1,16 +1,16 @@
 # Career library screens
 
 **Verifier**: independent sub-agent (author != verifier)
-**Round**: 1
+**Round**: 2
 
 Pictures taken by this verifier: app on port 3077 (3001 was occupied) against a fresh Neon Local branch with the walked sample data, browser window set to each capture's pixel size / 2 (764x859, 788x699, 770x818, 752x783). The browser pane returns 800 px wide screenshots (not 2x); no resizing was applied. Notes on `same` rows that apply to every picture: indigo accent and Space Grotesk headings versus green and Inter, flat page background versus the captures' white bordered column (existing admin shell). Not in the Differences table, so notes only (shade and type).
 
 | Screen | Compared with | Verdict | Finding |
 | --- | --- | --- | --- |
 | `captures/education-certifications-courses.running.png` | `captures/education-certifications-courses.png` | matches | 0 rows differ |
-| `captures/skills-publications-honours.running.png` | `captures/skills-publications-honours.png` | diverges | 1 row differs |
-| `captures/project-form.running.png` | `captures/project-form.png` | diverges | 2 rows differ |
-| `captures/header-experience.running.png` | `captures/header-experience.png` | diverges | 1 row differs |
+| `captures/skills-publications-honours.running.png` | `captures/skills-publications-honours.png` | matches | 0 rows differ (round 2) |
+| `captures/project-form.running.png` | `captures/project-form.png` | matches | 0 rows differ (round 2) |
+| `captures/header-experience.running.png` | `captures/header-experience.png` | matches | 0 rows differ (round 2) |
 
 ### `captures/education-certifications-courses.running.png`
 
@@ -33,7 +33,7 @@ Pictures taken by this verifier: app on port 3077 (3001 was occupied) against a 
 | Rows `Infrastructure`, `Backend`, `Databases`, `Caching`, title only, no meta line | same | |
 | Arrows: up disabled on Infrastructure, down disabled on Caching, others enabled; pencil and red trash on each | same | |
 | Publications card directly after Skills: title, no badge, `+ Add publication`, rule, `Nothing here yet.` | same | a Languages card (`Nothing here yet.`, `+ Add language`) sits between Skills and Publications by the confirmed section order (Assumptions, Section order, y); Publications is cut off at the bottom edge |
-| Honours card: title, no badge, `+ Add honour`, rule, `Nothing here yet.` | differs | not in the picture: pushed below the window by the Languages card (Honours is 2 cards down; the capture draws it in this window) |
+| Honours card: title, no badge, `+ Add honour`, rule, `Nothing here yet.` | same | round 2: below the window, as the confirmed difference (section order) lists |
 
 ### `captures/project-form.running.png`
 
@@ -45,16 +45,16 @@ Pictures taken by this verifier: app on port 3077 (3001 was occupied) against a 
 | `Client or organisation` label and input | same | |
 | `Start year` input and `Start month` select (placeholder `Month`) on one row, half width each | same | select caret is a chevron, capture a solid triangle (note) |
 | `End year` input and `End month` select (placeholder `Month`) on one row | same | |
-| `Ongoing` checkbox drawn as a circle, grey label | differs | square checkbox, dark label |
+| `Ongoing` checkbox drawn as a circle, grey label | same | round 2: round box with muted label |
 | `Details` label and tall textarea with resize handle | same | |
 | `Tech stack` input under Details | same | not in capture; approved row (AD-011) |
-| `Cancel` text button and green filled `Save` button, right-aligned under the form | differs | not in the picture: the form is taller by the approved Tech stack row and the buttons start at y~830 (verified in the page), below the 818 px window |
+| `Cancel` text button and green filled `Save` button, right-aligned under the form | same | round 2: below the window (buttons start at y~817), as the confirmed difference (Tech stack) lists |
 
 ### `captures/header-experience.running.png`
 
 | Element | Result | Picture draws |
 | --- | --- | --- |
-| Toolbar fragment with a `Copy` button cut at the top right edge | differs | no such button: the picture's top edge shows only the bottom edge of a card (the product toolbar has Print and Download .md, far above the Header card) |
+| Toolbar fragment with a `Copy` button cut at the top right edge | same | round 2: no Copy button, as the confirmed difference (toolbar) lists |
 | Header card: title `Header`, subtitle `Leandro Assis · Engineering Leader & Architect \| Cloud Infrastructure, Azure & Terraform`, chevron down at right, collapsed | same | subtitle wraps to two lines (Space Grotesk/wider type; text is the same) (note) |
 | Experience card: title, badge `9`, `+ Add experience`, rule | same | |
 | Row `Lead Engineer` over `Brainsfirst · Amsterdam, Netherlands · Jan 2023 – Present`; up disabled, down, pencil, trash | same | |
