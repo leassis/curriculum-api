@@ -336,4 +336,44 @@ describe("admin resumes left out routes", () => {
     expect(items.at(-1)).toMatchObject({ title: "Staff Engineer", sourceId: globex?.id });
     expect(await services.career.library()).toEqual(libraryBefore);
   });
+  it("keeps both items when two different items are added back at the same time", async () => {
+    const { id, page, click, stored, send, services } = await generatedResume();
+    await click(await page(), "Delete Staff Engineer");
+    await click(await page(), "Delete Engineer");
+    const before = (await stored()).length;
+    const library = (await services.career.library()).items;
+    const ids = ["Staff Engineer", "Engineer"].map(
+      (t) => library.find((i) => i.title === t)?.id as string,
+    );
+    const results = await Promise.all(
+      ids.map((libraryId) => send("POST", `/admin/resumes/${id}/left-out/${libraryId}`)),
+    );
+    expect(results.map((r) => r.status)).toEqual([200, 200]);
+    const items = await stored();
+    expect(items).toHaveLength(before + 2);
+    expect(
+      items
+        .filter((i) => ids.includes(i.sourceId as string))
+        .map((i) => i.sourceId)
+        .sort(),
+    ).toEqual([...ids].sort());
+  });
+
+  it("stores one copy and answers 400 to the second of two simultaneous add backs of one item", async () => {
+    const { id, page, click, stored, send, services } = await generatedResume();
+    await click(await page(), "Delete Staff Engineer");
+    const before = (await stored()).length;
+    const library = (await services.career.library()).items;
+    const globex = library.find((i) => i.title === "Staff Engineer")?.id as string;
+    const results = await Promise.all([
+      send("POST", `/admin/resumes/${id}/left-out/${globex}`),
+      send("POST", `/admin/resumes/${id}/left-out/${globex}`),
+    ]);
+    expect(results.map((r) => r.status).sort()).toEqual([200, 400]);
+    const failed = results.find((r) => r.status === 400);
+    expect(await failed?.text()).toContain("That item is not left out");
+    const items = await stored();
+    expect(items).toHaveLength(before + 1);
+    expect(items.filter((i) => i.sourceId === globex)).toHaveLength(1);
+  });
 });

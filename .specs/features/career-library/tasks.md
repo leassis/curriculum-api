@@ -887,6 +887,9 @@ Proof: run int | ✓ admin resumes left out routes > lists a deleted item under 
 **C81** - Items the Owner added by hand (`sourceId` null) never hide a library item from Left out (CLIB-13, Tailored AC 13)
 Proof: run unit | ✓ left out > ignores items without a source id
 
+**C82** - Changes to one Tailored Resume made at the same time never lose an update: two add backs of different items store both, and two add backs of one item store one copy and answer the second 400 "That item is not left out" (CLIB-13, Tailored AC 17 and the concurrency edge case)
+Proof: run int | ✓ admin resumes left out routes > stores one copy and answers 400 to the second of two simultaneous add backs of one item
+
 ---
 
 ## Handoff

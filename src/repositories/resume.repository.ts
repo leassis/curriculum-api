@@ -25,6 +25,11 @@ export interface ResumeRepo {
   find(id: string): Promise<ResumeRow | null>;
   insert(row: ResumeInsert): Promise<ResumeRow>;
   update(id: string, patch: ResumePatch): Promise<ResumeRow | null>;
+  /** Locks the row, lets `fn` turn it into a patch, and stores that patch in one transaction. */
+  change(
+    id: string,
+    fn: (row: ResumeRow) => ResumePatch | Promise<ResumePatch>,
+  ): Promise<ResumeRow | null>;
   delete(id: string): Promise<boolean>;
 }
 
@@ -55,6 +60,27 @@ export class ResumeRepository implements ResumeRepo {
       .where(eq(tailoredResumes.id, id))
       .returning();
     return row ?? null;
+  }
+
+  change(
+    id: string,
+    fn: (row: ResumeRow) => ResumePatch | Promise<ResumePatch>,
+  ): Promise<ResumeRow | null> {
+    return this.db.transaction(async (tx) => {
+      const [current] = await tx
+        .select()
+        .from(tailoredResumes)
+        .where(eq(tailoredResumes.id, id))
+        .for("update");
+      if (!current) return null;
+      const patch = await fn(current);
+      const [row] = await tx
+        .update(tailoredResumes)
+        .set({ ...patch, updatedAt: sql`now()` })
+        .where(eq(tailoredResumes.id, id))
+        .returning();
+      return row ?? null;
+    });
   }
 
   async delete(id: string): Promise<boolean> {

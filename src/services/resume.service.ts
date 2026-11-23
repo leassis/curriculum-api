@@ -373,15 +373,19 @@ export class ResumeService {
     change: (doc: ResumeDocument) => ResumeDocument,
     strings: string[] | (() => string[]),
   ): Promise<Resume> {
-    const { document } = await this.get(id);
-    if (!document) throw new ValidationError(NOT_GENERATED);
-    const candidate = change(document);
-    const checked = ResumeDocumentSchema.safeParse(candidate);
-    if (!checked.success) {
-      throw new ValidationError(checked.error.issues[0]?.message ?? "Invalid resume item");
-    }
-    await this.guard(typeof strings === "function" ? strings() : strings);
-    return this.update(id, { structured: checked.data });
+    if (!UUID.test(id)) throw new NotFoundError("Resume not found");
+    const row = await this.resumes.change(id, async (current) => {
+      const { document } = this.toResume(current);
+      if (!document) throw new ValidationError(NOT_GENERATED);
+      const checked = ResumeDocumentSchema.safeParse(change(document));
+      if (!checked.success) {
+        throw new ValidationError(checked.error.issues[0]?.message ?? "Invalid resume item");
+      }
+      await this.guard(typeof strings === "function" ? strings() : strings);
+      return { structured: checked.data };
+    });
+    if (!row) throw new NotFoundError("Resume not found");
+    return this.toResume(row);
   }
 
   private async guard(strings: string[]): Promise<void> {

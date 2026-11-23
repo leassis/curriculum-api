@@ -47,6 +47,15 @@ export class FakeResumeRepo implements ResumeRepo {
     return next;
   }
 
+  async change(
+    id: string,
+    fn: (row: ResumeRow) => ResumePatch | Promise<ResumePatch>,
+  ): Promise<ResumeRow | null> {
+    const row = this.rows.find((r) => r.id === id);
+    if (!row) return null;
+    return this.update(id, await fn(row));
+  }
+
   async delete(id: string): Promise<boolean> {
     const before = this.rows.length;
     this.rows = this.rows.filter((r) => r.id !== id);
