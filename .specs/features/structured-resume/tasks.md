@@ -237,8 +237,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests: numeric key order, bullets split and blank lines dropped, empty section dropped, remove, up, down, no-op at edges
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` (phase end)
+- [x] Unit tests: numeric key order, bullets split and blank lines dropped, empty section dropped, remove, up, down, no-op at edges
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` (phase end)
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: build
