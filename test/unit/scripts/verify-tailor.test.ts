@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { exitCode, fixture, formatResults, runChecks } from "../../../scripts/verify-tailor-checks";
 import type { Assessment } from "../../../src/services/tailor/assessment";
@@ -105,4 +107,16 @@ describe("verify tailor", () => {
       expect(exitCode(failing)).toBe(1);
     }
   });
+
+  it("exits 2 without OPENROUTER_API_KEY", () => {
+    const root = join(import.meta.dirname, "../../..");
+    const run = spawnSync(process.execPath, ["--import", "tsx", "scripts/verify-tailor.ts"], {
+      cwd: root,
+      env: { PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "" },
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    expect(run.status).toBe(2);
+    expect(run.stderr).toContain("OPENROUTER_API_KEY is required");
+  }, 40_000);
 });

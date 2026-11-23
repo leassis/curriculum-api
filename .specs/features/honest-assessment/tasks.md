@@ -326,9 +326,9 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit test: running the script with `OPENROUTER_API_KEY` unset exits 2 printing "OPENROUTER_API_KEY is required" (C43)
+- [x] Unit test: running the script with `OPENROUTER_API_KEY` unset exits 2 printing "OPENROUTER_API_KEY is required" (C43)
 - [ ] User approved the paid run in chat; output saved to `.specs/features/honest-assessment/real-model-run.md` with four PASS lines (C39)
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
