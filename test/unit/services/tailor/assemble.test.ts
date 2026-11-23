@@ -87,6 +87,18 @@ describe("assemble v2", () => {
     expect(doc.items.some((i) => i.kind === "certification")).toBe(false);
     expect(doc.items.some((i) => i.kind === "skill_group")).toBe(false);
     expect(doc.items.filter((i) => i.kind === "project")).toHaveLength(1);
+
+    const noExperience = all().filter(
+      (o) => library.find((i) => ids.get(i.id) === o.source_id)?.kind !== "experience",
+    );
+    const both = built(
+      reply(noExperience.map((o) => ({ ...o, text: "Model text", bullets: ["Model bullet"] }))),
+    );
+    const restored = both.items.filter((i) => i.kind === "experience");
+    expect(restored.map((i) => i.sourceId)).toEqual([SAMPLE_IDS.globex, SAMPLE_IDS.initech]);
+    for (const [at, source] of [library[0], library[1]].entries()) {
+      expect(restored[at]).toMatchObject({ text: source?.text, bullets: source?.bullets });
+    }
   });
 
   it("keeps the model order inside a kind and orders kinds as the library does", () => {
