@@ -219,10 +219,26 @@ describe("admin resumes career routes", () => {
     const removal = gesture(button(page, "Delete BSc Computer Science"));
     expect((await send(removal.method, removal.path)).status).toBe(200);
 
+    const add = gesture(button(page, /Add experience$/));
+    const addForm = await (await send(add.method, add.path)).text();
+    const newForm = tags(addForm, "form").find((f) => f.attrs["hx-post"]?.includes("/items"));
+    expect(newForm).toBeDefined();
+    const post = gesture(newForm as never);
+    const added = await send(post.method, post.path, {
+      ...formFields((newForm as { html: string }).html),
+      title: "Side role",
+      organisation: "Side Co",
+      startYear: "2024",
+    });
+    expect(added.status).toBe(200);
+
     const [row] = await db.select().from(tailoredResumes);
-    const doc = row?.structured as unknown as { items: { title: string }[] };
+    const doc = row?.structured as unknown as {
+      items: { title: string; sourceId: string | null }[];
+    };
     const items = doc.items;
-    expect(items.map((i) => i.title)).toEqual(["Engineer", "Principal Engineer"]);
+    expect(items.map((i) => i.title)).toEqual(["Engineer", "Principal Engineer", "Side role"]);
+    expect(items.at(-1)?.sourceId).toBeNull();
     expect(await services.career.library()).toEqual(libraryBefore);
   });
 
