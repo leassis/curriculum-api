@@ -27,6 +27,10 @@ export class FakeResumeRepo implements ResumeRepo {
       headerFields: input.headerFields ?? null,
       model: null,
       structured: null,
+      score: null,
+      scoreRationale: "",
+      missingSkills: [],
+      omissions: [],
       createdAt: at,
       updatedAt: at,
     };
@@ -42,6 +46,10 @@ export class FakeResumeRepo implements ResumeRepo {
     if (patch.structured !== undefined) next.structured = structuredClone(patch.structured);
     if (patch.customInstructions !== undefined) next.customInstructions = patch.customInstructions;
     if (patch.headerFields !== undefined) next.headerFields = patch.headerFields;
+    if (patch.score !== undefined) next.score = patch.score;
+    if (patch.scoreRationale !== undefined) next.scoreRationale = patch.scoreRationale;
+    if (patch.missingSkills !== undefined) next.missingSkills = [...patch.missingSkills];
+    if (patch.omissions !== undefined) next.omissions = structuredClone(patch.omissions);
     next.updatedAt = new Date();
     this.rows[index] = next;
     return next;

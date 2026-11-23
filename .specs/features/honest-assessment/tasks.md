@@ -211,8 +211,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Integration test: columns exist with defaults (`''`, `{}`, `[]`, NULL); insert of score 101 and −1 fails the CHECK; 0 and 100 succeed (C19)
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration test: columns exist with defaults (`''`, `{}`, `[]`, NULL); insert of score 101 and −1 fails the CHECK; 0 and 100 succeed (C19)
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

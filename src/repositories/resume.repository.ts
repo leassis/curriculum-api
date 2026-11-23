@@ -18,6 +18,11 @@ export interface ResumePatch {
   customInstructions?: string;
   /** `null` stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;
+  score?: number | null;
+  scoreRationale?: string;
+  missingSkills?: string[];
+  /** Array of `{ what, reason }`, already validated by the service; stored as jsonb. */
+  omissions?: unknown;
 }
 
 export interface ResumeRepo {

@@ -50,6 +50,13 @@
       "when": 1795461427698,
       "tag": "0006_drop_master_cv",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795472014124,
+      "tag": "0007_graceful_karma",
+      "breakpoints": true
     }
   ]
 }

@@ -60,19 +60,29 @@ export const personalInfo = curriculum.table(
   ],
 );
 
-export const tailoredResumes = curriculum.table("tailored_resumes", {
-  id: uuid().primaryKey().default(sql`gen_random_uuid()`),
-  title: text().notNull(),
-  company: text(),
-  jobDescription: text().notNull(),
-  customInstructions: text().notNull().default(""),
-  headerFields: text().array(),
-  model: text(),
-  /** The Resume Document; NULL until the first successful generation. Parsed by the service. */
-  structured: jsonb(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const tailoredResumes = curriculum.table(
+  "tailored_resumes",
+  {
+    id: uuid().primaryKey().default(sql`gen_random_uuid()`),
+    title: text().notNull(),
+    company: text(),
+    jobDescription: text().notNull(),
+    customInstructions: text().notNull().default(""),
+    headerFields: text().array(),
+    model: text(),
+    /** The Resume Document; NULL until the first successful generation. Parsed by the service. */
+    structured: jsonb(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** Fit of the Career Library to the job, 0-100; NULL until the first successful generation. */
+    score: integer(),
+    scoreRationale: text().notNull().default(""),
+    missingSkills: text().array().notNull().default(sql`'{}'::text[]`),
+    /** Array of `{ what, reason }`, parsed by the service. */
+    omissions: jsonb().notNull().default(sql`'[]'::jsonb`),
+  },
+  (t) => [check("tailored_resumes_score", sql`${t.score} between 0 and 100`)],
+);
 
 export const recruiterChats = curriculum.table(
   "recruiter_chats",
