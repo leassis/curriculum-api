@@ -1,58 +1,56 @@
+import { randomUUID } from "node:crypto";
+import { type CareerItem, KIND_META, KINDS } from "../career/item.js";
 import { cleanLine, cleanText, parseDocument, type ResumeDocument } from "./document.js";
 import type { TailorOutput } from "./output.js";
-import type { ParsedCv } from "./parse-cv.js";
 
 export type AssembleFailure = "unknown_id" | "duplicate_id" | "schema";
 export type AssembleResult =
   | { ok: true; doc: ResumeDocument }
   | { ok: false; reason: AssembleFailure };
 
-/** Indexes returned entries by id; reports an id the source does not have, or one returned twice. */
-function index<T>(
-  entries: T[],
-  idOf: (e: T) => string,
-  known: Set<string>,
-): Map<string, T> | "unknown_id" | "duplicate_id" {
-  const byId = new Map<string, T>();
-  let duplicate = false;
-  for (const e of entries) {
-    const id = idOf(e);
-    if (!known.has(id)) return "unknown_id";
-    if (byId.has(id)) duplicate = true;
-    byId.set(id, e);
-  }
-  return duplicate ? "duplicate_id" : byId;
+const RESTORED_KINDS: readonly string[] = ["experience", "education"];
+
+function bodyOf(item: CareerItem, returned?: TailorOutput["items"][number]) {
+  const meta = KIND_META[item.kind];
+  if (!returned) return { text: item.text, bullets: item.bullets };
+  return {
+    text: meta.fields.includes("text") ? cleanText(returned.text) : item.text,
+    bullets: meta.fields.includes("bullets")
+      ? returned.bullets.map(cleanLine).filter((b) => b !== "")
+      : item.bullets,
+  };
 }
 
 /**
- * Builds the Resume Document in source order. Titles, kinds and headings come from the parsed
- * Master CV; the model only supplies bodies. Anything the model leaves out is dropped.
+ * Builds the Resume Document from the Career Library. Typed fields are copied by code; the model
+ * supplies the headline, the summary, item order per kind, and text and bullets only.
  */
-export function assemble(parsed: ParsedCv, out: TailorOutput): AssembleResult {
-  const sectionIds = new Set(parsed.sections.map((s) => s.id));
-  const itemIds = new Set(parsed.sections.flatMap((s) => s.items.map((i) => i.id)));
-  const sections = index(out.sections, (s) => s.source_id, sectionIds);
-  const items = index(out.items, (i) => i.source_item_id, itemIds);
-  if (typeof sections === "string") return { ok: false, reason: sections };
-  if (typeof items === "string") return { ok: false, reason: items };
-
-  const built = parsed.sections.flatMap((section) => {
-    const keptItems = section.items.flatMap((item) => {
-      const returned = items.get(item.id);
-      if (!returned) return [];
-      return [
-        {
-          heading: item.heading,
-          text: cleanText(returned.text),
-          bullets: returned.bullets.map(cleanLine).filter((b) => b !== ""),
-        },
-      ];
-    });
-    const text = cleanText(sections.get(section.id)?.text ?? "");
-    if (text === "" && keptItems.length === 0) return [];
-    return [{ title: section.title, kind: section.kind, text, items: keptItems }];
+export function assemble(
+  library: CareerItem[],
+  ids: Map<string, string>,
+  out: TailorOutput,
+): AssembleResult {
+  const byTag = new Map(library.map((item) => [ids.get(item.id), item]));
+  const seen = new Set<string>();
+  const kept: ResumeDocument["items"] = [];
+  for (const returned of out.items) {
+    const source = byTag.get(returned.source_id);
+    if (!source) return { ok: false, reason: "unknown_id" };
+    if (seen.has(source.id)) return { ok: false, reason: "duplicate_id" };
+    seen.add(source.id);
+    kept.push({ ...source, ...bodyOf(source, returned), id: randomUUID(), sourceId: source.id });
+  }
+  const restored = library
+    .filter((item) => RESTORED_KINDS.includes(item.kind) && !seen.has(item.id))
+    .map((item) => ({ ...item, id: randomUUID(), sourceId: item.id }));
+  const items = [...kept, ...restored].sort(
+    (a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind),
+  );
+  const result = parseDocument({
+    version: 2,
+    headline: cleanLine(out.headline),
+    summary: cleanText(out.summary),
+    items,
   });
-
-  const result = parseDocument({ version: 1, sections: built });
   return result.ok ? { ok: true, doc: result.doc } : { ok: false, reason: "schema" };
 }

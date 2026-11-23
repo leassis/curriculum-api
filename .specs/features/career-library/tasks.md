@@ -380,8 +380,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Tailored AC 3-6 (assembler side), including a model reply with a different title or date that is ignored
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Tailored AC 3-6 (assembler side), including a model reply with a different title or date that is ignored
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
