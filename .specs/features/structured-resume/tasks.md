@@ -216,8 +216,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit test: exact markdown for `sampleDocument()`; intro has no `##`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test: exact markdown for `sampleDocument()`; intro has no `##`
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
