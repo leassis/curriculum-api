@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { addItem, moveItem, removeItem, replaceItem } from "../../../../src/services/career/ops";
+import {
+  addItem,
+  leftOut,
+  moveItem,
+  removeItem,
+  replaceItem,
+} from "../../../../src/services/career/ops";
 import { item } from "../../../support/career";
 
 const titles = (items: { title: string }[] | null) => items?.map((i) => i.title);
@@ -54,5 +60,26 @@ describe("career ops", () => {
     moveItem(list, b.id, "up");
     removeItem(list, a.id);
     expect(titles(list)).toEqual(["A", "B"]);
+  });
+});
+
+describe("left out", () => {
+  const a = item("experience", { title: "A" });
+  const b = item("education", { title: "B" });
+  const c = item("course", { title: "C" });
+
+  it("lists the library items no document item points at", () => {
+    const doc = [{ sourceId: b.id }];
+    expect(titles(leftOut([a, b, c], doc))).toEqual(["A", "C"]);
+  });
+
+  it("ignores items without a source id", () => {
+    expect(titles(leftOut([a, b], [{ sourceId: null }]))).toEqual(["A", "B"]);
+  });
+
+  it("returns an item to left out once its document item is removed", () => {
+    const doc = [{ sourceId: a.id }, { sourceId: b.id }];
+    expect(titles(leftOut([a, b], doc))).toEqual([]);
+    expect(titles(leftOut([a, b], doc.slice(1)))).toEqual(["A"]);
   });
 });

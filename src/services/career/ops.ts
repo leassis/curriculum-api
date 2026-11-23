@@ -34,3 +34,8 @@ export function moveItem<T extends CareerItem>(
   moved[neighbour] = current;
   return moved;
 }
+
+export function leftOut(library: CareerItem[], items: { sourceId: string | null }[]): CareerItem[] {
+  const used = new Set(items.map((i) => i.sourceId));
+  return library.filter((i) => !used.has(i.id));
+}

@@ -6,7 +6,14 @@ import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js
 import { renderCareerBody } from "./career/body.js";
 import { itemFromForm } from "./career/form.js";
 import { type Kind, normalizeItem } from "./career/item.js";
-import { addItem, type Direction, moveItem, removeItem, replaceItem } from "./career/ops.js";
+import {
+  addItem,
+  type Direction,
+  leftOut,
+  moveItem,
+  removeItem,
+  replaceItem,
+} from "./career/ops.js";
 import { type CareerService, itemStrings } from "./career.service.js";
 import {
   LlmOutputInvalidError,
@@ -79,6 +86,7 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 const EMPTY_LIBRARY = "Add Career Items to your profile before generating";
 const NOT_GENERATED = "Generate the resume before editing it";
 const ITEM_NOT_FOUND = "Resume item not found";
+const NOT_LEFT_OUT = "That item is not left out";
 const RESUME_FULL_NAME = "Your full name is in the resume — it is added when printed";
 const LIBRARY_FULL_NAME = "Your full name is in the career library — it is added when printed";
 
@@ -304,6 +312,15 @@ export class ResumeService {
       sourceId: null,
     };
     return this.changeItems(id, (items) => addItem(items, item));
+  }
+
+  async addBack(id: string, libraryItemId: string): Promise<Resume> {
+    const { items: library } = await this.career.library();
+    return this.changeItems(id, (items) => {
+      const source = leftOut(library, items).find((i) => i.id === libraryItemId);
+      if (!source) throw new ValidationError(NOT_LEFT_OUT);
+      return addItem(items, { ...source, id: randomUUID(), sourceId: source.id });
+    });
   }
 
   async editItem(id: string, itemId: string, body: Record<string, unknown>): Promise<Resume> {

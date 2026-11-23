@@ -971,6 +971,56 @@ describe("resume service items", () => {
   });
 });
 
+describe("resume service add back", () => {
+  const withDocument = async () => {
+    const setup = await resumeSetup();
+    const { id } = await setup.resumes.create(draft);
+    const document = sampleDocumentV2();
+    await setup.repo.update(id, { structured: document });
+    const doc = () => setup.repo.rows[0]?.structured as ResumeDocument;
+    return { ...setup, id, doc, document };
+  };
+
+  it("appends a copy with a new id and the library id as source after a delete", async () => {
+    const { resumes, id, doc, careerRepo, document } = await withDocument();
+    const libraryBefore = structuredClone(careerRepo.document);
+    const removed = document.items[0] as ResumeDocument["items"][number];
+    await resumes.removeItem(id, removed.id);
+    const saved = await resumes.addBack(id, removed.sourceId as string);
+    const added = saved.document?.items.at(-1);
+    expect(added).toMatchObject({
+      kind: "experience",
+      title: removed.title,
+      text: removed.text,
+      bullets: removed.bullets,
+      sourceId: removed.sourceId,
+    });
+    expect(added?.id).not.toBe(removed.id);
+    expect(added?.id).not.toBe(removed.sourceId);
+    expect(doc().items).toHaveLength(document.items.length);
+    expect(doc().items.at(-1)).toEqual(added);
+    expect(careerRepo.document).toEqual(libraryBefore);
+  });
+
+  it("refuses an unknown or already present item", async () => {
+    const { resumes, id, doc, document } = await withDocument();
+    const before = structuredClone(doc());
+    for (const itemId of [MISSING, document.items[0]?.sourceId as string]) {
+      await expect(resumes.addBack(id, itemId)).rejects.toMatchObject({
+        status: 400,
+        message: "That item is not left out",
+      });
+    }
+    expect(doc()).toEqual(before);
+  });
+
+  it("refuses before the first generation", async () => {
+    const setup = await resumeSetup();
+    const fresh = await setup.resumes.create(draft);
+    await expect(setup.resumes.addBack(fresh.id, MISSING)).rejects.toMatchObject({ status: 400 });
+  });
+});
+
 describe("resume service v2 print", () => {
   it("renders print and download with the career body", async () => {
     const { resumes, repo, addField } = await resumeSetup();
