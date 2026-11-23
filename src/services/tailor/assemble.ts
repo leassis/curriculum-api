@@ -8,7 +8,14 @@ export type AssembleResult =
   | { ok: true; doc: ResumeDocument }
   | { ok: false; reason: AssembleFailure };
 
-const RESTORED_KINDS: readonly string[] = ["experience", "education"];
+const RESTORED_KINDS: readonly string[] = [
+  "experience",
+  "education",
+  "certification",
+  "course",
+  "skill_group",
+  "language",
+];
 
 function bodyOf(item: CareerItem, returned?: TailorOutput["items"][number]) {
   const meta = KIND_META[item.kind];

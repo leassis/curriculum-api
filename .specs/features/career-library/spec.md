@@ -165,7 +165,7 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 2. WHEN the Owner uses Generate THEN the system SHALL send the model the Career Items rendered with an id per item and the Job Description, and nothing from the Personal Header.
 3. WHEN the model answers THEN the system SHALL build each item by copying `kind`, `title`, `organisation`, `location`, dates, `current`, `skills` and `level` from the Career Item named by its id, and take `text` and `bullets` from the model.
 4. The system SHALL set each item's `sourceId` to the id of the Career Item it was built from.
-5. WHEN the model omits an experience or education Career Item THEN the system SHALL add it with its library text and bullets in library order after the model's items of that kind.
+5. WHEN the model omits an experience, education, certification, course, skill group or language Career Item THEN the system SHALL add it with its library text and bullets in library order after the model's items of that kind.
 6. IF the model answers an unknown or duplicate id THEN the system SHALL reject that answer, retry once, and answer 503 with the existing message when the retry is also rejected.
 7. IF the Career Library has no Career Item THEN the system SHALL answer 400 with "Add Career Items to your profile before generating".
 8. WHEN the Owner opens a Tailored Resume THEN the system SHALL show a Header card (name and headline, summary on expand) and one card per kind with items, with the same rows and controls as the Career Library.

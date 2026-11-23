@@ -764,8 +764,8 @@ Proof: run unit | ✓ assemble v2 > copies typed fields from the library and bod
 **C61** - Every built item carries the library id as `sourceId` (CLIB-07, Tailored AC 4)
 Proof: run unit | ✓ assemble v2 > sets source id to the library item id
 
-**C62** - Omitted experience and education items are restored with library text in library order after the model's items of that kind (CLIB-07, Tailored AC 5)
-Proof: run unit | ✓ assemble v2 > restores omitted experience and education after the model items
+**C62** - Omitted experience, education, certification, course, skill group and language items are restored with library text in library order after the model's items of that kind (CLIB-07, Tailored AC 5)
+Proof: run unit | ✓ assemble v2 > restores omitted experience, education, certifications, courses, skills and languages after the model items
 
 **C63** - An unknown or duplicate id is rejected, retried once, and a second rejection answers 503 with the document unchanged (CLIB-07, Tailored AC 6)
 Proof: run unit | ✓ admin resumes > generate answers 503 after one retry when the model names an unknown id twice

@@ -156,7 +156,7 @@ Every rule that changes what the Owner sees (kind order, meta line, date format,
 - **Interfaces**:
   - `TailorOutputSchema` — `{ headline, summary, items: { source_id, text, bullets }[] }`, all required and described.
   - `annotate(items): Map<libraryId, "cN">` — ids in library order.
-  - `assemble(library, ids, out)` — unknown/duplicate `source_id` → reject; each kept item = library item with `text`/`bullets` from the model (`cleanText`/`cleanLine`), new `id`, `sourceId` = library id; per kind, model order; omitted experience/education appended in library order; result through `ResumeDocumentSchema`.
+  - `assemble(library, ids, out)` — unknown/duplicate `source_id` → reject; each kept item = library item with `text`/`bullets` from the model (`cleanText`/`cleanLine`), new `id`, `sourceId` = library id; per kind, model order; omitted experience/education/certification/course/skill group/language appended in library order; result through `ResumeDocumentSchema`.
 
 ### ResumeService (changed)
 - `generate(id, instructions?)` — library empty → 400 "Add Career Items to your profile before generating"; full name in library/headline/summary → 400; body `renderCareerBody(profile, items, { ids })`; existing two-attempt loop; stores `structured` v2.

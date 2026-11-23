@@ -67,7 +67,7 @@ describe("assemble v2", () => {
     expect(doc).toMatchObject({ version: 2, headline: "Backend engineer", summary: "Ten years" });
   });
 
-  it("restores omitted experience and education after the model items", () => {
+  it("restores omitted experience, education, certifications, courses, skills and languages after the model items", () => {
     const keep = all().filter((o) =>
       [SAMPLE_IDS.initech, SAMPLE_IDS.msc, SAMPLE_IDS.platform].includes(
         library.find((i) => ids.get(i.id) === o.source_id)?.id as never,
@@ -84,8 +84,12 @@ describe("assemble v2", () => {
     });
     const edu = doc.items.filter((i) => i.kind === "education");
     expect(edu.map((i) => i.sourceId)).toEqual([SAMPLE_IDS.msc, SAMPLE_IDS.bsc]);
-    expect(doc.items.some((i) => i.kind === "certification")).toBe(false);
-    expect(doc.items.some((i) => i.kind === "skill_group")).toBe(false);
+    for (const kind of ["certification", "course", "skill_group", "language"]) {
+      const source = library.filter((i) => i.kind === kind);
+      expect(doc.items.filter((i) => i.kind === kind).map((i) => i.sourceId)).toEqual(
+        source.map((i) => i.id),
+      );
+    }
     expect(doc.items.filter((i) => i.kind === "project")).toHaveLength(1);
 
     const noExperience = all().filter(
@@ -110,6 +114,11 @@ describe("assemble v2", () => {
       SAMPLE_IDS.platform,
       SAMPLE_IDS.bsc,
       SAMPLE_IDS.msc,
+      SAMPLE_IDS.aws,
+      SAMPLE_IDS.course,
+      SAMPLE_IDS.backend,
+      SAMPLE_IDS.tools,
+      SAMPLE_IDS.english,
     ]);
   });
 
