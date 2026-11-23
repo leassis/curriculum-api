@@ -11,6 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/career-library/design.md`
 **Status**: Approved
 **Approved**: 2026-11-23 - user: "approvo mas nao inicia a implementacao"
+**Amendment**: Phase 5 (T27-T29, C74-C81) added 2026-11-23 for CLIB-13; approved 2026-11-23 - user: "Approve, build"
 **Build**: `pnpm build; pnpm typecheck; pnpm lint`
 **Run unit**: `pnpm vitest run --project unit --reporter=verbose`
 **Run int**: `pnpm vitest run --project integration --reporter=verbose`
@@ -79,6 +80,12 @@ T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20
 
 ```
 T20 → T21 → T22 → T23 → T24 → T25 → T26
+```
+
+### Phase 5: Left out (amendment)
+
+```
+T26 → T27 → T28 → T29
 ```
 
 ---
@@ -579,6 +586,62 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 ---
 
+### T27: Left out operation and ResumeService.addBack
+
+**What**: pure `leftOut(library, doc)` in `career/ops.ts`; `ResumeService.addBack(id, libraryItemId)` appends a copy (new id, `sourceId` = library id) or throws `ValidationError("That item is not left out")`; library never written.
+**Where**: `src/services/career/ops.ts`, `src/services/resume.service.ts`
+**Depends on**: T26
+**Reuses**: `ops.ts`, `CareerService.library()`, PII Guard, schema check from `addItem`
+**Requirement**: CLIB-13
+
+**Done when**:
+
+- [ ] Unit tests for Tailored AC 13, 15, 16-18 at the operation and service (fake repo): left out by `sourceId`, copy appended at the end, library unchanged, refusal for unknown and already-present ids, a deleted item returns to left out
+- [ ] Gate check passes: `pnpm test:unit`
+
+**Tests**: unit
+**Gate**: quick
+**Commit**: `feat(resumes): add back career items left out of a tailored resume`
+
+---
+
+### T28: Left out row and Add back route
+
+**What**: `ResumeCards` renders all nine kinds, each card with a `<details>` "Left out (N)" (hidden at 0) listing title, meta line and an "Add back" button; `POST /admin/resumes/:id/left-out/:libraryItemId` re-renders the cards, 400 with "That item is not left out"; `editor()` and every cards fragment load the library for left out per kind.
+**Where**: `src/admin/resumes/view.tsx`, `src/admin/resumes/routes.ts`, `src/admin/career/view.tsx`, `src/admin/career/model.ts`
+**Depends on**: T27
+**Reuses**: `CareerCards`, `cardsFrom`, `change()`
+**Requirement**: CLIB-08, CLIB-13
+
+**Done when**:
+
+- [ ] Unit route and render tests for Tailored AC 8 (empty kinds show a card), 13, 14, 16, 17; integration test: Add back leaves `career_library` unchanged and a delete lists the item under Left out
+- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+
+**Tests**: integration
+**Gate**: full
+**Commit**: `feat(admin): show left out items on tailored resume cards`
+
+---
+
+### T29: Glossary term and handoff
+
+**What**: GLOSSARY entry "Left out"; STATE handoff and `HANDOFF.md` updated.
+**Where**: `GLOSSARY.md`
+**Depends on**: T28
+**Reuses**: domain-modeling conventions
+**Requirement**: CLIB-13
+
+**Done when**:
+
+- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+
+**Tests**: none
+**Gate**: build
+**Commit**: `docs: describe left out items`
+
+---
+
 ## Checks
 
 **C1** - The Career Library cards come in the order Experience, Projects, Education, Certifications, Courses, Skills, Languages, Publications, Honours (CLIB-01, Library AC 1)
@@ -800,6 +863,30 @@ Proof: run int | ✓ career migration > creates the singleton library and the pr
 **C73** - Migration 0006 drops `master_cv`, nulls every `structured` and `model`, and keeps resume rows, inputs and recruiter links (CLIB-10)
 Proof: run int | ✓ career migration > drops the master cv and discards v1 documents keeping rows
 
+**C74** - Every one of the nine kinds shows a card on a Tailored Resume, including a kind with no items (CLIB-08, Tailored AC 8)
+Proof: run unit | ✓ admin resumes left out > shows a card for every kind including empty ones
+
+**C75** - A card shows a collapsed "Left out (N)" row counting the Career Items of its kind that no resume item points at (CLIB-13, Tailored AC 13)
+Proof: run unit | ✓ admin resumes left out > shows a left out row with the count
+
+**C76** - Expanding Left out lists each item with its title, meta line and an "Add back" button (CLIB-13, Tailored AC 14)
+Proof: run unit | ✓ admin resumes left out > lists left out items with an add back button
+
+**C77** - Add back appends a copy with a new id and `sourceId` set to the library id, and the library is unchanged (CLIB-13, Tailored AC 15)
+Proof: run int | ✓ admin resumes left out routes > adds back a left out item and leaves the library unchanged
+
+**C78** - A kind with nothing left out shows no Left out row (CLIB-13, Tailored AC 16)
+Proof: run unit | ✓ admin resumes left out > hides the left out row when nothing is left out
+
+**C79** - Add back of an unknown or already present item answers 400 "That item is not left out" and leaves the document unchanged (CLIB-13, Tailored AC 17)
+Proof: run unit | ✓ resume service add back > refuses an unknown or already present item
+
+**C80** - Deleting a resume item that has a `sourceId` lists its Career Item under Left out (CLIB-13, Tailored AC 18)
+Proof: run int | ✓ admin resumes left out routes > lists a deleted item under left out
+
+**C81** - Items the Owner added by hand (`sourceId` null) never hide a library item from Left out (CLIB-13, Tailored AC 13)
+Proof: run unit | ✓ left out > ignores items without a source id
+
 ---
 
 ## Handoff
@@ -815,12 +902,13 @@ The feature's live state, written as it happens - a compaction gives no warning.
 ## Phase Execution Map
 
 ```
-Phase 1 → Phase 2 → Phase 3 → Phase 4
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5
 
 Phase 1:  T1 → T2 → T3 → T4 → T5 → T6 → T7
 Phase 2:  T8 → T9 → T10 → T11 → T12 → T13
 Phase 3:  T14 → T15 → T16 → T17 → T18 → T19 → T20
 Phase 4:  T21 → T22 → T23 → T24 → T25 → T26
+Phase 5:  T27 → T28 → T29
 ```
 
 Execution is strictly sequential. 26 tasks pack into 4 batches of whole phases (7, 6, 7, 6).

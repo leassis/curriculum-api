@@ -170,6 +170,12 @@ Every rule that changes what the Owner sees (kind order, meta line, date format,
 - Profile routes (`/admin/profile/items…`): `GET new?kind=`, `GET :id/edit`, `GET /items` (cancel), `POST /items`, `PUT :id`, `POST :id/move`, `DELETE :id`, `GET /markdown`, `PUT /markdown`, `POST /import`. Resume routes mirror the item ops under `/admin/resumes/:id/items…` plus `PUT /admin/resumes/:id/header`; the Header card shows the Profile name and the document headline, summary on expand.
 - `CareerCards` and `ItemForm` take a `url` prop, so one component serves both editors.
 
+### Left out (amendment, CLIB-13)
+- **Pure op** `leftOut(library: CareerItem[], doc: ResumeDocument): CareerItem[]` in `src/services/career/ops.ts`: library items whose id is not the `sourceId` of any document item, in library order. Items the Owner added (`sourceId` null) never hide a library item.
+- **ResumeService.addBack(id, libraryItemId)**: load the v2 document (400 when not generated), read the library, find the item in `leftOut(...)` else `ValidationError("That item is not left out")` (covers unknown id and already present), append `{ ...item, id: newId, sourceId: item.id }` at the end of the document items (ends its kind's card, since cards group by kind in document order), schema + PII check, store. The library is never written. Delete needs no change: a removed item's `sourceId` leaves the set, so the library item appears under Left out.
+- **Routes**: `POST /admin/resumes/:id/left-out/:libraryItemId` (add back, re-renders the cards fragment, 400 re-renders with the message). The editor and every cards fragment load the library through `CareerService.library()` to compute left out per kind.
+- **View**: `ResumeCards` renders all nine kinds (drops the `rows.length > 0` filter in `editor()`), and under each card's rows a `<details>` "Left out (N)" (omitted when N = 0) listing title over meta line and an "Add back" `hx-post` button; the same `CareerCards` markup serves the Career Library (no Left out there) via an optional `leftOut` prop per card.
+
 ---
 
 ## Data Models

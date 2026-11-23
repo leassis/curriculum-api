@@ -1,6 +1,7 @@
 # Career Library Specification
 
 **Approved**: 2026-11-23 - user: "Aprovar todos"
+**Amendment approved**: 2026-11-23 - user: "Approve, build" (Tailored AC 8, 13-18, CLIB-13)
 
 **Depends on**: `structured-resume` merged to `main` (AD-008). Supersedes AD-006 (Master CV parsed from markdown headings) with AD-009. Touches: `src/db/schema.ts` + one migration (serialized on `main`, AD-003), a new career-item repository and service, `src/services/tailor/*`, `src/services/resume.service.ts`, `src/services/public-chat.service.ts`, `src/services/recruiter-chat.service.ts`, `src/admin/profile/`, `src/admin/resumes/`, `GLOSSARY.md`. `honest-assessment` (spec not approved) is rewritten on top of this feature afterwards.
 
@@ -50,6 +51,7 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 | Delete confirmation | Browser confirm "Delete this item?" before delete | A delete is not reversible | y - user: "Aprovar todos" |
 | Skills of a skill group | Stored as a list of strings, entered comma-separated, shown comma-separated | Competitor stores CSV in `bodyMarkdown`; a list validates and tailors per skill | y - user: "Aprovar todos" |
 | Branch | Built on a branch cut from `main` after `structured-resume` is merged | Schema changes are serialized on `main` (AD-003) | y - user: "Aprovar todos" |
+| Left out row (Tailored Resume) | Lists library items not used by the resume with "Add back" that copies the item to the end of the card; on every kind's card; a kind with no items still shows its card; the model's always-restore rule (AC 5) stays; the row is hidden when nothing is left out | User chose: list plus Add back, all kinds, keep always-restore, show empty kinds; hiding an empty row is the default taken | y except the hidden empty row (n - correct me) |
 | Library bounds | ≤ 200 Career Items; per-field bounds in Edge Cases | Same order of magnitude as v1 document bounds | y - user: "Aprovar todos" |
 
 **Open questions:** none - all resolved or logged above.
@@ -168,11 +170,17 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 5. WHEN the model omits an experience, education, certification, course, skill group or language Career Item THEN the system SHALL add it with its library text and bullets in library order after the model's items of that kind. The system SHALL instruct the model to return every one of those kinds ordered by relevance to the job, and to leave out only projects, publications and honours.
 6. IF the model answers an unknown or duplicate id THEN the system SHALL reject that answer, retry once, and answer 503 with the existing message when the retry is also rejected.
 7. IF the Career Library has no Career Item THEN the system SHALL answer 400 with "Add Career Items to your profile before generating".
-8. WHEN the Owner opens a Tailored Resume THEN the system SHALL show a Header card (name and headline, summary on expand) and one card per kind with items, with the same rows and controls as the Career Library.
+8. WHEN the Owner opens a Tailored Resume THEN the system SHALL show a Header card (name and headline, summary on expand) and one card for each of the nine kinds, in section order, including a kind with no items, with the same rows and controls as the Career Library.
 9. WHEN the Owner edits, moves, adds or deletes an item of a Tailored Resume THEN the system SHALL change only that resume's document and leave the Career Library unchanged.
 10. WHEN the Owner adds an item to a Tailored Resume THEN the system SHALL store it with `sourceId` null.
 11. The system SHALL render Print View, the markdown download and the Recruiter Chat context from the v2 document with the Career Body renderer.
 12. IF a stored document is not a valid v2 document THEN the system SHALL treat it as not generated and log `stored resume document invalid {id, path}`.
+13. WHEN a Tailored Resume has Career Items of a kind whose id is not the `sourceId` of any of its items THEN the system SHALL show on that kind's card a collapsed row "Left out (N)", N being the number of those Career Items.
+14. WHEN the Owner expands "Left out (N)" THEN the system SHALL list each left-out Career Item as a row with its title, its meta line and an "Add back" button.
+15. WHEN the Owner uses "Add back" on a left-out Career Item THEN the system SHALL append to the end of that kind's card a copy of it (new `id`, `sourceId` set to the Career Item's id, library fields, text and bullets), show the card with its count raised by one and "Left out" lowered by one, and leave the Career Library unchanged.
+16. IF no Career Item of a kind is left out THEN the system SHALL show no "Left out" row on that card.
+17. IF "Add back" names a Career Item that does not exist or is already the `sourceId` of an item in the resume THEN the system SHALL answer 400 "That item is not left out" and leave the document unchanged.
+18. WHEN the Owner deletes an item of a Tailored Resume whose `sourceId` names a Career Item THEN the system SHALL list that Career Item under "Left out" on its card.
 
 **Independent Test**: Generate with the mock model returning two of three experiences reworded; the document holds three experiences with library titles and dates, two reworded, all with `sourceId`.
 
@@ -208,11 +216,12 @@ Dimensions: input validation - above; failure states - Generate retry (Tailored 
 | CLIB-12 | P2 Import AC 1-8: redaction, import model, model to editor, nothing stored, bounds, failure | Specify | Pending |
 | CLIB-06 | P1 Career Body AC 1-4 | Specify | Pending |
 | CLIB-07 | P1 Tailored AC 1-7: v2 schema, generation, copy, restore, retry | Specify | Pending |
-| CLIB-08 | P1 Tailored AC 8-10: editor cards, copy-only edits | Specify | Pending |
+| CLIB-08 | P1 Tailored AC 8-10: editor cards (all kinds), copy-only edits | Specify | Pending |
+| CLIB-13 | P1 Tailored AC 13-18: Left out row, Add back, refusal, delete returns to Left out | Specify | Pending |
 | CLIB-09 | P1 Tailored AC 11-12: outputs, invalid documents | Specify | Pending |
 | CLIB-10 | Migration: `career_items`, profile `summary`, drop `master_cv`, null v1 documents | Specify | Pending |
 
-**Coverage:** 10 total, 0 mapped to tasks.
+**Coverage:** 11 total, 0 mapped to tasks.
 
 ---
 
@@ -232,11 +241,13 @@ Dimensions: input validation - above; failure states - Generate retry (Tailored 
 - ![header-experience](captures/header-experience.png) - binding - Header card collapsed, Experience card with count, Add, rows title + "org · location · dates", up/down/edit/delete, disabled edges.
 - ![education-certifications-courses](captures/education-certifications-courses.png) - binding - Education, Certifications ("No expiry"), Courses cards.
 - ![skills-publications-honours](captures/skills-publications-honours.png) - binding - Skills rows (title only), empty Publications and Honours with "Nothing here yet.".
+- Competitor Tailored Resume card with `Left out (1)` (Courses card: count badge 2, `+ Add course`, rows with move up/down, edit, delete, collapsed `Left out (1)` row at the bottom) - screenshot sent in an earlier session, not on disk; the user's description and answers above settle AC 13-18. Binding once the file is saved as `captures/tailored-left-out.png`.
 - ![project-form](captures/project-form.png) - binding - Projects card with the Add/Edit form open: Project, Client or organisation, Start/End year and month, Ongoing, Details, Cancel, Save.
 
 ---
 
 ## Success Criteria
 
+- [ ] After Generate, the Owner opens a card, sees "Left out (N)" for the library items the resume does not hold, and adds one back in one click.
 - [ ] The Owner enters a full CV (9 experiences, 4 skill groups, 2 educations, 1 certification, 3 courses, 2 languages) and the cards match the captures.
 - [ ] A generated Tailored Resume never shows a title, employer or date that differs from the Career Library unless the Owner edited it.
