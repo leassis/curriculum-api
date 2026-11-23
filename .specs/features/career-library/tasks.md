@@ -114,8 +114,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for every meta-line shape in Library AC 4-8, empty parts omitted with their separator, kinds in order with empty kinds kept
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for every meta-line shape in Library AC 4-8, empty parts omitted with their separator, kinds in order with empty kinds kept
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
