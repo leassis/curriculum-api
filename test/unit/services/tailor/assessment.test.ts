@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   ASSESSMENT_BOUNDS,
   checkAssessment,
+  collapseOldRoles,
   filterMissingSkills,
   restoreNote,
 } from "../../../../src/services/tailor/assessment";
+import type { ResumeDocument } from "../../../../src/services/tailor/document";
 import type { TailorOutput } from "../../../../src/services/tailor/output";
 import { item } from "../../../support/career";
 
@@ -108,5 +110,88 @@ describe("restore notes", () => {
     expect(note.what).toBe("English");
     expect(note.what).not.toContain(" at ");
     expect(note.reason).toBe("Languages items are always kept; restored by code.");
+  });
+});
+
+describe("old role collapse", () => {
+  const TODAY = 2026;
+  const BULLETS = ["First", "Second", "Third"];
+
+  function docOf(...items: Parameters<typeof item>[1][]): ResumeDocument {
+    return {
+      version: 2,
+      headline: "",
+      summary: "",
+      items: items.map((overrides) => ({
+        ...item((overrides?.kind ?? "experience") as "experience", overrides),
+        sourceId: null,
+      })),
+    };
+  }
+
+  const role = (overrides: Parameters<typeof item>[1]) =>
+    ({ title: "Engineer", organisation: "Initech", startYear: 2000, ...overrides }) as const;
+
+  it("keeps the first bullet and empties the text of a role ended more than 15 years ago", () => {
+    const doc = docOf(role({ endYear: 2010, bullets: BULLETS, text: "Led the team." }));
+    const result = collapseOldRoles(doc, TODAY);
+    expect(result.doc.items[0]).toMatchObject({ bullets: ["First"], text: "" });
+    expect(result.notes).toEqual([
+      {
+        what: "Engineer at Initech",
+        reason: "Ended more than 15 years ago; shortened to one bullet.",
+      },
+    ]);
+  });
+
+  it("adds the note only when something was removed", () => {
+    const untouched = [
+      role({ endYear: 2010, bullets: [], text: "" }),
+      role({ endYear: 2010, bullets: ["Only"], text: "" }),
+    ];
+    for (const overrides of untouched) {
+      expect(collapseOldRoles(docOf(overrides), TODAY).notes).toEqual([]);
+    }
+    expect(
+      collapseOldRoles(docOf(role({ endYear: 2010, bullets: ["Only"], text: "T" })), TODAY).notes,
+    ).toHaveLength(1);
+    expect(
+      collapseOldRoles(docOf(role({ endYear: 2010, bullets: ["A", "B"], text: "" })), TODAY).notes,
+    ).toHaveLength(1);
+  });
+
+  it("leaves a role ending 15 years ago, without end year or current unchanged", () => {
+    const doc = docOf(
+      role({ endYear: 2011, bullets: BULLETS, text: "Kept." }),
+      role({ endYear: null, bullets: BULLETS, text: "Kept." }),
+      role({ endYear: 2005, current: true, bullets: BULLETS, text: "Kept." }),
+    );
+    const result = collapseOldRoles(doc, TODAY);
+    expect(result.doc).toEqual(doc);
+    expect(result.notes).toEqual([]);
+  });
+
+  it("leaves other kinds unchanged", () => {
+    const doc = docOf(
+      {
+        kind: "project",
+        title: "Old project",
+        startYear: 2000,
+        endYear: 2005,
+        bullets: BULLETS,
+        text: "Kept.",
+      },
+      {
+        kind: "education",
+        title: "BSc",
+        organisation: "Uni",
+        endYear: 2005,
+        bullets: BULLETS,
+        text: "Kept.",
+      },
+    );
+    const result = collapseOldRoles(doc, TODAY);
+    expect(result.doc).toEqual(doc);
+    expect(result.notes).toEqual([]);
   });
 });

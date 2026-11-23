@@ -153,8 +153,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests with today 2026: experience ending 2010 → first bullet, empty text, note; ending 2011, no end year, current → unchanged; old project/education → unchanged; old role with no bullets and empty text → no note (C10-C13)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests with today 2026: experience ending 2010 → first bullet, empty text, note; ending 2011, no end year, current → unchanged; old project/education → unchanged; old role with no bullets and empty text → no note (C10-C13)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

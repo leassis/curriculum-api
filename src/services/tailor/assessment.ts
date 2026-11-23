@@ -1,5 +1,5 @@
 import { type CareerItem, KIND_META } from "../career/item.js";
-import { cleanLine } from "./document.js";
+import { cleanLine, type ResumeDocument } from "./document.js";
 import type { TailorOutput } from "./output.js";
 
 export interface Omission {
@@ -58,7 +58,7 @@ export function filterMissingSkills(skills: string[], library: CareerItem[]): st
   return kept;
 }
 
-function describeItem(item: CareerItem): string {
+function describeItem(item: { title: string; organisation: string }): string {
   return item.organisation ? `${item.title} at ${item.organisation}` : item.title;
 }
 
@@ -67,4 +67,28 @@ export function restoreNote(item: CareerItem): Omission {
     what: describeItem(item),
     reason: `${KIND_META[item.kind].section} items are always kept; restored by code.`,
   };
+}
+
+export const COLLAPSE_YEARS = 15;
+
+export function collapseOldRoles(
+  doc: ResumeDocument,
+  todayYear: number,
+): { doc: ResumeDocument; notes: Omission[] } {
+  const notes: Omission[] = [];
+  const items = doc.items.map((item) => {
+    const old =
+      item.kind === "experience" &&
+      !item.current &&
+      item.endYear !== null &&
+      item.endYear < todayYear - COLLAPSE_YEARS;
+    if (!old) return item;
+    if (item.bullets.length <= 1 && item.text === "") return item;
+    notes.push({
+      what: describeItem(item),
+      reason: `Ended more than ${COLLAPSE_YEARS} years ago; shortened to one bullet.`,
+    });
+    return { ...item, bullets: item.bullets.slice(0, 1), text: "" };
+  });
+  return { doc: { ...doc, items }, notes };
 }
