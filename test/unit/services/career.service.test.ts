@@ -271,6 +271,13 @@ describe("career service", () => {
     const body = renderCareerBody(await profile.get(), (await career.library()).items);
     expect(body).toContain("Built payment systems.");
     for (const secret of secrets) expect(body.toLowerCase()).not.toContain(secret.toLowerCase());
+    await addField("EMAIL_2", "Backup email", "late.private@example.com");
+    await addField("PHONE_2", "Mobile", "+55 11 90000-0000");
+    const later = renderCareerBody(await profile.get(), (await career.library()).items);
+    expect(later).toBe(body);
+    for (const value of ["late.private@example.com", "+55 11 90000-0000"]) {
+      expect(later.toLowerCase()).not.toContain(value.toLowerCase());
+    }
   });
 });
 
