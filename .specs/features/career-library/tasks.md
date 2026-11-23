@@ -615,8 +615,8 @@ T26 → T27 → T28 → T29
 
 **Done when**:
 
-- [ ] Unit route and render tests for Tailored AC 8 (empty kinds show a card), 13, 14, 16, 17; integration test: Add back leaves `career_library` unchanged and a delete lists the item under Left out
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Unit route and render tests for Tailored AC 8 (empty kinds show a card), 13, 14, 16, 17; integration test: Add back leaves `career_library` unchanged and a delete lists the item under Left out
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

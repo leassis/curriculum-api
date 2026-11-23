@@ -259,3 +259,54 @@ describe("admin resumes career routes", () => {
     expect((await services.profile.get()).headline).toBe("Engineer");
   });
 });
+
+describe("admin resumes left out routes", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  const generatedResume = async () => {
+    const s = await setup();
+    const id = await s.create();
+    await s.send("POST", `/admin/resumes/${id}/generate`);
+    const page = async () => (await s.send("GET", `/admin/resumes/${id}`)).text();
+    const click = async (html: string, label: string | RegExp) => {
+      const { method, path } = gesture(button(html, label));
+      return s.send(method, path);
+    };
+    const stored = async () => {
+      const [row] = await db.select().from(tailoredResumes);
+      const doc = row?.structured as unknown as {
+        items: { title: string; sourceId: string | null }[];
+      };
+      return doc.items;
+    };
+    return { ...s, id, page, click, stored };
+  };
+
+  it("lists a deleted item under left out", async () => {
+    const { page, click, stored } = await generatedResume();
+    expect(await page()).not.toContain("Left out");
+    const deleted = await click(await page(), "Delete Staff Engineer");
+    expect(deleted.status).toBe(200);
+    expect((await stored()).map((i) => i.title)).not.toContain("Staff Engineer");
+    const html = await page();
+    expect(html).toContain("Left out (1)");
+    expect(tags(html, "details").some((d) => d.text.includes("Staff Engineer"))).toBe(true);
+  });
+
+  it("adds back a left out item and leaves the library unchanged", async () => {
+    const { page, click, stored, services } = await generatedResume();
+    const libraryBefore = await services.career.library();
+    const globex = libraryBefore.items.find((i) => i.title === "Staff Engineer");
+    await click(await page(), "Delete Staff Engineer");
+    const html = await page();
+    const left = tags(html, "details").find((d) => d.text.includes("Left out"));
+    const added = await click(left?.html ?? "", /^Add back/);
+    expect(added.status).toBe(200);
+    expect(await added.text()).not.toContain("Left out");
+    const items = await stored();
+    expect(items.at(-1)).toMatchObject({ title: "Staff Engineer", sourceId: globex?.id });
+    expect(await services.career.library()).toEqual(libraryBefore);
+  });
+});

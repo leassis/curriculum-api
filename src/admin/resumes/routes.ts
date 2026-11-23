@@ -1,6 +1,7 @@
 import { type Context, Hono } from "hono";
 import type { Env } from "../../env.js";
 import { KINDS, type Kind } from "../../services/career/item.js";
+import { leftOut } from "../../services/career/ops.js";
 import { LlmUnavailableError, NotFoundError, ValidationError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
 import { cardsFrom, formFor } from "../career/model.js";
@@ -74,11 +75,13 @@ async function fullName(c: Ctx): Promise<string> {
 }
 
 async function editor(c: Ctx, resume: Resume) {
+  const items = resume.document?.items ?? [];
+  const library = (await c.var.services.career.library()).items;
   return {
     basePath: c.var.config.basePath,
     resume,
     fullName: await fullName(c),
-    cards: cardsFrom(resume.document?.items ?? []).filter((card) => card.rows.length > 0),
+    cards: cardsFrom(items, leftOut(library, items)),
     options: await c.var.services.resumes.headerOptions(),
   };
 }
@@ -86,6 +89,7 @@ async function editor(c: Ctx, resume: Resume) {
 interface Reopen {
   form?: FormView;
   headerError?: string;
+  leftOutError?: string;
   /** The header values the Owner entered, shown again with the error. */
   header?: { headline: string; summary: string };
 }
@@ -216,6 +220,14 @@ resumesRouter.delete("/resumes/:id/items/:itemId", async (c) => {
   const resume = await c.var.services.resumes.removeItem(c.req.param("id"), c.req.param("itemId"));
   return c.html(await cardsFragment(c, resume));
 });
+
+resumesRouter.post("/resumes/:id/left-out/:libraryItemId", (c) =>
+  change(
+    c,
+    () => c.var.services.resumes.addBack(c.req.param("id"), c.req.param("libraryItemId")),
+    (leftOutError) => ({ leftOutError }),
+  ),
+);
 
 resumesRouter.put("/resumes/:id/header", async (c) => {
   const { headline = "", summary = "" } = await fields(c);

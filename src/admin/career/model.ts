@@ -3,12 +3,16 @@ import { type FormValues, formValues } from "../../services/career/form.js";
 import { type CareerItem, fieldLabel, KIND_META, type Kind } from "../../services/career/item.js";
 import type { CardView, FieldView, FormView } from "./view.js";
 
-export function cardsFrom(items: CareerItem[]): CardView[] {
+const rowOf = (item: CareerItem) => ({ id: item.id, title: item.title, meta: metaLine(item) });
+
+export function cardsFrom(items: CareerItem[], leftOut?: CareerItem[]): CardView[] {
+  const left = leftOut ? groupByKind(leftOut) : [];
   return groupByKind(items).map(({ kind, section, items: group }) => ({
     kind,
     section,
     add: KIND_META[kind].add,
-    rows: group.map((item) => ({ id: item.id, title: item.title, meta: metaLine(item) })),
+    rows: group.map(rowOf),
+    ...(leftOut ? { leftOut: (left.find((g) => g.kind === kind)?.items ?? []).map(rowOf) } : {}),
   }));
 }
 

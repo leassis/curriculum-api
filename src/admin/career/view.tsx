@@ -11,6 +11,7 @@ export interface CardView {
   section: string;
   add: string;
   rows: RowView[];
+  leftOut?: RowView[];
 }
 
 export interface FieldView {
@@ -194,7 +195,43 @@ const Row = ({
   );
 };
 
-const Card = ({ card, url, form }: { card: CardView; url: string; form?: FormView }) => {
+const LeftOut = ({ rows, url }: { rows: RowView[]; url: string }) => (
+  <details class="disclosure">
+    <summary>Left out ({rows.length})</summary>
+    <ul class="career-rows">
+      {rows.map((row) => (
+        <li class="career-row">
+          <div class="career-row-text">
+            <span class="career-row-title">{row.title}</span>
+            {row.meta ? <span class="career-row-meta">{row.meta}</span> : null}
+          </div>
+          <div class="career-row-controls">
+            <button
+              type="button"
+              class="career-add"
+              aria-label={`Add back ${row.title}`}
+              hx-post={`${url}/${row.id}`}
+            >
+              Add back
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </details>
+);
+
+const Card = ({
+  card,
+  url,
+  leftOutUrl,
+  form,
+}: {
+  card: CardView;
+  url: string;
+  leftOutUrl?: string;
+  form?: FormView;
+}) => {
   const adding = form && form.kind === card.kind && !form.itemId;
   return (
     <section class="career-card" aria-labelledby={`career-${card.kind}`}>
@@ -222,6 +259,9 @@ const Card = ({ card, url, form }: { card: CardView; url: string; form?: FormVie
         </ul>
       ) : null}
       {adding ? <ItemForm form={form} url={url} /> : null}
+      {leftOutUrl && card.leftOut && card.leftOut.length > 0 ? (
+        <LeftOut rows={card.leftOut} url={leftOutUrl} />
+      ) : null}
     </section>
   );
 };
@@ -233,18 +273,20 @@ const Card = ({ card, url, form }: { card: CardView; url: string; form?: FormVie
 export const CareerCards = ({
   cards,
   url,
+  leftOutUrl,
   form,
   children,
 }: {
   cards: CardView[];
   url: string;
+  leftOutUrl?: string;
   form?: FormView;
   children?: Child;
 }) => (
   <div id="career-library" class="career-cards" hx-target="#career-library" hx-swap="outerHTML">
     {children}
     {cards.map((card) => (
-      <Card card={card} url={url} form={form} />
+      <Card card={card} url={url} leftOutUrl={leftOutUrl} form={form} />
     ))}
   </div>
 );

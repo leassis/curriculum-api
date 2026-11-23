@@ -211,14 +211,16 @@ export const ResumeCards = ({
   cards,
   form,
   headerError,
+  leftOutError,
 }: {
   basePath: string;
   resume: ResumeView;
   fullName: string;
-  /** One card per kind that has items. */
+  /** One card per kind, empty ones included. */
   cards: CardView[];
   form?: FormView;
   headerError?: string;
+  leftOutError?: string;
 }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
   if (!resume.document) {
@@ -229,7 +231,12 @@ export const ResumeCards = ({
     );
   }
   return (
-    <CareerCards cards={cards} url={`${url}/items`} form={form}>
+    <CareerCards cards={cards} url={`${url}/items`} leftOutUrl={`${url}/left-out`} form={form}>
+      {leftOutError ? (
+        <div class="error" role="alert">
+          {leftOutError}
+        </div>
+      ) : null}
       <HeaderCard
         url={url}
         fullName={fullName}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INVALID_DOCUMENT, NOT_GENERATED } from "../../../src/admin/resumes/view";
 import type { ResumeDocument } from "../../../src/services/tailor/document";
-import { item, sampleLibrary, sampleReplyV2 } from "../../support/career";
+import { item, SAMPLE_IDS, sampleLibrary, sampleReplyV2 } from "../../support/career";
 import {
   button,
   decode,
@@ -128,7 +128,7 @@ describe("admin resumes", () => {
     }
   });
 
-  it("renders the editor with options, buttons and one card per kind with items", async () => {
+  it("renders the editor with options, buttons and one card per kind", async () => {
     const { get, resumes, addField, id } = await generated();
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
@@ -153,6 +153,8 @@ describe("admin resumes", () => {
       "Courses",
       "Skills",
       "Languages",
+      "Publications",
+      "Honours",
     ]);
     expect(html).toContain("Staff Engineer");
     expect(html).toContain("Header");
@@ -263,6 +265,83 @@ describe("admin resumes", () => {
     expect(tag.attrs["hx-include"]).toBe("#resume-form");
     expect(tag.attrs["hx-target"]).toBe("#editor-status");
     expect(gesture(tag).method).toBe("PUT");
+  });
+});
+
+describe("admin resumes left out", () => {
+  const globex = SAMPLE_IDS.globex;
+  const card = (html: string, title: RegExp) => {
+    const found = sections(html).find((c) => title.test(c.title));
+    if (!found) throw new Error(`no card ${title}`);
+    return found.html;
+  };
+
+  it("shows a card for every kind including empty ones", async () => {
+    const { page } = await generated();
+    const titles = sections(await page()).map((c) => c.title.replace(/\d+$/, ""));
+    expect(titles).toEqual([
+      "Experience",
+      "Projects",
+      "Education",
+      "Certifications",
+      "Courses",
+      "Skills",
+      "Languages",
+      "Publications",
+      "Honours",
+    ]);
+  });
+
+  it("shows a left out row with the count", async () => {
+    const { page, click } = await generated();
+    await click(await page(), "Delete Staff Engineer");
+    const experience = card(await page(), /^Experience/);
+    const details = tags(experience, "details");
+    expect(details).toHaveLength(1);
+    expect(details[0]?.attrs).not.toHaveProperty("open");
+    expect(tags(details[0]?.html ?? "", "summary")[0]?.text).toBe("Left out (1)");
+  });
+
+  it("lists left out items with an add back button", async () => {
+    const { page, click, doc, id } = await generated();
+    await click(await page(), "Delete Staff Engineer");
+    const experience = card(await page(), /^Experience/);
+    const left = tags(experience, "details")[0]?.html ?? "";
+    expect(decode(left)).toContain("Staff Engineer");
+    expect(decode(left)).toContain("Globex");
+    expect(gesture(button(left, /^Add back/))).toEqual({
+      method: "POST",
+      path: `/admin/resumes/${id}/left-out/${globex}`,
+      fields: {},
+    });
+    const before = doc().items.length;
+    const res = await click(left, /^Add back/);
+    expect(res.status).toBe(200);
+    const added = doc().items.at(-1);
+    expect(doc().items).toHaveLength(before + 1);
+    expect(added).toMatchObject({ title: "Staff Engineer", sourceId: globex });
+    expect(added?.id).not.toBe(globex);
+    expect(await res.text()).not.toContain("Left out");
+  });
+
+  it("hides the left out row when nothing is left out", async () => {
+    const { page } = await generated();
+    expect(await page()).not.toContain("Left out");
+  });
+
+  it("answers 400 and keeps the document for an item that is not left out", async () => {
+    const { send, doc, id } = await generated();
+    const before = structuredClone(doc());
+    for (const itemId of [MISSING, globex]) {
+      const res = await send({
+        method: "POST",
+        path: `/admin/resumes/${id}/left-out/${itemId}`,
+        fields: {},
+      });
+      expect(res.status).toBe(400);
+      expect(decode(await res.text())).toContain("That item is not left out");
+    }
+    expect(doc()).toEqual(before);
   });
 });
 
@@ -625,7 +704,7 @@ describe("admin resumes career routes", () => {
     const s = await generated();
     const res = await s.click(await s.page(), "Delete Staff Engineer");
     expect(res.status).toBe(200);
-    expect(await res.text()).not.toContain("Staff Engineer");
+    expect(await res.text()).not.toContain("Delete Staff Engineer");
     expect(s.doc().items.some((i) => i.title === "Staff Engineer")).toBe(false);
     expect((await s.career.library()).items.some((i) => i.title === "Staff Engineer")).toBe(true);
   });

@@ -106,6 +106,7 @@ export async function resumeApp(opts: Parameters<typeof resumeSetup>[0] = {}) {
     config: opts.config,
     services: {
       resumes: setup.resumes,
+      career: setup.career,
       profile: setup.profile,
       personalInfo: setup.personalInfo,
       settings: setup.settings,
