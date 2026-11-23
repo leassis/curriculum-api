@@ -347,6 +347,16 @@
   .career-toolbar {
     @apply flex flex-wrap items-center justify-between gap-4;
   }
+  .career-header-summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-4;
+  }
+  .career-header-summary::after {
+    content: "⌄";
+    @apply text-xl text-ink;
+  }
+  .career-header[open] > .career-header-summary::after {
+    content: "⌃";
+  }
   .career-card {
     @apply flex flex-col rounded-card border border-line bg-surface px-7 py-6;
   }

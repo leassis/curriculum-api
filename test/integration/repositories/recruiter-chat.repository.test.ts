@@ -2,8 +2,8 @@ import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { RecruiterChatRepository } from "../../../src/repositories/recruiter-chat.repository";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
+import { sampleDocumentV2 as sampleDocument } from "../../support/career";
 import { resetDb, testDb } from "../../support/db";
-import { sampleDocument } from "../../support/resume-document";
 
 const db = testDb();
 const repo = new RecruiterChatRepository(db);

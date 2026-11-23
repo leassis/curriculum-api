@@ -16,11 +16,8 @@ import { FakeProfileRepo, profileInput } from "./fakes/profile.fake";
 import { FakeSettingsRepo } from "./fakes/settings.fake";
 import { createRecordingModel, type RecordingModelOptions } from "./mock-llm";
 import { FakeResumeRepo } from "./resume.fake";
-import { sampleCv } from "./resume-document";
 import { createTestApp } from "./test-app";
 
-/** A Master CV with `##` sections and `###` items; the default reply tailors it. */
-export const CV = sampleCv;
 export const JD = "We need a senior backend engineer who knows Postgres.";
 export const FULL_NAME = "Ada Lovelace";
 export const TAILOR_PROMPT = "Tailor the CV to the job.";
@@ -54,7 +51,7 @@ export async function resumeSetup(
       fullName: FULL_NAME,
       headline: "Backend engineer",
       summary: "Ten years building payment systems.",
-      masterCv: opts.cv ?? CV,
+      masterCv: opts.cv ?? "",
       tailorSystemPrompt: TAILOR_PROMPT,
     });
   }

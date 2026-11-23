@@ -513,8 +513,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit route tests for each item and header route (happy, 400); integration test: an edit on a resume leaves `career_library` unchanged
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Unit route tests for each item and header route (happy, 400); integration test: an edit on a resume leaves `career_library` unchanged
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

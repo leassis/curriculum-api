@@ -15,7 +15,7 @@ export function swapErrorsInto(id: string): void {
   document.addEventListener("htmx:beforeSwap", (e) => {
     const { detail } = e as BeforeSwapEvent;
     const target = document.getElementById(id);
-    if (detail.xhr.status >= 400 && target) {
+    if (detail.xhr.status >= 400 && target && !detail.shouldSwap) {
       detail.shouldSwap = true;
       detail.isError = false;
       detail.target = target;

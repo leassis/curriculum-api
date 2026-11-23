@@ -4,20 +4,11 @@ import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { signSession } from "../../../src/security/session";
 import { LlmService } from "../../../src/services/llm.service";
 import { ResumeService } from "../../../src/services/resume.service";
+import { sampleReplyV2 } from "../../support/career";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
+import { button, formFields, gesture, tags } from "../../support/html";
 import { createRecordingModel } from "../../support/mock-llm";
-import {
-  editorForm,
-  formFields,
-  itemAt,
-  opVals,
-  sampleCv,
-  sampleDocument,
-  sampleReply,
-  sectionAt,
-  textForm,
-} from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -26,11 +17,41 @@ const EMAIL = "ada.private@example.com";
 const PHONE = "+44 20 7946 0958";
 const JD = "Senior backend engineer, Postgres.";
 
+const EXPERIENCE = {
+  title: "Staff Engineer",
+  organisation: "Globex",
+  startYear: "2020",
+  current: "on",
+  details: "Led the platform team.\n- Cut p99 latency by 40%",
+  stack: "TypeScript, Postgres",
+};
+
 async function setup() {
   const config = resolvedConfig(options);
   const base = createTestApp({ config: options });
   const { services } = base;
-  const { factory, calls } = createRecordingModel({ text: JSON.stringify(sampleReply()) });
+  await services.profile.update({
+    fullName: "Ada Lovelace",
+    headline: "Engineer",
+    summary: "Backend engineer with ten years of experience.",
+    masterCv: "",
+    publicSystemPrompt: "p",
+    recruiterSystemPrompt: "r",
+    tailorSystemPrompt: "Tailor it.",
+  });
+  await services.career.add("experience", EXPERIENCE);
+  await services.career.add("experience", {
+    title: "Engineer",
+    organisation: "Initech",
+    startYear: "2016",
+    endYear: "2020",
+  });
+  await services.career.add("education", {
+    title: "BSc Computer Science",
+    organisation: "State University",
+  });
+  const library = (await services.career.library()).items;
+  const { factory, calls } = createRecordingModel({ text: JSON.stringify(sampleReplyV2(library)) });
   const llm = new LlmService(config, services.settings, services.personalInfo, factory, {
     info: () => {},
     warn: () => {},
@@ -41,16 +62,9 @@ async function setup() {
     services.settings,
     services.personalInfo,
     llm,
+    services.career,
   );
   const { app } = createTestApp({ config: options, services: { llm, resumes } });
-  await services.profile.update({
-    fullName: "Ada Lovelace",
-    headline: "Engineer",
-    masterCv: sampleCv,
-    publicSystemPrompt: "p",
-    recruiterSystemPrompt: "r",
-    tailorSystemPrompt: "Tailor it.",
-  });
   await services.personalInfo.create({
     key: "EMAIL",
     label: "Email",
@@ -90,7 +104,7 @@ async function setup() {
     calls.length = 0;
     return (res.headers.get("location") ?? "").split("/").pop() as string;
   };
-  return { send, create, calls };
+  return { send, create, calls, services };
 }
 
 describe("resumes with database", () => {
@@ -105,19 +119,16 @@ describe("resumes with database", () => {
 
     const generated = await send("POST", `/admin/resumes/${id}/generate`);
     expect(generated.status).toBe(200);
-    expect(await generated.text()).toContain('value="Staff Engineer — Globex (2020-2024)"');
+    expect(await generated.text()).toContain("Staff Engineer");
     expect(calls).toHaveLength(1);
     expect(calls[0]?.maxOutputTokens).toBe(6000);
     for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {
       expect(calls[0]?.prompt).not.toContain(secret);
     }
     expect(calls[0]?.prompt).toContain(JD);
-    expect(calls[0]?.prompt).toContain("## Experience [s1]");
+    expect(calls[0]?.prompt).toContain("Staff Engineer");
 
-    const saved = await send("PUT", `/admin/resumes/${id}`, {
-      ...textForm("<script>alert(1)</script>**safe**"),
-      headerFields: ["EMAIL"],
-    });
+    const saved = await send("PUT", `/admin/resumes/${id}`, { headerFields: ["EMAIL"] });
     expect(await saved.text()).toBe("Saved");
 
     const print = await send("GET", `/admin/resumes/${id}/print`);
@@ -126,21 +137,20 @@ describe("resumes with database", () => {
     expect(html).toContain("<h1>Ada Lovelace</h1>");
     expect(html).toContain(`Email: ${EMAIL}`);
     expect(html).not.toContain("Phone:");
-    expect(html).toContain("<strong>safe</strong>");
-    expect(html).not.toContain("<script>alert");
+    expect(html).toContain("<h2>Experience</h2>");
+    expect(html).toContain("<h3>Staff Engineer</h3>");
     expect(calls).toHaveLength(1);
 
     const download = await send("GET", `/admin/resumes/${id}/download.md`);
     expect(download.headers.get("content-disposition")).toBe(
       'attachment; filename="backend-at-acme.md"',
     );
-    expect(await download.text()).toBe(
-      `# Ada Lovelace\nEmail: ${EMAIL}\n\n## Summary\n\n<script>alert(1)</script>**safe**\n`,
-    );
+    const markdown = await download.text();
+    expect(markdown.startsWith(`# Ada Lovelace\nEmail: ${EMAIL}\n\n`)).toBe(true);
+    expect(markdown).toContain("### Staff Engineer");
 
     const profilePrint = await (await send("GET", "/admin/profile/print")).text();
     expect(profilePrint).toContain(`Phone: ${PHONE}`);
-    expect(profilePrint).toContain("Backend engineer with ten years of experience.");
 
     expect((await send("DELETE", `/admin/resumes/${id}`)).status).toBe(200);
     expect((await send("GET", `/admin/resumes/${id}`)).status).toBe(404);
@@ -181,65 +191,56 @@ describe("resumes with database", () => {
   });
 });
 
-describe("resumes structured editing", () => {
+describe("admin resumes career routes", () => {
   beforeEach(async () => {
     await resetDb(db);
   });
 
-  it("removes an item and saves without it", async () => {
-    const { send, create } = await setup();
+  it("edits the resume copy and leaves the library unchanged", async () => {
+    const { send, create, services } = await setup();
     const id = await create();
     expect((await send("POST", `/admin/resumes/${id}/generate`)).status).toBe(200);
+    const libraryBefore = await services.career.library();
+
     const page = await (await send("GET", `/admin/resumes/${id}`)).text();
-    const outside = Object.fromEntries(
-      Object.entries(editorForm(page)).filter(([k]) => !k.startsWith("sections.")),
-    );
-    const headings = (html: string) =>
-      [...html.matchAll(/name="sections\.\d+\.items\.\d+\.heading"[^>]*value="([^"]*)"/g)].map(
-        (m) => m[1],
-      );
-
-    // Move the first role down, then remove it from its new place.
-    const moved = await send("POST", `/admin/resumes/${id}/form`, {
-      ...editorForm(page),
-      ...opVals(page, "Move down", "s1.i0"),
+    const edit = gesture(button(page, "Edit Staff Engineer"));
+    const form = await (await send(edit.method, edit.path)).text();
+    const itemForm = tags(form, "form").find((f) => f.attrs["hx-put"]?.includes("/items/"));
+    expect(itemForm).toBeDefined();
+    const put = gesture(itemForm as never);
+    const saved = await send(put.method, put.path, {
+      ...formFields((itemForm as { html: string }).html),
+      title: "Principal Engineer",
     });
-    expect(moved.status).toBe(200);
-    const movedHtml = await moved.text();
-    expect(headings(movedHtml).slice(0, 2)).toEqual([
-      "Engineer — Initech (2016-2020)",
-      "Staff Engineer — Globex (2020-2024)",
-    ]);
-    const removed = await send("POST", `/admin/resumes/${id}/form`, {
-      ...outside,
-      ...formFields(movedHtml),
-      ...opVals(movedHtml, "Remove", "s1.i1"),
-    });
-    expect(removed.status).toBe(200);
-    const removedHtml = await removed.text();
-    expect(headings(removedHtml)).toEqual([
-      "Engineer — Initech (2016-2020)",
-      "BSc Computer Science — State University",
-    ]);
-    // Nothing is stored before Save.
-    const [before] = await db.select().from(tailoredResumes);
-    expect(before?.structured).toEqual(sampleDocument());
+    expect(saved.status).toBe(200);
+    expect(await saved.text()).toContain("Principal Engineer");
 
-    const saved = await send("PUT", `/admin/resumes/${id}`, {
-      ...outside,
-      ...formFields(removedHtml),
-    });
-    expect(await saved.text()).toBe("Saved");
+    const down = gesture(button(page, "Move Engineer up"));
+    expect((await send(down.method, down.path, down.fields)).status).toBe(200);
+    const removal = gesture(button(page, "Delete BSc Computer Science"));
+    expect((await send(removal.method, removal.path)).status).toBe(200);
 
-    const expected = sampleDocument();
-    sectionAt(expected, 1).items = [itemAt(sampleDocument(), 1, 1)];
     const [row] = await db.select().from(tailoredResumes);
-    expect(row?.structured).toEqual(expected);
-    const reloaded = await (await send("GET", `/admin/resumes/${id}`)).text();
-    expect(headings(reloaded)).toEqual([
-      "Engineer — Initech (2016-2020)",
-      "BSc Computer Science — State University",
-    ]);
-    expect(reloaded).not.toContain("Staff Engineer — Globex");
+    const doc = row?.structured as unknown as { items: { title: string }[] };
+    const items = doc.items;
+    expect(items.map((i) => i.title)).toEqual(["Engineer", "Principal Engineer"]);
+    expect(await services.career.library()).toEqual(libraryBefore);
+  });
+
+  it("saves the header on the resume only", async () => {
+    const { send, create, services } = await setup();
+    const id = await create();
+    await send("POST", `/admin/resumes/${id}/generate`);
+    const res = await send("PUT", `/admin/resumes/${id}/header`, {
+      headline: "Platform engineer",
+      summary: "Tailored summary.",
+    });
+    expect(res.status).toBe(200);
+    const [row] = await db.select().from(tailoredResumes);
+    expect(row?.structured).toMatchObject({
+      headline: "Platform engineer",
+      summary: "Tailored summary.",
+    });
+    expect((await services.profile.get()).headline).toBe("Engineer");
   });
 });

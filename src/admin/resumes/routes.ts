@@ -1,13 +1,13 @@
-import { Hono } from "hono";
-import { raw } from "hono/html";
+import { type Context, Hono } from "hono";
 import type { Env } from "../../env.js";
-import { renderMarkdown } from "../../lib/markdown.js";
-import { renderCareerBody } from "../../services/career/body.js";
-import { LlmUnavailableError } from "../../services/errors.js";
+import { KINDS, type Kind } from "../../services/career/item.js";
+import { LlmUnavailableError, NotFoundError, ValidationError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
+import { cardsFrom, formFor } from "../career/model.js";
+import type { FormView } from "../career/view.js";
 import { ErrorFragment } from "../error-fragment.js";
 import { EDITOR_JS } from "../static/resumes-js.generated.js";
-import { Editor, EditorPage, FormSwap, ResumesPage } from "./view.js";
+import { Editor, EditorPage, ResumeCards, ResumesPage } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
@@ -15,10 +15,8 @@ const optionalText = (value: unknown) => (typeof value === "string" ? value : un
 
 const CREATE_ERRORS: Record<string, string> = {
   generate: "Generation failed, try again",
-  "master-cv": "Fill the master CV first",
-  structure: "Structure the master CV with ## sections and ### items",
-  "full-name": "Your full name is in the master CV — it is added when printed",
-  heading: "A ### heading in the master CV is empty or longer than 200 characters",
+  "empty-library": "Add Career Items to your profile before generating",
+  "full-name": "Your full name is in the career library — it is added when printed",
 };
 
 const createError = (code: string | undefined): string | undefined =>
@@ -26,6 +24,9 @@ const createError = (code: string | undefined): string | undefined =>
 
 const headerKeys = (fields: unknown): string[] =>
   (Array.isArray(fields) ? fields : [fields]).filter((k): k is string => typeof k === "string");
+
+type Ctx = Context<Env>;
+type Fields = Record<string, string>;
 
 /** Mounted at `/admin`. */
 export const resumesRouter = new Hono<Env>();
@@ -48,7 +49,6 @@ resumesRouter.post("/resumes", async (c) => {
     company: first(body.company),
     jobDescription: first(body.jobDescription),
     customInstructions: first(body.customInstructions),
-    // The marker tells "every box unchecked" apart from a form without the fieldset.
     headerKeys: body.headerFieldsPosted === undefined ? undefined : headerKeys(body.headerFields),
   });
   const query = error ? `?error=${error}` : "";
@@ -64,13 +64,38 @@ resumesRouter.get("/resumes/editor.js", (c) =>
   c.body(EDITOR_JS, 200, { "Content-Type": "text/javascript; charset=utf-8" }),
 );
 
-async function editor(c: { var: Env["Variables"] }, resume: Resume) {
+async function fullName(c: Ctx): Promise<string> {
+  try {
+    return (await c.var.services.profile.get()).fullName;
+  } catch (error) {
+    if (error instanceof NotFoundError) return "";
+    throw error;
+  }
+}
+
+async function editor(c: Ctx, resume: Resume) {
   return {
     basePath: c.var.config.basePath,
     resume,
-    preview: resume.document ? renderCareerBody(resume.document, resume.document.items) : "",
+    fullName: await fullName(c),
+    cards: cardsFrom(resume.document?.items ?? []).filter((card) => card.rows.length > 0),
     options: await c.var.services.resumes.headerOptions(),
   };
+}
+
+interface Reopen {
+  form?: FormView;
+  headerError?: string;
+  /** The header values the Owner entered, shown again with the error. */
+  header?: { headline: string; summary: string };
+}
+
+async function cardsFragment(c: Ctx, resume: Resume, reopen: Reopen = {}) {
+  const { options: _options, ...props } = await editor(c, resume);
+  const { header, ...extra } = reopen;
+  const shown =
+    resume.document && header ? { ...resume, document: { ...resume.document, ...header } } : resume;
+  return ResumeCards({ ...props, resume: shown, ...extra });
 }
 
 resumesRouter.get("/resumes/:id", async (c) => {
@@ -96,34 +121,107 @@ resumesRouter.post("/resumes/:id/generate", async (c) => {
   }
 });
 
-resumesRouter.post("/resumes/:id/preview", async (c) => {
-  const body = await c.req.parseBody({ all: true, dot: true });
-  const doc = await c.var.services.resumes.formDocument(c.req.param("id"), body);
-  return c.html(raw(renderMarkdown(renderCareerBody(doc, doc.items))));
-});
-
-/** Remove / Move up / Move down: applies the op to the posted form and returns it unsaved. */
-resumesRouter.post("/resumes/:id/form", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.parseBody({ all: true, dot: true });
-  const doc = await c.var.services.resumes.formOp(id, body, text(body.op), text(body.target));
-  return c.html(
-    FormSwap({
-      doc,
-      url: `${c.var.config.basePath}/admin/resumes/${id}`,
-      preview: renderCareerBody(doc, doc.items),
-    }),
-  );
-});
-
 resumesRouter.put("/resumes/:id", async (c) => {
-  const body = await c.req.parseBody({ all: true, dot: true });
-  const keys = headerKeys(body.headerFields);
-  await c.var.services.resumes.save(
+  const body = await c.req.parseBody({ all: true });
+  await c.var.services.resumes.updateOptions(
     c.req.param("id"),
-    body,
-    keys,
+    headerKeys(body.headerFields),
     optionalText(body.customInstructions),
   );
   return c.html("Saved");
+});
+
+function kindOf(value: unknown): Kind {
+  const found = KINDS.find((k) => k === value);
+  if (!found) throw new ValidationError("Unknown kind");
+  return found;
+}
+
+async function fields(c: Ctx): Promise<Fields> {
+  const body = await c.req.parseBody();
+  return Object.fromEntries(
+    Object.entries(body).filter(([, v]) => typeof v === "string"),
+  ) as Fields;
+}
+
+function findItem(resume: Resume, itemId: string) {
+  const item = resume.document?.items.find((i) => i.id === itemId);
+  if (!item) throw new NotFoundError("Resume item not found");
+  return item;
+}
+
+/** Runs a change and re-renders the cards; a rejected change answers 400 with the form kept open. */
+async function change(c: Ctx, run: () => Promise<Resume>, reopen: (error: string) => Reopen) {
+  const id = c.req.param("id") as string;
+  try {
+    return c.html(await cardsFragment(c, await run()));
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      const resume = await c.var.services.resumes.get(id);
+      return c.html(await cardsFragment(c, resume, reopen(error.message)), 400);
+    }
+    throw error;
+  }
+}
+
+resumesRouter.get("/resumes/:id/items", async (c) =>
+  c.html(await cardsFragment(c, await c.var.services.resumes.get(c.req.param("id")))),
+);
+
+resumesRouter.get("/resumes/:id/items/new", async (c) => {
+  const resume = await c.var.services.resumes.get(c.req.param("id"));
+  return c.html(await cardsFragment(c, resume, { form: formFor(kindOf(c.req.query("kind"))) }));
+});
+
+resumesRouter.get("/resumes/:id/items/:itemId/edit", async (c) => {
+  const resume = await c.var.services.resumes.get(c.req.param("id"));
+  const item = findItem(resume, c.req.param("itemId"));
+  return c.html(await cardsFragment(c, resume, { form: formFor(item.kind, { item }) }));
+});
+
+resumesRouter.post("/resumes/:id/items", async (c) => {
+  const body = await fields(c);
+  const kind = kindOf(body.kind);
+  return change(
+    c,
+    () => c.var.services.resumes.addItem(c.req.param("id"), kind, body),
+    (error) => ({ form: formFor(kind, { values: body, error }) }),
+  );
+});
+
+resumesRouter.put("/resumes/:id/items/:itemId", async (c) => {
+  const id = c.req.param("id");
+  const itemId = c.req.param("itemId");
+  const body = await fields(c);
+  const item = findItem(await c.var.services.resumes.get(id), itemId);
+  return change(
+    c,
+    () => c.var.services.resumes.editItem(id, itemId, body),
+    (error) => ({ form: formFor(item.kind, { item, values: body, error }) }),
+  );
+});
+
+resumesRouter.post("/resumes/:id/items/:itemId/move", async (c) => {
+  const { direction } = await fields(c);
+  if (direction !== "up" && direction !== "down") throw new ValidationError("Unknown direction");
+  const resume = await c.var.services.resumes.moveItem(
+    c.req.param("id"),
+    c.req.param("itemId"),
+    direction,
+  );
+  return c.html(await cardsFragment(c, resume));
+});
+
+resumesRouter.delete("/resumes/:id/items/:itemId", async (c) => {
+  const resume = await c.var.services.resumes.removeItem(c.req.param("id"), c.req.param("itemId"));
+  return c.html(await cardsFragment(c, resume));
+});
+
+resumesRouter.put("/resumes/:id/header", async (c) => {
+  const { headline = "", summary = "" } = await fields(c);
+  return change(
+    c,
+    () => c.var.services.resumes.editHeader(c.req.param("id"), { headline, summary }),
+    (error) => ({ headerError: error, header: { headline, summary } }),
+  );
 });
