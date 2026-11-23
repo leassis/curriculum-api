@@ -209,8 +209,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Career Body AC 1 and `[cN]` after titles when ids are given
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Career Body AC 1 and `[cN]` after titles when ids are given
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
