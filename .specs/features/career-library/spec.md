@@ -11,10 +11,10 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 
 ## Goals
 
-- [ ] The Owner keeps the CV as Career Items of 9 kinds with typed fields, edited in one card per kind (count, Add, summary row, move up, move down, edit, delete).
-- [ ] Every Tailored Resume item carries the `sourceId` of the Career Item it came from, and its title, organisation, location and dates are copied by code, never written by the model.
-- [ ] The Career Body sent to an LLM is rendered by code from Career Items (Public Chat) or from a Resume Document (Recruiter Chat, print, download); no free-text Master CV remains.
-- [ ] No Personal Info Field value and not the Owner's full name is stored in a Career Item or a Resume Document.
+- [x] The Owner keeps the CV as Career Items of 9 kinds with typed fields, edited in one card per kind (count, Add, summary row, move up, move down, edit, delete).
+- [x] Every Tailored Resume item carries the `sourceId` of the Career Item it came from, and its title, organisation, location and dates are copied by code, never written by the model.
+- [x] The Career Body sent to an LLM is rendered by code from Career Items (Public Chat) or from a Resume Document (Recruiter Chat, print, download); no free-text Master CV remains.
+- [x] No Personal Info Field value and not the Owner's full name is stored in a Career Item or a Resume Document.
 
 ## Out of Scope
 
@@ -208,21 +208,21 @@ Dimensions: input validation - above; failure states - Generate retry (Tailored 
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| CLIB-01 | P1 Library AC 1-8: cards, counts, empty state, meta lines, dates | Specify | Pending |
-| CLIB-02 | P1 Library AC 9-12: add, edit, cancel | Specify | Pending |
-| CLIB-03 | P1 Library AC 13-15: move, edges, delete | Specify | Pending |
-| CLIB-04 | P1 Library AC 16-18 + edges: validation, bounds, PII | Specify | Pending |
-| CLIB-05 | P1 Library AC 19: headline and summary | Specify | Pending |
-| CLIB-11 | P1 Markdown AC 1-8: render, parse, round-trip, id reuse, line errors | Specify | Pending |
-| CLIB-12 | P2 Import AC 1-8: redaction, import model, model to editor, nothing stored, bounds, failure | Specify | Pending |
-| CLIB-06 | P1 Career Body AC 1-4 | Specify | Pending |
-| CLIB-07 | P1 Tailored AC 1-7: v2 schema, generation, copy, restore, retry | Specify | Pending |
-| CLIB-08 | P1 Tailored AC 8-10: editor cards (all kinds), copy-only edits | Specify | Pending |
-| CLIB-13 | P1 Tailored AC 13-18: Left out row, Add back, refusal, delete returns to Left out | Specify | Pending |
-| CLIB-09 | P1 Tailored AC 11-12: outputs, invalid documents | Specify | Pending |
-| CLIB-10 | Migration: `career_items`, profile `summary`, drop `master_cv`, null v1 documents | Specify | Pending |
+| CLIB-01 | P1 Library AC 1-8: cards, counts, empty state, meta lines, dates | Done | Verified |
+| CLIB-02 | P1 Library AC 9-12: add, edit, cancel | Done | Verified |
+| CLIB-03 | P1 Library AC 13-15: move, edges, delete | Done | Verified |
+| CLIB-04 | P1 Library AC 16-18 + edges: validation, bounds, PII | Done | Verified |
+| CLIB-05 | P1 Library AC 19: headline and summary | Done | Verified |
+| CLIB-11 | P1 Markdown AC 1-8: render, parse, round-trip, id reuse, line errors | Done | Verified |
+| CLIB-12 | P2 Import AC 1-8: redaction, import model, model to editor, nothing stored, bounds, failure | Done | Verified |
+| CLIB-06 | P1 Career Body AC 1-4 | Done | Verified |
+| CLIB-07 | P1 Tailored AC 1-7: v2 schema, generation, copy, restore, retry | Done | Verified |
+| CLIB-08 | P1 Tailored AC 8-10: editor cards (all kinds), copy-only edits | Done | Verified |
+| CLIB-13 | P1 Tailored AC 13-18: Left out row, Add back, refusal, delete returns to Left out | Done | Verified |
+| CLIB-09 | P1 Tailored AC 11-12: outputs, invalid documents | Done | Verified |
+| CLIB-10 | Migration: `career_items`, profile `summary`, drop `master_cv`, null v1 documents | Done | Verified |
 
-**Coverage:** 11 total, 0 mapped to tasks.
+**Coverage:** 13 total, 13 mapped to tasks, 13 verified.
 
 ---
 
@@ -249,6 +249,6 @@ Dimensions: input validation - above; failure states - Generate retry (Tailored 
 
 ## Success Criteria
 
-- [ ] After Generate, the Owner opens a card, sees "Left out (N)" for the library items the resume does not hold, and adds one back in one click.
-- [ ] The Owner enters a full CV (9 experiences, 4 skill groups, 2 educations, 1 certification, 3 courses, 2 languages) and the cards match the captures.
-- [ ] A generated Tailored Resume never shows a title, employer or date that differs from the Career Library unless the Owner edited it.
+- [x] After Generate, the Owner opens a card, sees "Left out (N)" for the library items the resume does not hold, and adds one back in one click.
+- [x] The Owner enters a full CV (9 experiences, 4 skill groups, 2 educations, 1 certification, 3 courses, 2 languages) and the cards match the captures.
+- [x] A generated Tailored Resume never shows a title, employer or date that differs from the Career Library unless the Owner edited it.
