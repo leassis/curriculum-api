@@ -250,7 +250,7 @@ export const Editor = ({
               </a>
             </div>
             <p id="editor-status" class="status" role="status">
-              {error}
+              {error && <span class="text-danger">{error}</span>}
             </p>
           </form>
           <section class="flex flex-col gap-3" aria-labelledby="preview-title">

@@ -396,14 +396,14 @@ describe("admin resumes create flow", () => {
     const { get, resumes } = await resumeApp();
     const { id } = await resumes.create(newResume);
     const html = await (await get(`/admin/resumes/${id}?error=generate`)).text();
-    expect(status(html)).toBe("Generation failed, try again");
+    expect(status(html)).toBe('<span class="text-danger">Generation failed, try again</span>');
   });
 
   it("editor shows the master cv text for error master-cv", async () => {
     const { get, resumes } = await resumeApp();
     const { id } = await resumes.create(newResume);
     const html = await (await get(`/admin/resumes/${id}?error=master-cv`)).text();
-    expect(status(html)).toBe("Fill the master CV first");
+    expect(status(html)).toBe('<span class="text-danger">Fill the master CV first</span>');
   });
 
   it("editor shows no error text for an unknown error value", async () => {
