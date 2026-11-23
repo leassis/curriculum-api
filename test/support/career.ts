@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CareerItem, CareerLibrary, Kind } from "../../src/services/career/item";
+import type { ResumeDocument } from "../../src/services/tailor/document";
 
 const VALID: Record<Kind, Partial<CareerItem>> = {
   experience: { title: "Engineer", organisation: "Acme", startYear: 2020 },
@@ -118,5 +119,18 @@ export function sampleLibrary(): CareerLibrary {
       item("skill_group", { id: SAMPLE_IDS.tools, title: "Tools", skills: ["Git", "Docker"] }),
       item("language", { id: SAMPLE_IDS.english, title: "English", level: "Fluent" }),
     ],
+  };
+}
+
+export function sampleDocumentV2(): ResumeDocument {
+  return {
+    version: 2,
+    headline: "Backend engineer",
+    summary: "Ten years building payment systems.",
+    items: sampleLibrary().items.map((i) => ({
+      ...i,
+      id: i.id.replace(/^./, "b"),
+      sourceId: i.id,
+    })),
   };
 }

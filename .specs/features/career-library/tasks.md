@@ -342,8 +342,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests: v2 accepted, v1 rejected with path `version`, item rules apply, 100 000-char cap
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: v2 accepted, v1 rejected with path `version`, item rules apply, 100 000-char cap
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
@@ -806,7 +806,7 @@ Proof: run int | ✓ career migration > drops the master cv and discards v1 docu
 
 The feature's live state, written as it happens - a compaction gives no warning.
 
-**Settled mid-build:** import route (T22) maps LlmUnavailableError to 503 explicitly (service error is 502); C57 test owed in T20
+**Settled mid-build:** phase 3-4 gate: T14-T22 use partial gate (task tests + lint); v1 admin/print/recruiter tests and admin/resumes/routes.ts typecheck stay red until T23, user-approved 2026-11-23; import route (T22) maps LlmUnavailableError to 503 explicitly (service error is 502); C57 test owed in T20
 **Dispatched:** batches 1-2 (T1-T13) done; batch 3 (T14-T20) -> sonnet sub-agent, 2026-11-23
 **Walked:** none
 

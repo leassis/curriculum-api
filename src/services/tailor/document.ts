@@ -1,28 +1,19 @@
 import { z } from "zod";
-
-export const SECTION_KINDS = ["intro", "experience", "education", "other"] as const;
-export type Kind = (typeof SECTION_KINDS)[number];
+import { CareerItemObject, MAX_ITEMS, refineItem } from "../career/item.js";
 
 export const MAX_DOCUMENT_CHARS = 100_000;
 
-const ItemSchema = z.object({
-  heading: z.string().min(1).max(200),
-  text: z.string().max(4000),
-  bullets: z.array(z.string().min(1).max(600)).max(30),
-});
-
-const SectionSchema = z.object({
-  title: z.string().max(200),
-  kind: z.enum(SECTION_KINDS),
-  text: z.string().max(4000),
-  items: z.array(ItemSchema).max(40),
-});
+const DocumentItemSchema = CareerItemObject.extend({ sourceId: z.uuid().nullable() }).superRefine(
+  refineItem,
+);
 
 /** The single definition of a stored Tailored Resume. */
 export const ResumeDocumentSchema = z
   .object({
-    version: z.literal(1),
-    sections: z.array(SectionSchema).max(30),
+    version: z.literal(2),
+    headline: z.string().max(200),
+    summary: z.string().max(4000),
+    items: z.array(DocumentItemSchema).max(MAX_ITEMS),
   })
   .superRefine((doc, ctx) => {
     if (JSON.stringify(doc).length > MAX_DOCUMENT_CHARS) {
@@ -34,10 +25,11 @@ export const ResumeDocumentSchema = z
   });
 
 export type ResumeDocument = z.infer<typeof ResumeDocumentSchema>;
+export type ResumeItem = ResumeDocument["items"][number];
 
 export type ParseDocumentResult = { ok: true; doc: ResumeDocument } | { ok: false; path: string };
 
-/** Validates a value; on failure returns the first failing field path, e.g. `sections.2.items.0.heading`. */
+/** Validates a value; on failure returns the first failing field path, e.g. `items.2.title`. */
 export function parseDocument(value: unknown): ParseDocumentResult {
   const parsed = ResumeDocumentSchema.safeParse(value);
   if (parsed.success) return { ok: true, doc: parsed.data };

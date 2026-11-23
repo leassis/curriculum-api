@@ -4,93 +4,95 @@ import {
   parseDocument,
   stripPrefix,
 } from "../../../../src/services/tailor/document";
-import { itemAt, sampleDocument, sectionAt } from "../../../support/resume-document";
+import { item, sampleDocumentV2 } from "../../../support/career";
 
-type Doc = ReturnType<typeof sampleDocument>;
+type Doc = ReturnType<typeof sampleDocumentV2>;
 
 function failingPath(mutate: (d: Doc) => void): string {
-  const doc = sampleDocument();
+  const doc = sampleDocumentV2();
   mutate(doc);
   const r = parseDocument(doc);
   if (r.ok) throw new Error("expected failure");
   return r.path;
 }
 
-describe("resume document schema", () => {
-  it("accepts the sample document unchanged", () => {
-    const r = parseDocument(sampleDocument());
-    expect(r).toEqual({ ok: true, doc: sampleDocument() });
+const first = (d: Doc) => d.items[0] as Doc["items"][number];
+
+describe("resume document v2", () => {
+  it("accepts the v2 shape and rejects v1", () => {
+    expect(parseDocument(sampleDocumentV2())).toEqual({ ok: true, doc: sampleDocumentV2() });
+    const v1 = { version: 1, sections: [] };
+    expect(parseDocument(v1)).toEqual({ ok: false, path: "version" });
+    expect(failingPath((d) => ((d as { version: number }).version = 1))).toBe("version");
   });
 
-  it("enforces every bound version kind and heading", () => {
-    expect(failingPath((d) => ((d as { version: number }).version = 2))).toBe("version");
-    expect(failingPath((d) => ((sectionAt(d, 0) as { kind: string }).kind = "skills"))).toBe(
-      "sections.0.kind",
+  it("holds the item fields of the spec and a nullable source id", () => {
+    const doc = sampleDocumentV2();
+    const parsed = parseDocument(doc);
+    expect(parsed.ok && Object.keys(parsed.doc.items[0] ?? {}).sort()).toEqual(
+      [
+        "id",
+        "sourceId",
+        "kind",
+        "title",
+        "organisation",
+        "location",
+        "startYear",
+        "startMonth",
+        "endYear",
+        "endMonth",
+        "current",
+        "text",
+        "bullets",
+        "skills",
+        "level",
+      ].sort(),
     );
-    expect(failingPath((d) => (itemAt(d, 1, 0).heading = ""))).toBe("sections.1.items.0.heading");
-    expect(failingPath((d) => (itemAt(d, 1, 1).heading = "x".repeat(201)))).toBe(
-      "sections.1.items.1.heading",
+    first(doc).sourceId = null;
+    expect(parseDocument(doc).ok).toBe(true);
+    expect(failingPath((d) => ((first(d) as { sourceId: unknown }).sourceId = "nope"))).toBe(
+      "items.0.sourceId",
     );
-    expect(failingPath((d) => (sectionAt(d, 1).title = "x".repeat(201)))).toBe("sections.1.title");
-    expect(failingPath((d) => (sectionAt(d, 0).text = "x".repeat(4001)))).toBe("sections.0.text");
-    expect(failingPath((d) => (itemAt(d, 1, 0).text = "x".repeat(4001)))).toBe(
-      "sections.1.items.0.text",
+    expect(failingPath((d) => delete (first(d) as { sourceId?: unknown }).sourceId)).toBe(
+      "items.0.sourceId",
     );
-    expect(failingPath((d) => (itemAt(d, 1, 0).bullets = Array(31).fill("b")))).toBe(
-      "sections.1.items.0.bullets",
-    );
-    expect(failingPath((d) => (itemAt(d, 1, 0).bullets[1] = "x".repeat(601)))).toBe(
-      "sections.1.items.0.bullets.1",
-    );
-    expect(failingPath((d) => (itemAt(d, 1, 0).bullets[0] = ""))).toBe(
-      "sections.1.items.0.bullets.0",
-    );
+  });
+
+  it("applies the career item rules to every item", () => {
+    expect(failingPath((d) => (first(d).title = ""))).toBe("items.0");
+    expect(failingPath((d) => (first(d).startYear = 1949))).toBe("items.0");
+    expect(failingPath((d) => (first(d).bullets = Array(31).fill("b")))).toBe("items.0");
+    expect(failingPath((d) => (first(d).kind = "nonsense" as never))).toBe("items.0.kind");
+  });
+
+  it("bounds headline summary and item count", () => {
+    expect(failingPath((d) => (d.headline = "x".repeat(201)))).toBe("headline");
+    expect(failingPath((d) => (d.summary = "x".repeat(4001)))).toBe("summary");
     expect(
       failingPath((d) => {
-        d.sections = Array.from({ length: 31 }, () => ({
-          title: "t",
-          kind: "other",
-          text: "",
-          items: [],
+        d.items = Array.from({ length: 201 }, (_, n) => ({
+          ...item("honour", { title: `h${n}` }),
+          sourceId: null,
         }));
       }),
-    ).toBe("sections");
-    expect(
-      failingPath((d) => {
-        sectionAt(d, 1).items = Array.from({ length: 41 }, () => ({
-          heading: "h",
-          text: "",
-          bullets: [],
-        }));
-      }),
-    ).toBe("sections.1.items");
+    ).toBe("items");
   });
 
   it("accepts values exactly at the bounds", () => {
-    const doc = sampleDocument();
-    sectionAt(doc, 0).text = "x".repeat(4000);
-    itemAt(doc, 1, 0).heading = "h".repeat(200);
-    itemAt(doc, 1, 0).bullets = Array.from({ length: 30 }, () => "b".repeat(600));
+    const doc = sampleDocumentV2();
+    doc.headline = "h".repeat(200);
+    doc.summary = "s".repeat(4000);
     expect(parseDocument(doc).ok).toBe(true);
   });
 
   it("rejects a document over 100000 characters serialized", () => {
-    const doc = sampleDocument();
-    doc.sections = Array.from({ length: 30 }, () => ({
-      title: "t",
-      kind: "other" as const,
-      text: "",
-      items: [{ heading: "h", text: "x".repeat(4000), bullets: Array(10).fill("y".repeat(600)) }],
+    const doc = sampleDocumentV2();
+    doc.items = Array.from({ length: 30 }, (_, n) => ({
+      ...item("honour", { title: `h${n}`, text: "x".repeat(4000) }),
+      sourceId: null,
     }));
     expect(JSON.stringify(doc).length).toBeGreaterThan(MAX_DOCUMENT_CHARS);
     expect(parseDocument(doc)).toEqual({ ok: false, path: "document" });
-  });
-
-  it("reports the first failing path in field order", () => {
-    const doc = sampleDocument();
-    itemAt(doc, 2, 0).heading = "";
-    itemAt(doc, 1, 1).heading = "";
-    expect(parseDocument(doc)).toEqual({ ok: false, path: "sections.1.items.1.heading" });
   });
 
   it("rejects non-objects", () => {
