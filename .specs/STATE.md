@@ -48,7 +48,7 @@
 - **Trade-off**: The Master CV must follow a heading convention (a CV with no `## ` heading cannot be generated); section names are matched from a fixed list.
 - **Scope**: `honest-assessment`; `src/services/tailor/`, `resume.service.ts`.
 - **Date**: 2026-11-23
-- **Status**: active
+- **Status**: superseded by AD-009
 
 ### AD-007
 - **Decision**: Custom Instructions in the tailor input are wrapped in `<custom_instructions>` … `</custom_instructions>` under the existing preamble, with both tags removed from the text first. Supersedes the input format of `resume-custom-instructions` AC 2 (plain text under the preamble).
@@ -65,6 +65,38 @@
 - **Scope**: `structured-resume`, `honest-assessment`; `tailored_resumes`, `resume.service.ts`, `src/admin/resumes/`, recruiter chat context, print.
 - **Date**: 2026-11-23
 - **Status**: active
+
+### AD-009
+- **Decision**: The Master CV becomes a structured Career Library: typed Career Items (experience, education, certification, course, skill_group, language, publication, honour) with title, organisation, location, start/end year and month, current, text, bullets, skills, level. The Career Body sent to an LLM is rendered from it by code. Resume Document v2 holds flat items copied from Career Items with a `sourceId`; the model only selects, orders and rewrites text/bullets/headline/summary. `profile.master_cv` and v1 documents are dropped with no import. Supersedes AD-006.
+- **Reason**: Competitor JSON is richer (typed dates, kinds, source link). Question: "Como fica o Master CV no v2?" User chose "Biblioteca estruturada" over "Markdown com parser"; then "nao estamos em producao entao os dados locais podem ser ignorados sem problema".
+- **Trade-off**: The Owner re-enters the CV item by item; `honest-assessment` spec must be rewritten.
+- **Scope**: `career-library`, `honest-assessment`; `profile`, new `career_items`, `tailored_resumes.structured`, `src/services/tailor/`, chats, print, `src/admin/profile/`, `src/admin/resumes/`.
+- **Date**: 2026-11-23
+- **Status**: active (AD-009)
+
+### AD-010
+- **Decision**: The Career Library has a `project` kind (Project, Client or organisation, start/end year and month, Ongoing, Details), shown as a Projects card after Experience with the form of `career-library/captures/project-form.png`. Its tech stack is a list field (AD-011).
+- **Reason**: Question: "Tipos de item além dos 8?" User: "temos q ter project", then sent the competitor's Projects form capture.
+- **Trade-off**: One more kind to validate, render and tailor.
+- **Scope**: `career-library`.
+- **Date**: 2026-11-23
+- **Status**: active (AD-010)
+
+### AD-011
+- **Decision**: Experience and project items have an optional "Tech stack" (stored as the item's `skills` list), entered comma-separated under Details, rendered as "Stack: a, b", copied from the Career Item by code when tailoring (the model never changes it). Departs from the competitor project form, which has no such field.
+- **Reason**: Question: "é melhor adicionar um campo tech stack?" Recommended on project and experience so the stack is a code-owned fact and `honest-assessment` can match Job Description skills without the model. User: "boa...entao adiciona".
+- **Trade-off**: One field more than the capture; can repeat what the Skills groups list.
+- **Scope**: `career-library`, `honest-assessment`.
+- **Date**: 2026-11-23
+- **Status**: active (AD-011)
+
+### AD-012
+- **Decision**: The Resume Document v2 holds only `headline` and `summary` of the header; the Tailored Resume Header card reads the name from the Profile and contact data from Personal Info Fields. Departs from the competitor capture/JSON, whose header carries name, email, phone and links.
+- **Reason**: Core invariant: personal data never reaches an LLM. Question: approve the Header card departure with the other pending defaults. User: "Aprovar todos".
+- **Trade-off**: The document alone cannot print a full header; print joins it with the Personal Header as today.
+- **Scope**: `career-library`; `src/services/tailor/`, `src/admin/resumes/`.
+- **Date**: 2026-11-23
+- **Status**: active (AD-012)
 
 ## Handoff
 
