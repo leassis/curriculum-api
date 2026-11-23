@@ -21,4 +21,12 @@ describe("ProfileService", () => {
     expect(stored).toMatchObject({ id: 1, masterCv: "new cv" });
     expect(repo.row).toEqual(stored);
   });
+
+  it("update stores the summary", async () => {
+    const repo = new FakeProfileRepo();
+    const service = new ProfileService(repo);
+    const stored = await service.update({ ...profileInput, summary: "Ten years of backend work." });
+    expect(stored.summary).toBe("Ten years of backend work.");
+    expect((await service.get()).summary).toBe("Ten years of backend work.");
+  });
 });

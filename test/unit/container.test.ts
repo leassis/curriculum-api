@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createContainer } from "../../src/container";
 import { AdminAuthService } from "../../src/security/admin-auth";
+import { CareerService } from "../../src/services/career.service";
 import { LlmService } from "../../src/services/llm.service";
 import { PersonalInfoService } from "../../src/services/personal-info.service";
 import { ProfileService } from "../../src/services/profile.service";
@@ -24,6 +25,7 @@ describe("container", () => {
 
     expect(services.config).toBe(config);
     expect(services.profile).toBeInstanceOf(ProfileService);
+    expect(services.career).toBeInstanceOf(CareerService);
     expect(services.settings).toBeInstanceOf(SettingsService);
     expect(services.personalInfo).toBeInstanceOf(PersonalInfoService);
     expect(services.llm).toBeInstanceOf(LlmService);

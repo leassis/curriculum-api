@@ -304,8 +304,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests (fake repo) for Library AC 10, 13, 15-19 and the edge cases on bounds, limit, `current`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests (fake repo) for Library AC 10, 13, 15-19 and the edge cases on bounds, limit, `current`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

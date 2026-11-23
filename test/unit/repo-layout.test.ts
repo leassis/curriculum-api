@@ -108,6 +108,7 @@ describe("repo layout", () => {
     const missing = FILES.filter((f) => !existsSync(join(root, f)));
     expect(missing).toEqual([]);
     expect(readdirSync(join(root, "test/support/fakes")).sort()).toEqual([
+      "career.fake.ts",
       "personal-info.fake.ts",
       "profile.fake.ts",
       "settings.fake.ts",
