@@ -13,9 +13,11 @@ import { FakeProfileRepo, profileInput } from "./fakes/profile.fake";
 import { FakeSettingsRepo } from "./fakes/settings.fake";
 import { createRecordingModel, type RecordingModelOptions } from "./mock-llm";
 import { FakeResumeRepo } from "./resume.fake";
+import { sampleCv, sampleReply } from "./resume-document";
 import { createTestApp } from "./test-app";
 
-export const CV = "Ten years building backends in TypeScript.";
+/** A Master CV with `##` sections and `###` items; the default reply tailors it. */
+export const CV = sampleCv;
 export const JD = "We need a senior backend engineer who knows Postgres.";
 export const FULL_NAME = "Ada Lovelace";
 export const TAILOR_PROMPT = "Tailor the CV to the job.";
@@ -54,7 +56,7 @@ export async function resumeSetup(
   const settings = new SettingsService(settingsRepo, config);
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY);
   const profile = new ProfileService(profileRepo);
-  const recording = createRecordingModel({ text: "# Tailored body", ...opts.mock });
+  const recording = createRecordingModel({ text: JSON.stringify(sampleReply()), ...opts.mock });
   const llm = new LlmService(config, settings, personalInfo, opts.factory ?? recording.factory, {
     info: () => {},
     warn: () => {},

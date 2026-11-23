@@ -7,6 +7,7 @@ import { ResumeService } from "../../../src/services/resume.service";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
 import { createRecordingModel } from "../../support/mock-llm";
+import { sampleCv, sampleReply } from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -19,7 +20,7 @@ async function setup() {
   const config = resolvedConfig(options);
   const base = createTestApp({ config: options });
   const { services } = base;
-  const { factory, calls } = createRecordingModel({ text: "## Tailored\n\n**Postgres** expert" });
+  const { factory, calls } = createRecordingModel({ text: JSON.stringify(sampleReply()) });
   const llm = new LlmService(config, services.settings, services.personalInfo, factory, {
     info: () => {},
     warn: () => {},
@@ -35,7 +36,7 @@ async function setup() {
   await services.profile.update({
     fullName: "Ada Lovelace",
     headline: "Engineer",
-    masterCv: "Ten years of backend work.",
+    masterCv: sampleCv,
     publicSystemPrompt: "p",
     recruiterSystemPrompt: "r",
     tailorSystemPrompt: "Tailor it.",
@@ -94,14 +95,14 @@ describe("resumes with database", () => {
 
     const generated = await send("POST", `/admin/resumes/${id}/generate`);
     expect(generated.status).toBe(200);
-    expect(await generated.text()).toContain("## Tailored");
+    expect(await generated.text()).toContain("### Staff Engineer — Globex (2020-2024)");
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.maxOutputTokens).toBe(4000);
+    expect(calls[0]?.maxOutputTokens).toBe(6000);
     for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {
       expect(calls[0]?.prompt).not.toContain(secret);
     }
     expect(calls[0]?.prompt).toContain(JD);
-    expect(calls[0]?.prompt).toContain("Ten years of backend work.");
+    expect(calls[0]?.prompt).toContain("## Experience [s1]");
 
     const saved = await send("PUT", `/admin/resumes/${id}`, {
       content: "## Edited\n\n<script>alert(1)</script>**safe**",
@@ -129,7 +130,7 @@ describe("resumes with database", () => {
 
     const profilePrint = await (await send("GET", "/admin/profile/print")).text();
     expect(profilePrint).toContain(`Phone: ${PHONE}`);
-    expect(profilePrint).toContain("Ten years of backend work.");
+    expect(profilePrint).toContain("Backend engineer with ten years of experience.");
 
     expect((await send("DELETE", `/admin/resumes/${id}`)).status).toBe(200);
     expect((await send("GET", `/admin/resumes/${id}`)).status).toBe(404);

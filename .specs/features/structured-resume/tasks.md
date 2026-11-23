@@ -384,8 +384,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests 1:1 to Generate AC 1-7, 11 and the no-PII edge
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests 1:1 to Generate AC 1-7, 11 and the no-PII edge
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick

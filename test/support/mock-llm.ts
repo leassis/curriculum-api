@@ -22,6 +22,8 @@ export interface RecordingModelOptions {
   failBeforeFirstChunk?: boolean;
   /** Text returned by generate(); for a structured call, the JSON the model replies with. */
   text?: string;
+  /** Texts returned by successive generate() calls; the last one repeats. Wins over `text`. */
+  replies?: string[];
 }
 
 const usage = {
@@ -50,6 +52,7 @@ function flatten(prompt: PromptMessage[]): string {
 export function createRecordingModel(opts: RecordingModelOptions = {}) {
   const calls: RecordedCall[] = [];
   const chunks = opts.chunks ?? ["Hello", " world"];
+  let generated = 0;
 
   const factory: ModelFactory = (modelId, modelOpts) =>
     new MockLanguageModelV4({
@@ -63,8 +66,9 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
           responseFormat: options.responseFormat,
           structured: modelOpts?.structured === true,
         });
+        const reply = opts.replies?.[Math.min(generated++, opts.replies.length - 1)];
         return {
-          content: [{ type: "text", text: opts.text ?? chunks.join("") }],
+          content: [{ type: "text", text: reply ?? opts.text ?? chunks.join("") }],
           finishReason,
           usage,
           warnings: [],

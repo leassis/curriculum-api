@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { profileInput } from "../../support/fakes/profile.fake";
+import { sampleCv, sampleDocument, sampleReply } from "../../support/resume-document";
 import { failingFactory, resumeApp } from "../../support/resumes";
+
+/** A reply whose first item text carries raw HTML, to prove it is escaped. */
+const freshReply = () => {
+  const reply = sampleReply();
+  const first = reply.items[0];
+  if (first) first.text = "Fresh <b>body</b>";
+  return JSON.stringify(reply);
+};
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const ids = [MISSING, "not-a-uuid"];
@@ -38,7 +47,7 @@ describe("admin resumes", () => {
     expect(repo.rows).toHaveLength(1);
     expect(repo.rows[0]).toMatchObject({
       title: "Backend at Acme",
-      content: "# Tailored body",
+      structured: sampleDocument(),
       company: "Acme",
     });
     expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}`);
@@ -105,15 +114,18 @@ describe("admin resumes", () => {
   });
 
   it("generate returns the editor fragment with the new content", async () => {
-    const { post, resumes, repo } = await resumeApp({ mock: { text: "## Fresh <b>body</b>" } });
+    const { post, resumes, repo } = await resumeApp({ mock: { text: freshReply() } });
     const { id } = await resumes.create(newResume);
     const res = await post(`/admin/resumes/${id}/generate`);
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html.startsWith('<div id="editor">')).toBe(true);
     expect(html).not.toContain("<html");
-    expect(html).toContain("## Fresh &lt;b&gt;body&lt;/b&gt;</textarea>");
-    expect(repo.rows[0]).toMatchObject({ content: "## Fresh <b>body</b>", model: "vendor/tailor" });
+    expect(html).toContain(
+      "### Staff Engineer — Globex (2020-2024)\n\nFresh &lt;b&gt;body&lt;/b&gt;",
+    );
+    expect(repo.rows[0]?.model).toBe("vendor/tailor");
+    expect(JSON.stringify(repo.rows[0]?.structured)).toContain("Fresh <b>body</b>");
   });
 
   it("generate button has an indicator, is disabled while running and confirms replacement", async () => {
@@ -250,7 +262,7 @@ describe("admin resumes custom instructions", () => {
   });
 
   it("generate saves the posted custom instructions", async () => {
-    const { post, resumes, repo, calls } = await resumeApp({ mock: { text: "## Fresh" } });
+    const { post, resumes, repo, calls } = await resumeApp();
     const { id } = await resumes.create(newResume);
     const res = await post(`/admin/resumes/${id}/generate`, {
       customInstructions: " Write in Portuguese ",
@@ -259,7 +271,7 @@ describe("admin resumes custom instructions", () => {
     const html = await res.text();
     expect(html.startsWith('<div id="editor">')).toBe(true);
     expect(repo.rows[0]).toMatchObject({
-      content: "## Fresh",
+      structured: sampleDocument(),
       customInstructions: "Write in Portuguese",
     });
     expect(calls[0]?.prompt).toContain("Write in Portuguese");
@@ -319,17 +331,20 @@ describe("admin resumes create flow", () => {
     expect(res.status).toBe(303);
     expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}`);
     expect(repo.rows).toHaveLength(1);
-    expect(repo.rows[0]).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
+    expect(repo.rows[0]).toMatchObject({ structured: sampleDocument(), model: "vendor/tailor" });
     expect(calls).toHaveLength(1);
   });
 
   it("editor after create holds the generated content", async () => {
-    const { post, get, repo } = await resumeApp({ mock: { text: "## Fresh <b>body</b>" } });
+    const { post, get, repo } = await resumeApp({ mock: { text: freshReply() } });
     const res = await post("/admin/resumes", newResume);
     const html = await (await get(res.headers.get("location") ?? "")).text();
-    expect(html).toContain("## Fresh &lt;b&gt;body&lt;/b&gt;</textarea>");
-    expect(html).toContain("<h2>Fresh &lt;b&gt;body&lt;/b&gt;</h2>");
-    expect(repo.rows[0]?.content).toBe("## Fresh <b>body</b>");
+    expect(html).toContain(
+      "### Staff Engineer — Globex (2020-2024)\n\nFresh &lt;b&gt;body&lt;/b&gt;",
+    );
+    expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
+    expect(html).toContain("Fresh &lt;b&gt;body&lt;/b&gt;</p>");
+    expect(JSON.stringify(repo.rows[0]?.structured)).toContain("Fresh <b>body</b>");
   });
 
   it("answers 400 and stores nothing for invalid input", async () => {
@@ -426,12 +441,14 @@ describe("admin resumes create flow", () => {
     const created = await post("/admin/resumes", newResume);
     const location = created.headers.get("location") ?? "";
     expect(location).toContain("?error=master-cv");
-    await profileRepo.upsert({ ...profileInput, masterCv: "Ten years of backends." });
+    await profileRepo.upsert({ ...profileInput, masterCv: sampleCv });
     expect(await (await get(location)).text()).toContain("Fill the master CV first");
     const res = await post(`/admin/resumes/${repo.rows[0]?.id}/generate`);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("# Tailored body</textarea>");
-    expect(repo.rows[0]).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
+    expect(await res.text()).toContain(
+      "### BSc Computer Science — State University\n\n2012-2016\n</textarea>",
+    );
+    expect(repo.rows[0]).toMatchObject({ structured: sampleDocument(), model: "vendor/tailor" });
   });
 
   const newForm = (html: string) =>

@@ -4,6 +4,7 @@ import type { Env } from "../../env.js";
 import { renderMarkdown } from "../../lib/markdown.js";
 import { LlmUnavailableError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
+import { renderResumeMarkdown } from "../../services/tailor/render.js";
 import { ErrorFragment } from "../error-fragment.js";
 import { EDITOR_JS } from "../static/resumes-js.generated.js";
 import { Editor, EditorPage, ResumesPage } from "./view.js";
@@ -61,9 +62,13 @@ resumesRouter.get("/resumes/editor.js", (c) =>
 );
 
 async function editor(c: { var: Env["Variables"] }, resume: Resume) {
+  // Until the document form replaces the textarea, the editor shows the document as markdown.
+  const shown = resume.document
+    ? { ...resume, content: renderResumeMarkdown(resume.document) }
+    : resume;
   return {
     basePath: c.var.config.basePath,
-    resume,
+    resume: shown,
     options: await c.var.services.resumes.headerOptions(),
   };
 }

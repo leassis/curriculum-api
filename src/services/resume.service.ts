@@ -2,7 +2,12 @@ import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
-import { LlmUnavailableError, NotFoundError, ValidationError } from "./errors.js";
+import {
+  LlmOutputInvalidError,
+  LlmUnavailableError,
+  NotFoundError,
+  ValidationError,
+} from "./errors.js";
 import type { LlmService } from "./llm.service.js";
 import type {
   ContactItem,
@@ -12,7 +17,10 @@ import type {
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
+import { type AssembleFailure, assemble } from "./tailor/assemble.js";
 import { parseDocument, type ResumeDocument } from "./tailor/document.js";
+import { TailorOutputSchema } from "./tailor/output.js";
+import { type ParsedCv, parseMasterCv } from "./tailor/parse-cv.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
 export type Resume = Omit<ResumeRow, "structured"> & {
@@ -27,7 +35,7 @@ export interface ResumeLogger {
   warn(message: string, data?: unknown): void;
 }
 
-export const TAILOR_MAX_OUTPUT_TOKENS = 4000;
+export const TAILOR_MAX_OUTPUT_TOKENS = 6000;
 export const CUSTOM_INSTRUCTIONS_MAX = 2000;
 
 /** Fixed and code-owned so the authority rule holds even for a stored tailor prompt that predates it. */
@@ -59,6 +67,15 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 }
 
 const MASTER_CV_REQUIRED = "Fill the master CV first";
+const MASTER_CV_UNSTRUCTURED = "Structure the master CV with ## sections and ### items";
+/** One model call, then one more when its output is rejected. */
+const TAILOR_ATTEMPTS = 2;
+
+/** The `<cv>` body of a tailor call: the annotated Master CV, then each section's id and kind. */
+function tailorBody(parsed: ParsedCv): string {
+  const kinds = parsed.sections.map((s) => `[${s.id}] ${s.kind}`).join(", ");
+  return `${parsed.annotated}\n\nSection kinds: ${kinds}`;
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -156,7 +173,7 @@ export class ResumeService {
   /** Creates the resume, then generates it. A failed generation keeps the resume and reports why. */
   async createAndGenerate(
     input: ResumeInput,
-  ): Promise<{ resume: Resume; error?: "generate" | "master-cv" }> {
+  ): Promise<{ resume: Resume; error?: "generate" | "master-cv" | "structure" }> {
     const created = await this.create(input);
     try {
       return { resume: await this.generate(created.id) };
@@ -164,6 +181,9 @@ export class ResumeService {
       if (error instanceof LlmUnavailableError) return { resume: created, error: "generate" };
       if (error instanceof ValidationError && error.message === MASTER_CV_REQUIRED) {
         return { resume: created, error: "master-cv" };
+      }
+      if (error instanceof ValidationError && error.message === MASTER_CV_UNSTRUCTURED) {
+        return { resume: created, error: "structure" };
       }
       throw error;
     }
@@ -179,7 +199,11 @@ export class ResumeService {
     return this.personalInfo.list();
   }
 
-  /** Tailors the Master CV to the Job Description. The model sees only those two texts. */
+  /**
+   * Tailors the Master CV to the Job Description as a Resume Document. The model sees the
+   * annotated Master CV and rewrites bodies only; a rejected reply gets one more call, and a
+   * second rejection leaves the stored document and model unchanged.
+   */
   async generate(id: string, customInstructions?: string): Promise<Resume> {
     let resume = await this.get(id);
     const instructions =
@@ -190,21 +214,38 @@ export class ResumeService {
     if (!profile || profile.masterCv.trim() === "") {
       throw new ValidationError(MASTER_CV_REQUIRED);
     }
+    const parsed = parseMasterCv(profile.masterCv);
+    if (!parsed) throw new ValidationError(MASTER_CV_UNSTRUCTURED);
     if (instructions !== undefined) {
       resume = await this.update(id, { customInstructions: instructions });
     }
-    const { text, model } = await this.llm.generate({
-      area: "tailor",
+    const request = {
+      area: "tailor" as const,
       system: profile.tailorSystemPrompt,
-      body: profile.masterCv,
+      body: tailorBody(parsed),
       input: tailorInput(
         this.now().toISOString().slice(0, 10),
         resume.customInstructions,
         resume.jobDescription,
       ),
       maxOutputTokens: TAILOR_MAX_OUTPUT_TOKENS,
-    });
-    return this.update(id, { content: text, model });
+      schema: TailorOutputSchema,
+      schemaName: "tailored_resume",
+    };
+    for (let attempt = 1; attempt <= TAILOR_ATTEMPTS; attempt++) {
+      let reason: AssembleFailure;
+      try {
+        const { object, model } = await this.llm.generateObject(request);
+        const assembled = assemble(parsed, object);
+        if (assembled.ok) return this.update(id, { structured: assembled.doc, model });
+        reason = assembled.reason;
+      } catch (error) {
+        if (!(error instanceof LlmOutputInvalidError)) throw error;
+        reason = "schema";
+      }
+      this.logger.warn("tailor output rejected", { reason });
+    }
+    throw new LlmUnavailableError();
   }
 
   /** Saves the markdown and the selected header keys after the PII Guard. */
