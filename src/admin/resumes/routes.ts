@@ -115,7 +115,7 @@ resumesRouter.post("/resumes/:id/generate", async (c) => {
     return c.html(Editor(await editor(c, resume)));
   } catch (error) {
     if (error instanceof LlmUnavailableError) {
-      return c.html(ErrorFragment({ message: "Generation failed, try again" }), 502);
+      return c.html(ErrorFragment({ message: "Generation failed, try again" }), 503);
     }
     throw error;
   }

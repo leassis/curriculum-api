@@ -59,6 +59,6 @@ Tests use a recording mock model and never call OpenRouter or Cloudflare.
 
 ## What needs a real key
 
-- `OPENROUTER_API_KEY`: every LLM call (public chat, recruiter chat, resume generation). Without it these answer 502 `llm_unavailable` / "Generation failed".
+- `OPENROUTER_API_KEY`: every LLM call (public chat, recruiter chat, resume generation). Without it these answer 502 `llm_unavailable`; resume generation answers 503 "Generation failed".
 - `TURNSTILE_SECRET` (+ a widget token from the site): `POST /api/public/session` and `/api/r/:token/session`. For local runs Cloudflare's dummy secret `1x0000000000000000000000000000000AA` accepts any token (it still calls Cloudflare, so needs internet).
 - Admin, Master CV, personal info, settings, resumes (except Generate) and recruiter link management need no external key.

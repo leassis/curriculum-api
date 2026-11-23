@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INVALID_DOCUMENT, NOT_GENERATED } from "../../../src/admin/resumes/view";
 import type { ResumeDocument } from "../../../src/services/tailor/document";
-import { item, sampleLibrary } from "../../support/career";
+import { item, sampleLibrary, sampleReplyV2 } from "../../support/career";
 import {
   button,
   decode,
@@ -203,7 +203,7 @@ describe("admin resumes", () => {
     expect(tag(filled)).toContain('hx-confirm="Replace the current content?"');
   });
 
-  it("generate answers 502 with the failure text and keeps the document", async () => {
+  it("generate answers 503 with the failure text and keeps the document", async () => {
     const s = await resumeApp();
     const { id } = await s.resumes.create(newResume);
     await s.resumes.generate(id);
@@ -212,9 +212,25 @@ describe("admin resumes", () => {
     const created = await failing.resumes.create(newResume);
     await failing.repo.update(created.id, { structured: before as never });
     const res = await failing.post(`/admin/resumes/${created.id}/generate`);
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(503);
     expect(await res.text()).toContain("Generation failed, try again");
     expect(failing.repo.rows[0]?.structured).toEqual(before);
+  });
+
+  it("generate answers 503 after one retry when the model names an unknown id twice", async () => {
+    const wrong = JSON.stringify({
+      ...sampleReplyV2(),
+      items: [{ source_id: "c99", text: "Invented", bullets: [] }],
+    });
+    const s = await resumeApp({
+      mock: { replies: [wrong, wrong, JSON.stringify(sampleReplyV2())] },
+    });
+    const { id } = await s.resumes.create(newResume);
+    const res = await s.post(`/admin/resumes/${id}/generate`);
+    expect(res.status).toBe(503);
+    expect(await res.text()).toContain("Generation failed, try again");
+    expect(s.calls).toHaveLength(2);
+    expect(s.repo.rows[0]?.structured).toBeNull();
   });
 
   it("generate answers 400 when the library is empty", async () => {
