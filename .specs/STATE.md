@@ -42,6 +42,22 @@
 - **Date**: 2026-11-22
 - **Status**: active
 
+### AD-006
+- **Decision**: The tailor model works on CV items parsed from the Master CV markdown per generation: every `### ` heading is an item whose heading line is fixed and copied by code; text before the first `## ` and between a `## ` and its first `###` are droppable items. Items in sections titled Experience/Education (English or Portuguese variants) are never dropped; code restores any the model omits. Ids `i1..in` live only for one call.
+- **Reason**: Question: "The brief's safety net needs CV items with ids, but the Master CV is one free markdown text. How should items exist?" User chose "Parse markdown headings (Recommended)" over a structured CV editor or no ids.
+- **Trade-off**: The Master CV must follow a heading convention (a CV with no `## ` heading cannot be generated); section names are matched from a fixed list.
+- **Scope**: `honest-assessment`; `src/services/tailor/`, `resume.service.ts`.
+- **Date**: 2026-11-23
+- **Status**: active
+
+### AD-007
+- **Decision**: Custom Instructions in the tailor input are wrapped in `<custom_instructions>` … `</custom_instructions>` under the existing preamble, with both tags removed from the text first. Supersedes the input format of `resume-custom-instructions` AC 2 (plain text under the preamble).
+- **Reason**: Question: "Rule 7 says Custom Instructions go in a delimited block … What now?" User chose "Own delimiter (Recommended)": a tag distinct from the `<<<…>>>` data markers, which the shared rules declare never instructions.
+- **Trade-off**: The existing input-format test for Custom Instructions changes.
+- **Scope**: `honest-assessment`; `tailorInput` in `resume.service.ts`.
+- **Date**: 2026-11-23
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: `foundation`, Execute phase: T1-T35 done, one commit each on `main` (local, nothing pushed).

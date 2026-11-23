@@ -50,7 +50,15 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
   );
 };
 
-export const ResumesPage = ({ basePath, resumes }: { basePath: string; resumes: ResumeView[] }) => (
+export const ResumesPage = ({
+  basePath,
+  resumes,
+  options,
+}: {
+  basePath: string;
+  resumes: ResumeView[];
+  options: HeaderOption[];
+}) => (
   <Layout title="Resumes" basePath={basePath} section="resumes">
     <PageHeader
       eyebrow="Resumes"
@@ -79,7 +87,17 @@ export const ResumesPage = ({ basePath, resumes }: { basePath: string; resumes: 
         </table>
       </div>
     )}
-    <form class="card-pad" method="post" action={`${basePath}/admin/resumes`}>
+    {/* SPEC_DEVIATION: busy state uses hx-boost + hx-disabled-elt instead of an inline onsubmit.
+        Reason: the admin CSP (script-src 'self') blocks inline handlers. */}
+    <script src={`${basePath}/admin/resumes/editor.js`} />
+    <form
+      class="card-pad"
+      method="post"
+      action={`${basePath}/admin/resumes`}
+      hx-boost="true"
+      hx-disabled-elt="find button[type=submit]"
+      hx-indicator="#create-indicator"
+    >
       <h2 class="section-title">New resume</h2>
       <div class="form-grid">
         <div class="field">
@@ -107,11 +125,26 @@ export const ResumesPage = ({ basePath, resumes }: { basePath: string; resumes: 
         </label>
         <textarea class="input" id="customInstructions" name="customInstructions" rows={4} />
       </div>
+      {options.length > 0 && (
+        <fieldset class="checks">
+          <legend>Personal header</legend>
+          <input type="hidden" name="headerFieldsPosted" value="1" />
+          {options.map((o) => (
+            <label class="check">
+              <input type="checkbox" name="headerFields" value={o.key} checked /> {o.label}{" "}
+            </label>
+          ))}
+        </fieldset>
+      )}
       <div class="actions">
         <button type="submit" class="btn">
           Create
-        </button>
+        </button>{" "}
+        <span id="create-indicator" class="htmx-indicator muted">
+          Generating…
+        </span>
       </div>
+      <p id="editor-status" class="status" role="status" />
     </form>
   </Layout>
 );

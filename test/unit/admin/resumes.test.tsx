@@ -430,4 +430,50 @@ describe("admin resumes create flow", () => {
     expect(await res.text()).toContain("# Tailored body</textarea>");
     expect(repo.rows[0]).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
   });
+
+  const newForm = (html: string) =>
+    html.match(/<form[^>]*action="\/admin\/resumes"[^>]*>[\s\S]*?<\/form>/)?.[0] ?? "";
+
+  it("new resume form has a checked personal header checkbox per field", async () => {
+    const { get, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const form = newForm(await (await get("/admin/resumes")).text());
+    expect(form).toContain("<legend>Personal header</legend>");
+    expect(form).toMatch(/<input[^>]*name="headerFieldsPosted"[^>]*value="1"/);
+    for (const [key, label] of [
+      ["EMAIL", "Email"],
+      ["PHONE", "Phone"],
+    ]) {
+      expect(form).toMatch(
+        new RegExp(
+          `<input[^>]*type="checkbox"[^>]*name="headerFields"[^>]*value="${key}"[^>]*checked`,
+        ),
+      );
+      expect(form).toContain(label);
+    }
+    expect(form.match(/name="headerFields"/g)).toHaveLength(2);
+  });
+
+  it("create form disables the button and shows generating text", async () => {
+    const { get } = await resumeApp();
+    const form = newForm(await (await get("/admin/resumes")).text());
+    const tag = form.match(/<form[^>]*>/)?.[0] ?? "";
+    expect(tag).toContain('hx-boost="true"');
+    expect(tag).toContain('hx-disabled-elt="find button[type=submit]"');
+    expect(tag).toContain('hx-indicator="#create-indicator"');
+    expect(form).toMatch(/<[^>]*id="create-indicator"[^>]*>Generating…<\//);
+    expect(form).toMatch(/<button[^>]*type="submit"[^>]*>\s*Create\s*<\/button>/);
+    expect(form).not.toMatch(/\sonsubmit=/);
+  });
+
+  it("omits the fieldset and stores null without personal info fields", async () => {
+    const { get, post, repo } = await resumeApp();
+    const form = newForm(await (await get("/admin/resumes")).text());
+    expect(form).not.toContain("Personal header");
+    expect(form).not.toContain("headerFieldsPosted");
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    expect(repo.rows[0]?.headerFields).toBeNull();
+  });
 });

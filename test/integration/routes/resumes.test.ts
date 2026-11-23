@@ -75,6 +75,8 @@ async function setup() {
       ...extra,
     });
     expect(res.status).toBe(303);
+    // Create now generates once; these tests count the model calls of their own explicit generate.
+    calls.length = 0;
     return (res.headers.get("location") ?? "").split("/").pop() as string;
   };
   return { send, create, calls };

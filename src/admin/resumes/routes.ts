@@ -25,7 +25,11 @@ export const resumesRouter = new Hono<Env>();
 
 resumesRouter.get("/resumes", async (c) =>
   c.html(
-    ResumesPage({ basePath: c.var.config.basePath, resumes: await c.var.services.resumes.list() }),
+    ResumesPage({
+      basePath: c.var.config.basePath,
+      resumes: await c.var.services.resumes.list(),
+      options: await c.var.services.resumes.headerOptions(),
+    }),
   ),
 );
 
