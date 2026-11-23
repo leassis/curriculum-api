@@ -18,7 +18,7 @@ import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
 import { type AssembleFailure, assemble } from "./tailor/assemble.js";
-import { parseDocument, type ResumeDocument, stripPrefix } from "./tailor/document.js";
+import { cleanLine, cleanText, parseDocument, type ResumeDocument } from "./tailor/document.js";
 import { documentFromForm, type FormOp, type ItemOp } from "./tailor/form.js";
 import { TailorOutputSchema } from "./tailor/output.js";
 import { type ParsedCv, parseMasterCv } from "./tailor/parse-cv.js";
@@ -96,18 +96,21 @@ function documentStrings(doc: ResumeDocument): string[] {
   ]);
 }
 
-/** Strips a leading heading or bullet marker from every editable string; empty bullets go. */
+/**
+ * Strips heading and bullet markers from every line of a text field, and flattens titles,
+ * headings and bullets to one line; empty bullets go.
+ */
 function stripDocument(doc: ResumeDocument): ResumeDocument {
-  const clean = (v: string) => stripPrefix(v).trim();
   return {
     ...doc,
     sections: doc.sections.map((s) => ({
       ...s,
-      text: clean(s.text),
+      title: s.title.trim().replace(/[ \t]*\r?\n[ \t]*/g, " "),
+      text: cleanText(s.text),
       items: s.items.map((i) => ({
-        heading: clean(i.heading),
-        text: clean(i.text),
-        bullets: i.bullets.map(clean).filter((b) => b !== ""),
+        heading: cleanLine(i.heading),
+        text: cleanText(i.text),
+        bullets: i.bullets.map(cleanLine).filter((b) => b !== ""),
       })),
     })),
   };

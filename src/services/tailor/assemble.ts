@@ -1,4 +1,4 @@
-import { parseDocument, type ResumeDocument, stripPrefix } from "./document.js";
+import { cleanLine, cleanText, parseDocument, type ResumeDocument } from "./document.js";
 import type { TailorOutput } from "./output.js";
 import type { ParsedCv } from "./parse-cv.js";
 
@@ -6,10 +6,6 @@ export type AssembleFailure = "unknown_id" | "duplicate_id" | "schema";
 export type AssembleResult =
   | { ok: true; doc: ResumeDocument }
   | { ok: false; reason: AssembleFailure };
-
-function clean(s: string): string {
-  return stripPrefix(s.trimStart()).trim();
-}
 
 /** Indexes returned entries by id; reports an id the source does not have, or one returned twice. */
 function index<T>(
@@ -47,12 +43,12 @@ export function assemble(parsed: ParsedCv, out: TailorOutput): AssembleResult {
       return [
         {
           heading: item.heading,
-          text: clean(returned.text),
-          bullets: returned.bullets.map(clean).filter((b) => b !== ""),
+          text: cleanText(returned.text),
+          bullets: returned.bullets.map(cleanLine).filter((b) => b !== ""),
         },
       ];
     });
-    const text = clean(sections.get(section.id)?.text ?? "");
+    const text = cleanText(sections.get(section.id)?.text ?? "");
     if (text === "" && keptItems.length === 0) return [];
     return [{ title: section.title, kind: section.kind, text, items: keptItems }];
   });

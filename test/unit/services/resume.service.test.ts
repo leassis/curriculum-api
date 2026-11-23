@@ -850,6 +850,29 @@ describe("resume service save", () => {
     expect(repo.rows[0]?.structured).toEqual(sampleDocument());
   });
 
+  it("strips prefixes on every text line and flattens headings on save", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    const form = {
+      ...documentForm(sampleDocument()),
+      "sections.0.text": "Backend engineer\n## Injected Section\n  - listed",
+      "sections.1.items.0.heading": "### Staff Engineer\r\n## Injected Role",
+      "sections.1.items.0.text": "Led the team.\n### Fake Role\n* starred",
+    };
+    const saved = await resumes.save(id, form, []);
+    const expected = sampleDocument();
+    const [intro, experience] = expected.sections;
+    if (!intro || !experience?.items[0]) throw new Error("sample changed");
+    intro.text = "Backend engineer\nInjected Section\nlisted";
+    experience.items[0] = {
+      ...experience.items[0],
+      heading: "Staff Engineer ## Injected Role",
+      text: "Led the team.\nFake Role\nstarred",
+    };
+    expect(saved.document).toEqual(expected);
+    expect(repo.rows[0]?.structured).toEqual(expected);
+  });
+
   it("stores blank bullet lines as no bullets and drops an emptied section", async () => {
     const { resumes, repo } = await resumeSetup();
     const { id } = await resumes.create(draft);

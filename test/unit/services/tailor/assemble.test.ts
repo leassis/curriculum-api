@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { assemble } from "../../../../src/services/tailor/assemble";
 import type { TailorOutput } from "../../../../src/services/tailor/output";
 import { type ParsedCv, parseMasterCv } from "../../../../src/services/tailor/parse-cv";
+import { renderResumeMarkdown } from "../../../../src/services/tailor/render";
 
 const CV = `Intro line.
 
@@ -141,6 +142,33 @@ describe("assemble", () => {
       text: "Led",
       bullets: ["one", "two", "three", "-4 not a bullet"],
     });
+  });
+
+  it("strips prefixes on every text line and flattens headings and bullets", () => {
+    const doc = docOf(
+      source(),
+      out({
+        sections: [
+          { source_id: "s0", text: "Intro\n## Injected Section\n  - listed\r\n* starred" },
+        ],
+        items: [
+          {
+            source_item_id: "i1",
+            text: "ok\n## Injected Section\n### Fake Role\n###### six\n####### seven\n-not a marker",
+            bullets: ["a\n- b", "first\r\n  ### second  \nthird", "- \n"],
+          },
+        ],
+      }),
+    );
+    expect(doc.sections[0]?.text).toBe("Intro\nInjected Section\nlisted\nstarred");
+    expect(doc.sections[1]?.items[0]).toEqual({
+      heading: "Staff Engineer — Globex",
+      text: "ok\nInjected Section\nFake Role\nsix\n####### seven\n-not a marker",
+      bullets: ["a - b", "first ### second third"],
+    });
+    const md = renderResumeMarkdown(doc);
+    expect(md.match(/^#{1,6} .*$/gm)).toEqual(["## Experience", "### Staff Engineer — Globex"]);
+    expect(md.match(/^- .*$/gm)).toEqual(["- a - b", "- first ### second third"]);
   });
 
   it("reports unknown and repeated ids", () => {

@@ -51,3 +51,17 @@ const PREFIX = /^(?:#{1,6}|[-*]) /;
 export function stripPrefix(s: string): string {
   return s.replace(PREFIX, "");
 }
+
+/** A text field: a heading or bullet marker is stripped from the start of every line. */
+export function cleanText(s: string): string {
+  return s
+    .split(/\r?\n/)
+    .map((line) => stripPrefix(line.trimStart()).trimEnd())
+    .join("\n")
+    .trim();
+}
+
+/** A heading or bullet: one line, each line break replaced by one space, leading marker stripped. */
+export function cleanLine(s: string): string {
+  return stripPrefix(s.replace(/[ \t]*\r?\n[ \t]*/g, " ").trimStart()).trim();
+}
