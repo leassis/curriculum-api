@@ -109,10 +109,12 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Script exits 2 with "OPENROUTER_API_KEY is required" when the key is missing
+- [x] Script exits 2 with "OPENROUTER_API_KEY is required" when the key is missing
 - [ ] User approved the paid run; output saved to `.specs/features/structured-resume/smoke-run.md`
 - [ ] Parsed object printed (or T1 switched to `strict: false` and re-run until it is)
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+
+**Status**: ⏳ awaiting paid run
 
 **Tests**: none
 **Gate**: build
