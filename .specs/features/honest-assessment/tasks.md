@@ -132,10 +132,10 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: each bound accepted at its limit and rejected one past it (score −1/101/non-integer, rationale 0/1001, 31 skills, skill 201, 31 omissions, what 201, reason 301) (C3)
-- [ ] Unit tests: filter drops library-skill matches ignoring case, keeps unmatched trimmed in order, dedupes keeping first, keeps all when the library has no skills (C15-C18)
-- [ ] Unit tests: restore note with and without organisation, section from `KIND_META` (C6, C7)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: each bound accepted at its limit and rejected one past it (score −1/101/non-integer, rationale 0/1001, 31 skills, skill 201, 31 omissions, what 201, reason 301) (C3)
+- [x] Unit tests: filter drops library-skill matches ignoring case, keeps unmatched trimmed in order, dedupes keeping first, keeps all when the library has no skills (C15-C18)
+- [x] Unit tests: restore note with and without organisation, section from `KIND_META` (C6, C7)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
