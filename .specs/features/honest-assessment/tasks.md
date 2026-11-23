@@ -477,7 +477,7 @@ Proof: run unit | ✓ finish > restores every always-kept item when the model re
 The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none
-**Dispatched:** none
+**Dispatched:** Verifier (fresh sub-agent) at e7cbc54, range 37f6ac1..e7cbc54
 **Walked:** C38 at 375 px (browser pane, test app on fakes, resume generated with a 72 score, 5 missing skills, 2 omissions): `scrollWidth` 375 = `innerWidth`; Why this score, Missing skills, What was left out stack below the Header and item cards (`#assessment` top 3498 px, cards bottom 3475 px). Reach: unit-test app with fakes on a scratch port, admin cookie injected; no dev DB used.
 
 ---
