@@ -893,6 +893,9 @@ Proof: run int | ✓ admin resumes left out routes > stores one copy and answers
 **C83** - The Generate call tells the model to return every experience, education, certification, course, skill group and language ordered by relevance, and to leave out only projects, publications and honours (CLIB-07, Tailored AC 5)
 Proof: run unit | ✓ resume service > tells the model to return every kept kind ordered by relevance and leave out only projects, publications and honours
 
+**C84** - A Tailored Resume holding 200 items answers 400 "The resume is limited to 200 items" to an added item and to Add back, and the document stays unchanged (CLIB-13, CLIB-08, Edge Cases)
+Proof: run unit | ✓ resume service item limit > answers 400 with the 200 item message and leaves the document unchanged on add and add back
+
 ---
 
 ## Handoff

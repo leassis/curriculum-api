@@ -13,7 +13,9 @@ export const ResumeDocumentSchema = z
     version: z.literal(2),
     headline: z.string().max(200),
     summary: z.string().max(4000),
-    items: z.array(DocumentItemSchema).max(MAX_ITEMS),
+    items: z
+      .array(DocumentItemSchema)
+      .max(MAX_ITEMS, `The resume is limited to ${MAX_ITEMS} items`),
   })
   .superRefine((doc, ctx) => {
     if (JSON.stringify(doc).length > MAX_DOCUMENT_CHARS) {

@@ -1042,6 +1042,44 @@ describe("resume service add back", () => {
   });
 });
 
+describe("resume service item limit", () => {
+  const full = async () => {
+    const setup = await resumeSetup();
+    const { id } = await setup.resumes.create(draft);
+    const document = sampleDocumentV2();
+    const filler = Array.from({ length: 200 - document.items.length }, (_, n) => ({
+      ...item("honour", { title: `Award ${n}` }),
+      sourceId: null,
+    }));
+    await setup.repo.update(id, {
+      structured: { ...document, items: [...document.items, ...filler] },
+    });
+    const doc = () => setup.repo.rows[0]?.structured as ResumeDocument;
+    return { ...setup, id, doc };
+  };
+
+  it("answers 400 with the 200 item message and leaves the document unchanged on add and add back", async () => {
+    const { resumes, id, doc } = await full();
+    const before = structuredClone(doc());
+    expect(before.items).toHaveLength(200);
+    await expect(resumes.addItem(id, "honour", { title: "One more" })).rejects.toMatchObject({
+      status: 400,
+      message: "The resume is limited to 200 items",
+    });
+    expect(doc()).toEqual(before);
+    const left = (await resumes.removeItem(id, before.items[0]?.id as string)).document;
+    expect(left?.items).toHaveLength(199);
+    await resumes.addItem(id, "honour", { title: "Fills the gap" });
+    const filled = structuredClone(doc());
+    expect(filled.items).toHaveLength(200);
+    await expect(resumes.addBack(id, before.items[0]?.sourceId as string)).rejects.toMatchObject({
+      status: 400,
+      message: "The resume is limited to 200 items",
+    });
+    expect(doc()).toEqual(filled);
+  });
+});
+
 describe("resume service v2 print", () => {
   it("renders print and download with the career body", async () => {
     const { resumes, repo, addField } = await resumeSetup();
