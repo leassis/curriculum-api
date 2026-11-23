@@ -66,6 +66,10 @@ _Avoid_: Custom CV, variant
 The JSON form of a Tailored Resume: a headline, a summary and ordered Career Items, each remembering the library item it came from. The model rewrites item bodies only; titles, organisations, dates and Tech stack stay as in the library. Rendered to markdown to become a Career Body for print, download and Recruiter Chats.
 _Avoid_: Resume JSON, structured content, resume markdown
 
+**Left out**:
+The Career Items of one kind that no item of a Tailored Resume points at through its source id. Shown as a collapsed "Left out (N)" row on that kind's card, where "Add back" copies one to the end of the card; hidden when none.
+_Avoid_: Hidden items, removed items, excluded
+
 **Custom Instructions**:
 Owner-written steering text of one Tailored Resume, sent to the tailor model; never a source of facts.
 _Avoid_: Prompt, custom prompt
