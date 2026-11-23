@@ -4,6 +4,7 @@ import { KINDS, type Kind } from "../../services/career/item.js";
 import { leftOut } from "../../services/career/ops.js";
 import { LlmUnavailableError, NotFoundError, ValidationError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
+import { bandFor } from "../../services/tailor/rubric.js";
 import { cardsFrom, formFor } from "../career/model.js";
 import type { FormView } from "../career/view.js";
 import { ErrorFragment } from "../error-fragment.js";
@@ -83,6 +84,13 @@ async function editor(c: Ctx, resume: Resume) {
     fullName: await fullName(c),
     cards: cardsFrom(items, leftOut(library, items)),
     options: await c.var.services.resumes.headerOptions(),
+    assessment: resume.assessment && {
+      score: resume.assessment.score,
+      band: bandFor(resume.assessment.score).label,
+      rationale: resume.assessment.rationale,
+      missingSkills: resume.assessment.missingSkills,
+      omissions: resume.assessment.omissions,
+    },
   };
 }
 

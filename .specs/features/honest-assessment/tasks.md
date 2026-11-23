@@ -268,9 +268,9 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit test (test app): GET shows the band label from `SCORE_BANDS`; Generate response swaps in the new panels (C36)
-- [ ] Walk at 375 px wide: panels below the cards, no horizontal scroll (C38)
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Unit test (test app): GET shows the band label from `SCORE_BANDS`; Generate response swaps in the new panels (C36)
+- [x] Walk at 375 px wide: panels below the cards, no horizontal scroll (C38)
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
@@ -478,7 +478,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none
 **Dispatched:** none
-**Walked:** none
+**Walked:** C38 at 375 px (browser pane, test app on fakes, resume generated with a 72 score, 5 missing skills, 2 omissions): `scrollWidth` 375 = `innerWidth`; Why this score, Missing skills, What was left out stack below the Header and item cards (`#assessment` top 3498 px, cards bottom 3475 px). Reach: unit-test app with fakes on a scratch port, admin cookie injected; no dev DB used.
 
 ---
 

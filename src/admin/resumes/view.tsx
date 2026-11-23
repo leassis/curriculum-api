@@ -332,7 +332,7 @@ export const Editor = ({
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
-  assessment?: AssessmentView | null;
+  assessment: AssessmentView | null;
   error?: string;
 }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
@@ -410,7 +410,7 @@ export const Editor = ({
           </p>
         </form>
         <ResumeCards basePath={basePath} resume={resume} fullName={fullName} cards={cards} />
-        <AssessmentPanels assessment={assessment ?? null} />
+        <AssessmentPanels assessment={assessment} />
       </div>
     </div>
   );
@@ -422,7 +422,7 @@ export const EditorPage = (p: {
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
-  assessment?: AssessmentView | null;
+  assessment: AssessmentView | null;
   error?: string;
 }) => (
   <Layout title={p.resume.title} basePath={p.basePath} section="resumes">
