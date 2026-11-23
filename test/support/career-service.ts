@@ -32,7 +32,8 @@ export function careerSetup(
     id: 1,
     updatedAt: new Date(),
   };
-  const settings = new SettingsService(new FakeSettingsRepo(), config);
+  const settingsRepo = new FakeSettingsRepo();
+  const settings = new SettingsService(settingsRepo, config);
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY);
   const profile = new ProfileService(profileRepo);
   const recording = createRecordingModel(opts.mock);
@@ -53,6 +54,8 @@ export function careerSetup(
     config,
     repo,
     profileRepo,
+    settings,
+    settingsRepo,
     profile,
     personalInfo,
     llm,

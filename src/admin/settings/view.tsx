@@ -3,6 +3,7 @@ import { Layout, PageHeader } from "../layout.js";
 
 export interface Row {
   key: string;
+  label?: string;
   override: string;
   fallback: string;
 }
@@ -39,7 +40,7 @@ export const SettingsPage = ({
         {rows.map((r) => (
           <div class="field">
             <label class="field-label mono" for={r.key}>
-              {r.key}
+              {r.label ?? r.key}
             </label>
             <input
               class="input"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { signSession } from "../../../src/security/session";
 import { SettingsService } from "../../../src/services/settings.service";
+import { careerSetup } from "../../support/career-service";
 import { resolvedConfig } from "../../support/config";
 import { FakeSettingsRepo } from "../../support/fakes/settings.fake";
 import { createTestApp } from "../../support/test-app";
@@ -79,5 +80,47 @@ describe("admin settings", () => {
       expect(await res.text()).toContain("limits.maxQuestionChars");
     }
     expect(repo.rows).toEqual({});
+  });
+});
+
+describe("admin settings", () => {
+  it("import model is shown and used by the next convert", async () => {
+    const s = careerSetup({ mock: { text: "## Experience" } });
+    const { app } = createTestApp({
+      config: s.config,
+      services: {
+        settings: s.settings,
+        career: s.career,
+        profile: s.profile,
+        personalInfo: s.personalInfo,
+        llm: s.llm,
+      },
+    });
+    const cookie = `curr_admin=${await signSession({ scope: "admin" }, s.config.sessionSecret, 60)}`;
+    const send = (path: string, fields?: Record<string, string>) =>
+      app.request(
+        path,
+        fields
+          ? {
+              method: "POST",
+              headers: { cookie, "content-type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(fields).toString(),
+            }
+          : { headers: { cookie } },
+      );
+
+    const page = await (await send("/admin/settings")).text();
+    expect(page).toMatch(/<label[^>]*for="model\.import"[^>]*>\s*Import model/);
+    expect(page).toContain('placeholder="vendor/import"');
+
+    await send("/admin/profile/import", { text: "Worked at Acme" });
+    expect(s.calls.at(-1)?.modelId).toBe("vendor/import");
+
+    const saved = await send("/admin/settings", { "model.import": "ovr/import" });
+    expect(saved.status).toBe(200);
+    expect(await (await send("/admin/settings")).text()).toContain('value="ovr/import"');
+
+    await send("/admin/profile/import", { text: "Worked at Acme" });
+    expect(s.calls.at(-1)?.modelId).toBe("ovr/import");
   });
 });

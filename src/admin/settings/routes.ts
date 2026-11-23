@@ -22,6 +22,7 @@ async function rowsFor(c: { var: Env["Variables"] }, submitted?: Record<string, 
   const rows: Row[] = [
     ...MODEL_AREAS.map((area) => ({
       key: modelKey(area),
+      label: `${area[0]?.toUpperCase()}${area.slice(1)} model`,
       override: pick(modelKey(area)),
       fallback: config.models[area] ?? "",
     })),

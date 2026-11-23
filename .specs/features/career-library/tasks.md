@@ -532,8 +532,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit test: Settings shows "Import model"; a saved value is used by the next Convert (route + recording mock)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test: Settings shows "Import model"; a saved value is used by the next Convert (route + recording mock)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
