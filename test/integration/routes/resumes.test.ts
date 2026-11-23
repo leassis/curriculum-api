@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { recruiterChats, tailoredResumes } from "../../../src/db/schema";
+import { PersonalInfoRepository } from "../../../src/repositories/personal-info.repository";
+import { ProfileRepository } from "../../../src/repositories/profile.repository";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { signSession } from "../../../src/security/session";
 import { LlmService } from "../../../src/services/llm.service";
+import { PersonalInfoService } from "../../../src/services/personal-info.service";
+import { ProfileService } from "../../../src/services/profile.service";
 import { ResumeService } from "../../../src/services/resume.service";
 import { sampleReplyV2 } from "../../support/career";
 import { resolvedConfig } from "../../support/config";
@@ -57,9 +61,9 @@ async function setup() {
   });
   const resumes = new ResumeService(
     new ResumeRepository(db),
-    services.profile,
+    new ProfileService(new ProfileRepository(db)),
     services.settings,
-    services.personalInfo,
+    new PersonalInfoService(new PersonalInfoRepository(db), config.piiEncryptionKey),
     llm,
     services.career,
   );
@@ -103,7 +107,7 @@ async function setup() {
     calls.length = 0;
     return (res.headers.get("location") ?? "").split("/").pop() as string;
   };
-  return { send, create, calls, services };
+  return { send, create, calls, services, resumes };
 }
 
 describe("resumes with database", () => {
@@ -348,6 +352,37 @@ describe("admin resumes left out routes", () => {
     expect(await services.career.library()).toEqual(libraryBefore);
   });
 
+  it("keeps every item when several different items are added back at the same time", async () => {
+    const { id, page, click, stored, send, services } = await generatedResume();
+    await click(await page(), "Delete Staff Engineer");
+    await click(await page(), "Delete Engineer");
+    for (const n of [1, 2, 3, 4]) {
+      await services.career.add("experience", {
+        title: `Extra ${n}`,
+        organisation: `Org ${n}`,
+        startYear: "2010",
+        endYear: "2012",
+      });
+    }
+    const before = (await stored()).length;
+    const library = (await services.career.library()).items;
+    const ids = ["Staff Engineer", "Engineer", "Extra 1", "Extra 2", "Extra 3", "Extra 4"].map(
+      (t) => library.find((i) => i.title === t)?.id as string,
+    );
+    const results = await Promise.all(
+      ids.map((libraryId) => send("POST", `/admin/resumes/${id}/left-out/${libraryId}`)),
+    );
+    expect(results.map((r) => r.status)).toEqual(ids.map(() => 200));
+    const items = await stored();
+    expect(items).toHaveLength(before + ids.length);
+    expect(
+      items
+        .filter((i) => ids.includes(i.sourceId as string))
+        .map((i) => i.sourceId)
+        .sort(),
+    ).toEqual([...ids].sort());
+  });
+
   it("keeps both items when two different items are added back at the same time", async () => {
     const { id, page, click, stored, send, services } = await generatedResume();
     await click(await page(), "Delete Staff Engineer");
@@ -369,6 +404,21 @@ describe("admin resumes left out routes", () => {
         .map((i) => i.sourceId)
         .sort(),
     ).toEqual([...ids].sort());
+  });
+
+  it("answers every one of more simultaneous changes than the pool holds without a pool timeout", async () => {
+    const { id, resumes } = await generatedResume();
+    const headlines = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `Headline ${n}`);
+    const started = Date.now();
+    const results = await Promise.allSettled(
+      headlines.map((headline) => resumes.editHeader(id, { headline, summary: "A summary." })),
+    );
+    expect(Date.now() - started).toBeLessThan(5000);
+    expect(results.map((r) => r.status)).toEqual(headlines.map(() => "fulfilled"));
+    const [row] = await db.select().from(tailoredResumes);
+    const document = row?.structured as unknown as { headline: string; summary: string };
+    expect(headlines).toContain(document.headline);
+    expect(document.summary).toBe("A summary.");
   });
 
   it("stores one copy and answers 400 to the second of two simultaneous add backs of one item", async () => {

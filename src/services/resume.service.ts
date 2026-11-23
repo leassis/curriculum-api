@@ -374,6 +374,8 @@ export class ResumeService {
     strings: string[] | (() => string[]),
   ): Promise<Resume> {
     if (!UUID.test(id)) throw new NotFoundError("Resume not found");
+    const fields = await this.personalInfo.allValues();
+    const loaded = await this.loadProfile();
     const row = await this.resumes.change(id, async (current) => {
       const { document } = this.toResume(current);
       if (!document) throw new ValidationError(NOT_GENERATED);
@@ -381,23 +383,22 @@ export class ResumeService {
       if (!checked.success) {
         throw new ValidationError(checked.error.issues[0]?.message ?? "Invalid resume item");
       }
-      await this.guard(typeof strings === "function" ? strings() : strings);
+      this.guard(typeof strings === "function" ? strings() : strings, fields, loaded);
       return { structured: checked.data };
     });
     if (!row) throw new NotFoundError("Resume not found");
     return this.toResume(row);
   }
 
-  private async guard(strings: string[]): Promise<void> {
+  private guard(strings: string[], fields: PiiField[], loaded: Profile | null): void {
     if (strings.length === 0) return;
     const text = strings.join("\n");
-    const found = findPii(text, await this.personalInfo.allValues())[0];
+    const found = findPii(text, fields)[0];
     if (found) {
       throw new ValidationError(
         `Your ${found.label} is in the body — keep contact data in Personal info`,
       );
     }
-    const loaded = await this.loadProfile();
     if (loaded && containsFullName([text], loaded.fullName)) {
       throw new ValidationError(RESUME_FULL_NAME);
     }

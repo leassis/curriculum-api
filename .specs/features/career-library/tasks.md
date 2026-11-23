@@ -896,6 +896,9 @@ Proof: run unit | ✓ resume service > tells the model to return every kept kind
 **C84** - A Tailored Resume holding 200 items answers 400 "The resume is limited to 200 items" to an added item and to Add back, and the document stays unchanged (CLIB-13, CLIB-08, Edge Cases)
 Proof: run unit | ✓ resume service item limit > answers 400 with the 200 item message and leaves the document unchanged on add and add back
 
+**C85** - Eight simultaneous changes to one Tailored Resume, more than the pool holds, all succeed within the default connect timeout and the stored document is one of the submitted edits (CLIB-13, concurrency edge case)
+Proof: run int | ✓ admin resumes left out routes > answers every one of more simultaneous changes than the pool holds without a pool timeout
+
 ---
 
 ## Handoff
