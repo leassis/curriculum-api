@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { TailorOutputSchema } from "../../../../src/services/tailor/output";
+import { annotate, TailorOutputSchema } from "../../../../src/services/tailor/output";
+import { item, sampleLibrary } from "../../../support/career";
 
 type Node = Record<string, unknown>;
 
@@ -48,12 +49,41 @@ describe("tailor output schema", () => {
 
   it("accepts a well-formed reply and rejects a missing field", () => {
     const ok = {
-      sections: [{ source_id: "s1", text: "t" }],
-      items: [{ source_item_id: "i1", text: "", bullets: ["b"] }],
+      headline: "h",
+      summary: "s",
+      items: [{ source_id: "c1", text: "", bullets: ["b"] }],
     };
     expect(TailorOutputSchema.safeParse(ok).success).toBe(true);
     expect(
-      TailorOutputSchema.safeParse({ ...ok, items: [{ source_item_id: "i1", text: "" }] }).success,
+      TailorOutputSchema.safeParse({ ...ok, items: [{ source_id: "c1", text: "" }] }).success,
     ).toBe(false);
+    expect(TailorOutputSchema.safeParse({ ...ok, headline: undefined }).success).toBe(false);
+    expect(TailorOutputSchema.safeParse({ ...ok, summary: undefined }).success).toBe(false);
+  });
+
+  it("describes the id the model must return as the bracketed id after a title", () => {
+    const items = (json.properties as Record<string, Node>).items as Node;
+    const props = (items.items as Node).properties as Record<string, Node>;
+    expect(Object.keys(props)).toEqual(["source_id", "text", "bullets"]);
+    expect(props.source_id?.description).toContain("in brackets");
+  });
+});
+
+describe("annotate", () => {
+  it("numbers items c1..cn in library order", () => {
+    const lib = sampleLibrary().items;
+    const ids = annotate(lib);
+    expect([...ids.values()]).toEqual(lib.map((_, n) => `c${n + 1}`));
+    expect([...ids.keys()]).toEqual(lib.map((i) => i.id));
+  });
+
+  it("is empty for an empty library", () => {
+    expect(annotate([]).size).toBe(0);
+  });
+
+  it("numbers per call from one regardless of kind", () => {
+    const a = item("honour");
+    const b = item("experience");
+    expect(annotate([a, b]).get(b.id)).toBe("c2");
   });
 });

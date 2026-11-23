@@ -168,15 +168,16 @@ describe("llm service generate object", () => {
   const objectReq = {
     area: "tailor" as const,
     system: "Tailor the CV.",
-    body: "## Experience [s0]\n### Engineer [i1]",
+    body: "## Experience\n### Engineer [c1]",
     input: "Today's date: 2026-11-23",
     maxOutputTokens: 600,
     schema: TailorOutputSchema,
     schemaName: "tailored_resume",
   };
   const reply = {
-    sections: [{ source_id: "s0", text: "Lead" }],
-    items: [{ source_item_id: "i1", text: "Did things", bullets: ["One"] }],
+    headline: "Engineer",
+    summary: "Lead",
+    items: [{ source_id: "c1", text: "Did things", bullets: ["One"] }],
   };
 
   it("returns the parsed object and the model through a structured model", async () => {
@@ -186,7 +187,7 @@ describe("llm service generate object", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]?.structured).toBe(true);
     expect(calls[0]?.maxOutputTokens).toBe(600);
-    expect(calls[0]?.prompt).toContain("<cv>\n## Experience [s0]");
+    expect(calls[0]?.prompt).toContain("<cv>\n## Experience");
     expect(logs.find((l) => l.message === "llm call")?.data).toMatchObject({
       model: "vendor/public-model",
       inputTokens: 3,
@@ -203,11 +204,10 @@ describe("llm service generate object", () => {
     expect(sent?.name).toBe("tailored_resume");
     const props = properties(sent?.schema);
     expect(props.map((p) => p.path)).toEqual([
-      "sections",
-      "sections[].source_id",
-      "sections[].text",
+      "headline",
+      "summary",
       "items",
-      "items[].source_item_id",
+      "items[].source_id",
       "items[].text",
       "items[].bullets",
     ]);
@@ -224,7 +224,7 @@ describe("llm service generate object", () => {
   });
 
   it("tells invalid output apart from an outage", async () => {
-    for (const text of ["not json", JSON.stringify({ sections: [] }), '{"sections": [}']) {
+    for (const text of ["not json", JSON.stringify({ items: [] }), '{"sections": [}']) {
       const { llm } = await setup({ text });
       await expect(llm.generateObject(objectReq)).rejects.toBeInstanceOf(LlmOutputInvalidError);
     }
