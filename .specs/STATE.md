@@ -58,6 +58,14 @@
 - **Date**: 2026-11-23
 - **Status**: active
 
+### AD-008
+- **Decision**: Tailored Resumes are stored only as JSON (`structured jsonb`, a versioned Resume Document of sections and items); the markdown `content` column is dropped and existing generated content is discarded (rows, inputs and recruiter links kept). The Owner edits the JSON through a structured form. Print View, markdown download and recruiter-chat context are rendered from the JSON. The Master CV stays markdown and is parsed into items (AD-006). Built as its own feature `structured-resume`, before `honest-assessment`.
+- **Reason**: User: "at resumes we are phasing out markdowns. it should be only JSON and we edit the JSON" — opens custom PDF versions. Then chose "Split: structured-resume first", "Structured form", "Drop them" for old resumes, and Print View, markdown download, recruiter context rendered from JSON.
+- **Trade-off**: Existing tailored resume texts are lost (regenerate); dropping a column is a production schema change that needs its own go-ahead at deploy.
+- **Scope**: `structured-resume`, `honest-assessment`; `tailored_resumes`, `resume.service.ts`, `src/admin/resumes/`, recruiter chat context, print.
+- **Date**: 2026-11-23
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: `foundation`, Execute phase: T1-T35 done, one commit each on `main` (local, nothing pushed).
