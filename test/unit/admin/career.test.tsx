@@ -166,6 +166,11 @@ describe("career cards item form", () => {
     (<ItemForm form={formFor(kind)} url={URL} />).toString();
   const labels = (markup: string) => tags(markup, "label").map((l) => l.text);
 
+  it("draws the ongoing box as a round muted control", () => {
+    const label = tags(html("project"), "label").find((l) => l.text.includes("Ongoing"));
+    expect(label?.attrs.class).toContain("career-ongoing");
+  });
+
   it("shows the kind fields and its ongoing label", () => {
     expect(labels(html("project"))).toEqual([
       "Project",

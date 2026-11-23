@@ -104,7 +104,7 @@ export const ItemForm = ({ form, url }: { form: FormView; url: string }) => {
             <FieldControl field={field} form={form} />
           </div>
           {field.name === "endMonth" && form.ongoing ? (
-            <label class="check career-wide">
+            <label class="check career-wide career-ongoing">
               <input
                 type="checkbox"
                 name="current"

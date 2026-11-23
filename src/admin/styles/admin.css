@@ -408,6 +408,12 @@
   .career-wide {
     @apply col-span-2;
   }
+  .career-ongoing {
+    @apply text-muted;
+  }
+  .career-ongoing input {
+    @apply size-5 cursor-pointer appearance-none rounded-full border border-muted bg-surface checked:border-primary checked:bg-primary checked:shadow-[inset_0_0_0_3px_var(--color-surface)];
+  }
   .career-actions {
     @apply flex items-center justify-end gap-6;
   }
