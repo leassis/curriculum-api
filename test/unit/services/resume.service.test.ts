@@ -895,3 +895,66 @@ describe("resume service save", () => {
     });
   });
 });
+
+describe("resume service outputs", () => {
+  const MARKDOWN = [
+    "Backend engineer with 10 years of experience.",
+    "## Experience",
+    "### Staff Engineer — Globex (2020-2024)",
+    "Led the platform team.",
+    "- Cut p99 latency by 40%\n- Mentored **six** engineers",
+    "### Engineer — Initech (2016-2020)",
+    "- Built the billing service",
+    "## Education",
+    "### BSc Computer Science — State University",
+    "2012-2016",
+  ].join("\n\n");
+
+  const stored = async (structured: unknown) => {
+    const setup = await resumeSetup();
+    await setup.addField("EMAIL", "Email", "ada@example.com", 1);
+    await setup.addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const { id } = await setup.resumes.create({ ...draft, headerKeys: ["EMAIL"] });
+    await setup.repo.update(id, { structured });
+    return { ...setup, id };
+  };
+
+  it("print view renders the document", async () => {
+    const { resumes, id } = await stored(sampleDocument());
+    const data = await resumes.printData(id);
+    expect(data.empty).toBe(false);
+    expect(data.fullName).toBe(FULL_NAME);
+    expect(data.header.map((h) => `${h.label}: ${h.value}`)).toEqual(["Email: ada@example.com"]);
+    const html = data.bodyHtml;
+    expect(html).toContain("<p>Backend engineer with 10 years of experience.</p>");
+    expect(html.match(/<h2>/g)).toHaveLength(2);
+    expect(html).toContain("<h2>Experience</h2>");
+    expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
+    expect(html).toContain("<li>Cut p99 latency by 40%</li>");
+    expect(html).toContain("<strong>six</strong>");
+    expect(html).toContain("<h3>BSc Computer Science — State University</h3>");
+    const at = (s: string) => html.indexOf(s);
+    expect(at("<h2>Experience</h2>")).toBeLessThan(at("Globex"));
+    expect(at("Globex")).toBeLessThan(at("Initech"));
+    expect(at("Initech")).toBeLessThan(at("<h2>Education</h2>"));
+  });
+
+  it("markdown download renders the document", async () => {
+    const { resumes, id } = await stored(sampleDocument());
+    const { text, filename } = await resumes.download(id);
+    expect(text).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\n${MARKDOWN}\n`);
+    expect(filename).toBe("backend-at-acme.md");
+  });
+
+  it("print and download show the empty state without a document", async () => {
+    for (const structured of [null, { version: 1, sections: [{ kind: "nope" }] }]) {
+      const { resumes, id } = await stored(structured);
+      const data = await resumes.printData(id);
+      expect(data.empty).toBe(true);
+      expect(data.bodyHtml).toBe("");
+      expect(data.warnings).toEqual([]);
+      expect(data.header.map((h) => h.key)).toEqual(["EMAIL"]);
+      expect((await resumes.download(id)).text).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\n`);
+    }
+  });
+});

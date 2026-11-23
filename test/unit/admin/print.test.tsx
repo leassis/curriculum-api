@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { documentForm, textForm } from "../../support/resume-document";
+import { documentForm, textDocument, textForm } from "../../support/resume-document";
 import { FULL_NAME, resumeApp } from "../../support/resumes";
 
 async function withResume(opts: Parameters<typeof resumeApp>[0] = {}) {
@@ -102,7 +102,7 @@ describe("admin print", () => {
     const { get, repo, id } = await withResume();
     // Saved before the value existed in Personal info, so only the print guard sees it.
     const row = repo.rows[0];
-    if (row) row.content = "Mail me at ada@example.com";
+    if (row) row.structured = textDocument("Mail me at ada@example.com");
     const html = await (await get(`/admin/resumes/${id}/print`)).text();
     expect(html).toMatch(/class="screen-only banner" role="alert"/);
     expect(html).toContain("Email");

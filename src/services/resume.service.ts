@@ -103,6 +103,10 @@ function stripDocument(doc: ResumeDocument): ResumeDocument {
   };
 }
 
+/** The markdown of a resume's document; empty when it has none or it is invalid. */
+const markdownOf = (resume: Resume): string =>
+  resume.document ? renderResumeMarkdown(resume.document) : "";
+
 /** One model call, then one more when its output is rejected. */
 const TAILOR_ATTEMPTS = 2;
 
@@ -310,8 +314,6 @@ export class ResumeService {
     }
     return this.update(id, {
       structured: checked.doc,
-      // Kept in step until print and download render from the document.
-      content: renderResumeMarkdown(checked.doc),
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),
@@ -346,7 +348,7 @@ export class ResumeService {
     const items = await this.personalInfo.contactFor("print");
     const selected = resume.headerFields;
     const header = selected === null ? items : items.filter((i) => selected.includes(i.key));
-    return this.buildPrint(header, resume.content, items);
+    return this.buildPrint(header, markdownOf(resume), items);
   }
 
   async profilePrintData(): Promise<PrintData> {
@@ -361,7 +363,7 @@ export class ResumeService {
     const lines = [`# ${data.fullName}`, ...data.header.map((h) => `${h.label}: ${h.value}`)];
     return {
       filename: `${slugify(resume.title)}.md`,
-      text: `${lines.join("\n")}\n\n${resume.content}`,
+      text: `${lines.join("\n")}\n\n${markdownOf(resume)}`,
     };
   }
 

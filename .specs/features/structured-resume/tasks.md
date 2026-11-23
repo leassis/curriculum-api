@@ -426,8 +426,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests 1:1 to Outputs AC 2, 3, 6
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests 1:1 to Outputs AC 2, 3, 6
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
