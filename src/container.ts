@@ -57,7 +57,7 @@ export function createContainer(config: ResolvedConfig): Services {
   return {
     config,
     profile,
-    career: new CareerService(repos.career, personalInfo, profile),
+    career: new CareerService(repos.career, personalInfo, profile, llm),
     settings,
     personalInfo,
     llm,

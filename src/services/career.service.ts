@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { findPii } from "../llm/pii-guard.js";
+import { dataBlock } from "../llm/data-block.js";
+import { IMPORT_PROMPT } from "../llm/import-prompt.js";
+import { findPii, type PiiField, redactPii } from "../llm/pii-guard.js";
 import type { CareerRepo } from "../repositories/career.repository.js";
 import { itemFromForm } from "./career/form.js";
 import {
@@ -9,11 +11,16 @@ import {
   type Kind,
   normalizeItem,
 } from "./career/item.js";
+import { parseItemsMarkdown, renderItemsMarkdown } from "./career/markdown.js";
 import { addItem, type Direction, moveItem, removeItem, replaceItem } from "./career/ops.js";
 import { NotFoundError, ValidationError } from "./errors.js";
+import type { LlmService } from "./llm.service.js";
 import type { PersonalInfoService } from "./personal-info.service.js";
 import type { ProfileService } from "./profile.service.js";
 
+const IMPORT_MAX_CHARS = 50_000;
+const IMPORT_MAX_OUTPUT_TOKENS = 8000;
+const FENCE = /^```[\w-]*\r?\n([\s\S]*?)\r?\n```$/;
 const NOT_FOUND = "Career item not found";
 const FULL_NAME_MESSAGE = "Your full name is in the library — it is added when printed";
 
@@ -38,6 +45,7 @@ export class CareerService {
     private readonly repo: CareerRepo,
     private readonly personalInfo: PersonalInfoService,
     private readonly profile: ProfileService,
+    private readonly llm: LlmService,
   ) {}
 
   async library(): Promise<CareerLibrary> {
@@ -69,6 +77,37 @@ export class CareerService {
     await this.write((items) => removeItem(items, id) ?? notFound());
   }
 
+  async markdown(): Promise<string> {
+    return renderItemsMarkdown((await this.library()).items);
+  }
+
+  async saveMarkdown(markdown: string): Promise<void> {
+    await this.write((existing) => {
+      const parsed = parseItemsMarkdown(markdown, existing);
+      if (!parsed.ok) throw new ValidationError(`line ${parsed.line}: ${parsed.reason}`);
+      return parsed.items;
+    });
+  }
+
+  async importText(text: string): Promise<string> {
+    if (text.trim() === "") throw new ValidationError("Paste some text to import");
+    if (text.length > IMPORT_MAX_CHARS) {
+      throw new ValidationError(`Text is limited to ${IMPORT_MAX_CHARS} characters`);
+    }
+    const fields: PiiField[] = [...(await this.personalInfo.allValues())];
+    const fullName = await this.fullName();
+    if (fullName) fields.push({ key: "FULL_NAME", label: "Full name", value: fullName });
+    const { text: reply } = await this.llm.generate({
+      area: "import",
+      system: IMPORT_PROMPT,
+      body: "",
+      input: dataBlock("CV_TEXT", redactPii(text, fields)),
+      maxOutputTokens: IMPORT_MAX_OUTPUT_TOKENS,
+    });
+    const trimmed = reply.trim();
+    return FENCE.exec(trimmed)?.[1] ?? trimmed;
+  }
+
   private async write(change: (items: CareerItem[]) => CareerItem[]): Promise<void> {
     await this.repo.update(async (current) => {
       const before = parseLibrary(current).items;
@@ -95,7 +134,7 @@ export class CareerService {
           `Your ${found.label} is in the body — keep contact data in Personal info`,
         );
       }
-      if (fullName && strings.toLowerCase().includes(fullName)) {
+      if (fullName && strings.toLowerCase().includes(fullName.toLowerCase())) {
         throw new ValidationError(FULL_NAME_MESSAGE);
       }
     }
@@ -103,7 +142,7 @@ export class CareerService {
 
   private async fullName(): Promise<string> {
     try {
-      return (await this.profile.get()).fullName.trim().toLowerCase();
+      return (await this.profile.get()).fullName.trim();
     } catch (error) {
       if (error instanceof NotFoundError) return "";
       throw error;

@@ -323,8 +323,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Markdown AC 3, 5-7 at the service and Import AC 2-7, recorded prompt holds no Personal Info value or full name
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Markdown AC 3, 5-7 at the service and Import AC 2-7, recorded prompt holds no Personal Info value or full name
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
