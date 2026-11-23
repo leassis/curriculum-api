@@ -174,8 +174,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit test: `z.toJSONSchema(TailorOutputSchema)` has a description on every property and no `maxLength`/`maxItems`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test: `z.toJSONSchema(TailorOutputSchema)` has a description on every property and no `maxLength`/`maxItems`
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
