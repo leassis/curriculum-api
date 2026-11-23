@@ -222,7 +222,6 @@ describe("recruiter chat", () => {
     const id = "00000000-0000-4000-8000-000000000042";
     s.repo.resumes.set(id, {
       title: "R",
-      content: "",
       structured: textDocument("Resume-only text."),
     });
     const chat = await s.newChat({ tailoredResumeId: id });

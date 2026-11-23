@@ -29,6 +29,13 @@
       "when": 1795444749933,
       "tag": "0003_zippy_frank_castle",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795446915320,
+      "tag": "0004_woozy_bloodaxe",
+      "breakpoints": true
     }
   ]
 }

@@ -48,17 +48,18 @@ describe("resume repository", () => {
       title: "T",
       company: "Acme",
       jobDescription: "JD",
-      content: "",
       model: null,
+      structured: null,
       headerFields: null,
     });
+    expect(created).not.toHaveProperty("content");
     expect(await repo.find(created.id)).toMatchObject({ id: created.id });
     expect(await repo.find("00000000-0000-4000-8000-000000000000")).toBeNull();
 
-    const updated = await repo.update(created.id, { content: "# Body", model: "m/x" });
-    expect(updated).toMatchObject({ content: "# Body", model: "m/x" });
+    const updated = await repo.update(created.id, { structured: sampleDocument(), model: "m/x" });
+    expect(updated).toMatchObject({ structured: sampleDocument(), model: "m/x" });
     expect(updated?.updatedAt.getTime()).toBeGreaterThan(created.updatedAt.getTime());
-    expect(await repo.update("00000000-0000-4000-8000-000000000000", { content: "x" })).toBeNull();
+    expect(await repo.update("00000000-0000-4000-8000-000000000000", { model: "x" })).toBeNull();
 
     expect(await repo.delete(created.id)).toBe(true);
     expect(await repo.delete(created.id)).toBe(false);
@@ -80,8 +81,8 @@ describe("resume repository", () => {
     expect(created.customInstructions).toBe("One page");
     const replaced = await repo.update(created.id, { customInstructions: "Lead with platform" });
     expect(replaced?.customInstructions).toBe("Lead with platform");
-    const kept = await repo.update(created.id, { content: "# Body" });
-    expect(kept).toMatchObject({ content: "# Body", customInstructions: "Lead with platform" });
+    const kept = await repo.update(created.id, { model: "m/y" });
+    expect(kept).toMatchObject({ model: "m/y", customInstructions: "Lead with platform" });
   });
 
   it("stores null and array header fields", async () => {

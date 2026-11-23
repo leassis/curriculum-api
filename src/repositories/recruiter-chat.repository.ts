@@ -47,8 +47,6 @@ export interface RecruiterChatRepo {
   /** Gives one question back; never goes below zero. */
   release(id: string): Promise<void>;
   touch(id: string): Promise<void>;
-  /** Content of a Tailored Resume, or null when the id is null or the resume is gone. */
-  resumeContent(id: string | null): Promise<string | null>;
   /** Raw stored Resume Document of a Tailored Resume; null when the id or the document is null or the resume is gone. */
   resumeDocument(id: string | null): Promise<unknown>;
   resumeExists(id: string): Promise<boolean>;
@@ -147,15 +145,6 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
       .update(recruiterChats)
       .set({ lastUsedAt: sql`now()` })
       .where(eq(recruiterChats.id, id));
-  }
-
-  async resumeContent(id: string | null): Promise<string | null> {
-    if (id === null) return null;
-    const [row] = await this.db
-      .select({ content: tailoredResumes.content })
-      .from(tailoredResumes)
-      .where(eq(tailoredResumes.id, id));
-    return row?.content ?? null;
   }
 
   async resumeDocument(id: string | null): Promise<unknown> {

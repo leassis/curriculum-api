@@ -24,7 +24,6 @@ export class FakeResumeRepo implements ResumeRepo {
     const row: ResumeRow = {
       id: `00000000-0000-4000-8000-${String(this.tick).padStart(12, "0")}`,
       ...input,
-      content: "",
       headerFields: input.headerFields ?? null,
       model: null,
       structured: null,
@@ -39,7 +38,6 @@ export class FakeResumeRepo implements ResumeRepo {
     const index = this.rows.findIndex((r) => r.id === id);
     if (index < 0) return null;
     const next = { ...(this.rows[index] as ResumeRow) };
-    if (patch.content !== undefined) next.content = patch.content;
     if (patch.model !== undefined) next.model = patch.model;
     if (patch.structured !== undefined) next.structured = structuredClone(patch.structured);
     if (patch.customInstructions !== undefined) next.customInstructions = patch.customInstructions;

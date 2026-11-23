@@ -511,9 +511,11 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Integration test `structured-migration`: row inserted at `0003` keeps id, title, company, JD, instructions, header fields and recruiter link after `0004`; `content` column gone; `model` NULL
-- [ ] `grep -rn "\.content\b" src/services/resume.service.ts src/admin/resumes` finds nothing about resumes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration test `structured-migration`: row inserted at `0003` keeps id, title, company, JD, instructions, header fields and recruiter link after `0004`; `content` column gone; `model` NULL
+- [x] `grep -rn "\.content\b" src/services/resume.service.ts src/admin/resumes` finds nothing about resumes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+
+**Status**: ✅ Complete
 
 **Tests**: integration
 **Gate**: full

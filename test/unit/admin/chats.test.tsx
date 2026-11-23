@@ -61,7 +61,6 @@ describe("admin chats", () => {
     const s = await adminChats();
     s.repo.resumes.set("00000000-0000-4000-8000-000000000042", {
       title: "Backend <at> Acme",
-      content: "c",
     });
     const html = await (await s.get("/admin/chats")).text();
     expect(html).toContain("Backend &lt;at&gt; Acme");

@@ -269,14 +269,14 @@ describe("admin resumes custom instructions", () => {
       [tooLong, length],
       [leak, pii],
     ] as const) {
-      const saved = await put(`/admin/resumes/${id}`, { content: "x", customInstructions });
+      const saved = await put(`/admin/resumes/${id}`, { ...textForm("x"), customInstructions });
       expect(saved.status).toBe(400);
       expect(await saved.text()).toContain(message);
       const generated = await post(`/admin/resumes/${id}/generate`, { customInstructions });
       expect(generated.status).toBe(400);
       expect(await generated.text()).toContain(message);
     }
-    expect(repo.rows[0]).toMatchObject({ content: "", customInstructions: "" });
+    expect(repo.rows[0]).toMatchObject({ structured: null, customInstructions: "" });
   });
 
   it("generate saves the posted custom instructions", async () => {
@@ -398,7 +398,7 @@ describe("admin resumes create flow", () => {
     expect(res.status).toBe(303);
     expect(repo.rows).toHaveLength(1);
     expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=generate`);
-    expect(repo.rows[0]).toMatchObject({ content: "", model: null, headerFields: ["EMAIL"] });
+    expect(repo.rows[0]).toMatchObject({ structured: null, model: null, headerFields: ["EMAIL"] });
   });
 
   it("keeps the resume and redirects with error master-cv when the master cv is empty", async () => {
@@ -407,7 +407,7 @@ describe("admin resumes create flow", () => {
     expect(res.status).toBe(303);
     expect(repo.rows).toHaveLength(1);
     expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=master-cv`);
-    expect(repo.rows[0]).toMatchObject({ content: "", model: null });
+    expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
     expect(calls).toHaveLength(0);
   });
 

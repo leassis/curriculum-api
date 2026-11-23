@@ -32,7 +32,8 @@ describe("resume service", () => {
     });
     expect(repo.inserts).toBe(0);
     const created = await resumes.create({ title: " T ", jobDescription: "jd", company: " " });
-    expect(created).toMatchObject({ title: "T", company: null, content: "" });
+    expect(created).toMatchObject({ title: "T", company: null, document: null, invalid: false });
+    expect(created).not.toHaveProperty("content");
   });
 
   it("answers not found for an unknown or malformed id", async () => {

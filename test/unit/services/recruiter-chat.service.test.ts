@@ -41,7 +41,7 @@ describe("recruiter chat service", () => {
 
   it("rejects invalid input naming the field and creates nothing", async () => {
     const { recruiterChat, repo, newChat } = await recruiterSetup();
-    repo.resumes.set("00000000-0000-4000-8000-000000000099", { title: "T", content: "c" });
+    repo.resumes.set("00000000-0000-4000-8000-000000000099", { title: "T" });
     const cases: [Record<string, unknown>, string][] = [
       [{ recruiterName: " " }, "recruiterName"],
       [{ jobDescriptionShort: "x".repeat(2001) }, "jobDescriptionShort"],
@@ -149,7 +149,6 @@ describe("recruiter chat service", () => {
     const resumeId = "00000000-0000-4000-8000-000000000042";
     repo.resumes.set(resumeId, {
       title: "Tailored",
-      content: "",
       structured: textDocument("Tailored body about Postgres."),
     });
     const chat = await newChat({ tailoredResumeId: resumeId });
@@ -171,7 +170,7 @@ describe("recruiter chat service", () => {
   it("falls back to the master cv when the resume is missing or empty", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const emptyId = "00000000-0000-4000-8000-000000000043";
-    repo.resumes.set(emptyId, { title: "Empty", content: "", structured: null });
+    repo.resumes.set(emptyId, { title: "Empty", structured: null });
     const empty = await newChat({ tailoredResumeId: emptyId });
     await recruiterChat.ask(empty, messages);
     const plain = await newChat({ tailoredResumeId: undefined });
@@ -183,7 +182,7 @@ describe("recruiter chat service", () => {
   it("sends the linked resume document rendered as markdown", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const resumeId = "00000000-0000-4000-8000-000000000044";
-    repo.resumes.set(resumeId, { title: "Tailored", content: "", structured: sampleDocument() });
+    repo.resumes.set(resumeId, { title: "Tailored", structured: sampleDocument() });
     const chat = await newChat({ tailoredResumeId: resumeId });
     await readAll((await recruiterChat.ask(chat, messages)).stream);
     const system = calls[0]?.system ?? "";
@@ -215,14 +214,13 @@ describe("recruiter chat service", () => {
       ["00000000-0000-4000-8000-000000000047", { version: 1, sections: [] }],
     ] as const;
     for (const [id, structured] of cases) {
-      repo.resumes.set(id, { title: "R", content: "Stale markdown text", structured });
+      repo.resumes.set(id, { title: "R", structured });
       const chat = await newChat({ tailoredResumeId: id });
       await readAll((await recruiterChat.ask(chat, messages)).stream);
     }
     expect(calls).toHaveLength(3);
     for (const call of calls) {
       expect(call.system).toContain(`<cv>\n${CV}\n</cv>`);
-      expect(call.system).not.toContain("Stale markdown text");
       expect(call.system).not.toContain("Staff Engineer");
     }
   });

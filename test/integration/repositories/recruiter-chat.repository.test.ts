@@ -131,16 +131,13 @@ describe("recruiter chat repository", () => {
     expect((left as unknown as { rows: { n: number }[] }).rows[0]?.n).toBe(0);
   });
 
-  it("reads the linked resume content and lists resume titles", async () => {
+  it("lists resume titles and unlinks a deleted resume", async () => {
     const resume = await resumes.insert({
       title: "Backend",
       company: null,
       jobDescription: "jd",
       customInstructions: "",
     });
-    await resumes.update(resume.id, { content: "Tailored text" });
-    expect(await repo.resumeContent(resume.id)).toBe("Tailored text");
-    expect(await repo.resumeContent(null)).toBeNull();
     expect(await repo.resumeExists(resume.id)).toBe(true);
     expect(await repo.resumeExists("00000000-0000-4000-8000-00000000ffff")).toBe(false);
     expect(await repo.resumeOptions()).toEqual([{ id: resume.id, title: "Backend" }]);

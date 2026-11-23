@@ -12,7 +12,6 @@ export interface ResumeInsert {
   headerFields?: string[] | null;
 }
 export interface ResumePatch {
-  content?: string;
   model?: string | null;
   /** The Resume Document, already validated by the service; stored as jsonb. */
   structured?: unknown;
