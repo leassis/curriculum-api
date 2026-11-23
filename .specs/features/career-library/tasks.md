@@ -807,7 +807,7 @@ Proof: run int | ✓ career migration > drops the master cv and discards v1 docu
 The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none
-**Dispatched:** batch 1 (T1-T7) -> sonnet sub-agent, 2026-11-23
+**Dispatched:** batch 1 (T1-T7) done; batch 2 (T8-T13) -> sonnet sub-agent, 2026-11-23
 **Walked:** none
 
 ---
