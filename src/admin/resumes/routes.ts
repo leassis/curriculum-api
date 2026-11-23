@@ -12,6 +12,9 @@ const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
 const optionalText = (value: unknown) => (typeof value === "string" ? value : undefined);
 
+const headerKeys = (fields: unknown): string[] =>
+  (Array.isArray(fields) ? fields : [fields]).filter((k): k is string => typeof k === "string");
+
 /** Mounted at `/admin`. */
 export const resumesRouter = new Hono<Env>();
 
@@ -22,14 +25,18 @@ resumesRouter.get("/resumes", async (c) =>
 );
 
 resumesRouter.post("/resumes", async (c) => {
-  const body = await c.req.parseBody();
-  const resume = await c.var.services.resumes.create({
-    title: text(body.title),
-    company: text(body.company),
-    jobDescription: text(body.jobDescription),
-    customInstructions: text(body.customInstructions),
+  const body = await c.req.parseBody({ all: true });
+  const first = (value: unknown) => text(Array.isArray(value) ? value[0] : value);
+  const { resume, error } = await c.var.services.resumes.createAndGenerate({
+    title: first(body.title),
+    company: first(body.company),
+    jobDescription: first(body.jobDescription),
+    customInstructions: first(body.customInstructions),
+    // The marker tells "every box unchecked" apart from a form without the fieldset.
+    headerKeys: body.headerFieldsPosted === undefined ? undefined : headerKeys(body.headerFields),
   });
-  return c.redirect(`${c.var.config.basePath}/admin/resumes/${resume.id}`, 303);
+  const query = error ? `?error=${error}` : "";
+  return c.redirect(`${c.var.config.basePath}/admin/resumes/${resume.id}${query}`, 303);
 });
 
 resumesRouter.delete("/resumes/:id", async (c) => {
@@ -78,10 +85,7 @@ resumesRouter.post("/resumes/:id/preview", async (c) => {
 
 resumesRouter.put("/resumes/:id", async (c) => {
   const body = await c.req.parseBody({ all: true });
-  const fields = body.headerFields;
-  const keys = (Array.isArray(fields) ? fields : [fields]).filter(
-    (k): k is string => typeof k === "string",
-  );
+  const keys = headerKeys(body.headerFields);
   const content = Array.isArray(body.content) ? text(body.content[0]) : text(body.content);
   await c.var.services.resumes.save(
     c.req.param("id"),

@@ -107,14 +107,14 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Unit tests C3, C4, C8 (route), C9, C10 route rows pass
-- [ ] `admin resumes > creates a resume and redirects with 303` updated to the new redirect and passes
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C3, C4, C8 (route), C9, C10 route rows pass
+- [x] `admin resumes > creates a resume and redirects with 303` updated to the new redirect and passes
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(admin): generate on resume create`
-**Status**: ⬜ Pending
+**Status**: ✅ Complete
 
 ---
 

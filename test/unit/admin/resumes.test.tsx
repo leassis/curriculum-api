@@ -35,7 +35,11 @@ describe("admin resumes", () => {
     const res = await post("/admin/resumes", newResume);
     expect(res.status).toBe(303);
     expect(repo.rows).toHaveLength(1);
-    expect(repo.rows[0]).toMatchObject({ title: "Backend at Acme", content: "", company: "Acme" });
+    expect(repo.rows[0]).toMatchObject({
+      title: "Backend at Acme",
+      content: "# Tailored body",
+      company: "Acme",
+    });
     expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}`);
   });
 
@@ -304,5 +308,80 @@ describe("admin resumes custom instructions", () => {
     const button = html.match(/<button[^>]*hx-post="[^"]*\/generate"[^>]*>/)?.[0] ?? "";
     expect(button).toContain('hx-include="#custom-instructions"');
     expect(html.match(/id="custom-instructions"/g)).toHaveLength(1);
+  });
+});
+
+describe("admin resumes create flow", () => {
+  it("create generates and redirects to the editor", async () => {
+    const { post, repo, calls } = await resumeApp();
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}`);
+    expect(repo.rows).toHaveLength(1);
+    expect(repo.rows[0]).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("editor after create holds the generated content", async () => {
+    const { post, get, repo } = await resumeApp({ mock: { text: "## Fresh <b>body</b>" } });
+    const res = await post("/admin/resumes", newResume);
+    const html = await (await get(res.headers.get("location") ?? "")).text();
+    expect(html).toContain("## Fresh &lt;b&gt;body&lt;/b&gt;</textarea>");
+    expect(html).toContain("<h2>Fresh &lt;b&gt;body&lt;/b&gt;</h2>");
+    expect(repo.rows[0]?.content).toBe("## Fresh <b>body</b>");
+  });
+
+  it("answers 400 and stores nothing for invalid input", async () => {
+    const { post, repo, calls, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const cases: [Record<string, string>, string][] = [
+      [{ ...newResume, title: " " }, "Title is required"],
+      [{ ...newResume, jobDescription: "" }, "Job Description is required"],
+      [{ ...newResume, customInstructions: "x".repeat(2001) }, "at most 2000 characters"],
+      [{ ...newResume, customInstructions: "mail ada@example.com" }, "Your Email is in the custom"],
+    ];
+    for (const [fields, message] of cases) {
+      const res = await post("/admin/resumes", fields);
+      expect(res.status).toBe(400);
+      expect(await res.text()).toContain(message);
+    }
+    expect(repo.rows).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps the resume and redirects with error generate when the llm fails", async () => {
+    const { post, repo, addField } = await resumeApp({ factory: failingFactory });
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const res = await post("/admin/resumes", {
+      ...newResume,
+      headerFieldsPosted: "1",
+      headerFields: ["EMAIL"],
+    });
+    expect(res.status).toBe(303);
+    expect(repo.rows).toHaveLength(1);
+    expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=generate`);
+    expect(repo.rows[0]).toMatchObject({ content: "", model: null, headerFields: ["EMAIL"] });
+  });
+
+  it("keeps the resume and redirects with error master-cv when the master cv is empty", async () => {
+    const { post, repo, calls } = await resumeApp({ cv: "" });
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    expect(repo.rows).toHaveLength(1);
+    expect(res.headers.get("location")).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=master-cv`);
+    expect(repo.rows[0]).toMatchObject({ content: "", model: null });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("stores the checked header keys, null for all, [] for none", async () => {
+    const { post, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const posted = { ...newResume, headerFieldsPosted: "1" };
+    await post("/admin/resumes", { ...posted, headerFields: ["PHONE", "GONE"] });
+    await post("/admin/resumes", { ...posted, headerFields: ["EMAIL", "PHONE"] });
+    await post("/admin/resumes", posted);
+    expect(repo.rows.map((r) => r.headerFields)).toEqual([["PHONE"], null, []]);
   });
 });
