@@ -1,8 +1,14 @@
+import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
-import { LlmUnavailableError, PiiLeakError } from "../../../src/services/errors";
+import {
+  LlmOutputInvalidError,
+  LlmUnavailableError,
+  PiiLeakError,
+} from "../../../src/services/errors";
 import { LlmService } from "../../../src/services/llm.service";
 import { PersonalInfoService } from "../../../src/services/personal-info.service";
 import { SettingsService } from "../../../src/services/settings.service";
+import { TailorOutputSchema } from "../../../src/services/tailor/output";
 import { resolvedConfig, TEST_PII_KEY } from "../../support/config";
 import { FakePersonalInfoRepo } from "../../support/fakes/personal-info.fake";
 import { FakeSettingsRepo } from "../../support/fakes/settings.fake";
@@ -15,7 +21,11 @@ const PHONE = "+55 11 91234-5678";
 async function setup(mock: RecordingModelOptions = {}) {
   const config = resolvedConfig({
     openrouterApiKey: API_KEY,
-    models: { public: "vendor/public-model", recruiter: "vendor/recruiter-model" },
+    models: {
+      public: "vendor/public-model",
+      recruiter: "vendor/recruiter-model",
+      tailor: "vendor/tailor-model",
+    },
   });
   const settings = new SettingsService(new FakeSettingsRepo(), config);
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY);
@@ -138,5 +148,117 @@ describe("LlmService", () => {
     ]) {
       expect(logged).not.toContain(secret);
     }
+  });
+});
+
+/** Every object property in a JSON Schema, with its path, walking nested objects and arrays. */
+function properties(schema: unknown, path = ""): { path: string; node: Record<string, unknown> }[] {
+  const node = schema as Record<string, unknown>;
+  const out: { path: string; node: Record<string, unknown> }[] = [];
+  const props = (node.properties ?? {}) as Record<string, unknown>;
+  for (const [key, child] of Object.entries(props)) {
+    const p = path ? `${path}.${key}` : key;
+    out.push({ path: p, node: child as Record<string, unknown> }, ...properties(child, p));
+  }
+  if (node.items) out.push(...properties(node.items, `${path}[]`));
+  return out;
+}
+
+describe("llm service generate object", () => {
+  const objectReq = {
+    area: "tailor" as const,
+    system: "Tailor the CV.",
+    body: "## Experience [s0]\n### Engineer [i1]",
+    input: "Today's date: 2026-11-23",
+    maxOutputTokens: 600,
+    schema: TailorOutputSchema,
+    schemaName: "tailored_resume",
+  };
+  const reply = {
+    sections: [{ source_id: "s0", text: "Lead" }],
+    items: [{ source_item_id: "i1", text: "Did things", bullets: ["One"] }],
+  };
+
+  it("returns the parsed object and the model through a structured model", async () => {
+    const { llm, calls, logs } = await setup({ text: JSON.stringify(reply) });
+    const result = await llm.generateObject({ ...objectReq, area: "public" });
+    expect(result).toEqual({ object: reply, model: "vendor/public-model" });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.structured).toBe(true);
+    expect(calls[0]?.maxOutputTokens).toBe(600);
+    expect(calls[0]?.prompt).toContain("<cv>\n## Experience [s0]");
+    expect(logs.find((l) => l.message === "llm call")?.data).toMatchObject({
+      model: "vendor/public-model",
+      inputTokens: 3,
+      outputTokens: 5,
+    });
+  });
+
+  it("sends the schema with a description on every field", async () => {
+    const { llm, calls } = await setup({ text: JSON.stringify(reply) });
+    await llm.generateObject(objectReq);
+    const format = calls[0]?.responseFormat;
+    expect(format?.type).toBe("json");
+    const sent = format?.type === "json" ? format : undefined;
+    expect(sent?.name).toBe("tailored_resume");
+    const props = properties(sent?.schema);
+    expect(props.map((p) => p.path)).toEqual([
+      "sections",
+      "sections[].source_id",
+      "sections[].text",
+      "items",
+      "items[].source_item_id",
+      "items[].text",
+      "items[].bullets",
+    ]);
+    for (const { path, node } of props) {
+      expect(typeof node.description, path).toBe("string");
+      expect((node.description as string).length, path).toBeGreaterThan(0);
+    }
+    const tree = (sent?.schema ?? {}) as {
+      properties: {
+        items: { items: { properties: { bullets: { items: { description?: string } } } } };
+      };
+    };
+    expect(tree.properties.items.items.properties.bullets.items.description).toBeTruthy();
+  });
+
+  it("tells invalid output apart from an outage", async () => {
+    for (const text of ["not json", JSON.stringify({ sections: [] }), '{"sections": [}']) {
+      const { llm } = await setup({ text });
+      await expect(llm.generateObject(objectReq)).rejects.toBeInstanceOf(LlmOutputInvalidError);
+    }
+    const config = resolvedConfig({ models: { tailor: "vendor/tailor" } });
+    const outage = new LlmService(
+      config,
+      new SettingsService(new FakeSettingsRepo(), config),
+      new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY),
+      (modelId) =>
+        new MockLanguageModelV4({
+          modelId,
+          doGenerate: async () => {
+            throw new Error("provider down");
+          },
+        }),
+      { info: () => {}, warn: () => {} },
+    );
+    const error = await outage.generateObject(objectReq).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(LlmUnavailableError);
+    expect(error).not.toBeInstanceOf(LlmOutputInvalidError);
+  });
+
+  it("refuses a body with pii without calling the provider", async () => {
+    const { llm, calls } = await setup({ text: JSON.stringify(reply) });
+    await expect(
+      llm.generateObject({ ...objectReq, body: `Mail ${EMAIL}` }),
+    ).rejects.toBeInstanceOf(PiiLeakError);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("redacts pii in the input", async () => {
+    const { llm, calls } = await setup({ text: JSON.stringify(reply) });
+    await llm.generateObject({ ...objectReq, input: `call ${PHONE}` });
+    expect(calls[0]?.prompt).toContain("call [redacted]");
+    expect(calls[0]?.prompt).not.toContain("91234");
   });
 });

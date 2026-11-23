@@ -279,8 +279,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests: object returned, schema with descriptions recorded, invalid JSON → `LlmOutputInvalidError`, provider error → `LlmUnavailableError`, PII in body → `PiiLeakError`, model called with `structured: true`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: object returned, schema with descriptions recorded, invalid JSON → `LlmOutputInvalidError`, provider error → `LlmUnavailableError`, PII in body → `PiiLeakError`, model called with `structured: true`
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick

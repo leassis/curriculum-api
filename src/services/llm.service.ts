@@ -1,9 +1,10 @@
-import { generateText, streamText } from "ai";
+import { generateText, NoObjectGeneratedError, Output, streamText } from "ai";
+import type { z } from "zod";
 import type { ResolvedConfig } from "../config.js";
 import { firstChunk } from "../llm/first-chunk.js";
 import type { ModelFactory } from "../llm/openrouter.js";
 import { findPii, type PiiField, redactPii } from "../llm/pii-guard.js";
-import { LlmUnavailableError, PiiLeakError } from "./errors.js";
+import { LlmOutputInvalidError, LlmUnavailableError, PiiLeakError } from "./errors.js";
 import type { PersonalInfoService } from "./personal-info.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { ModelArea } from "./settings-keys.js";
@@ -27,6 +28,12 @@ export interface GenerateRequest {
   body: string;
   input: string;
   maxOutputTokens: number;
+}
+
+export interface GenerateObjectRequest<T> extends GenerateRequest {
+  schema: z.ZodType<T>;
+  /** Name of the output, sent with the JSON Schema. */
+  schemaName: string;
 }
 
 export interface LlmLogger {
@@ -76,6 +83,30 @@ export class LlmService {
       this.logCall(model, result.totalUsage, started);
       return { text: result.text, model };
     } catch {
+      throw new LlmUnavailableError();
+    }
+  }
+
+  /**
+   * Structured call: the model receives the schema's JSON Schema and the reply is parsed against it.
+   * A reply that does not parse throws `LlmOutputInvalidError`; anything else `LlmUnavailableError`.
+   */
+  async generateObject<T>(req: GenerateObjectRequest<T>): Promise<{ object: T; model: string }> {
+    const { fields, instructions, model } = await this.prepare(req);
+    const started = Date.now();
+    try {
+      const result = await generateText({
+        model: this.modelFactory(model, { structured: true }),
+        instructions,
+        prompt: redactPii(req.input, fields),
+        maxOutputTokens: req.maxOutputTokens,
+        output: Output.object({ schema: req.schema, name: req.schemaName }),
+      });
+      const object = result.output as T;
+      this.logCall(model, result.totalUsage, started);
+      return { object, model };
+    } catch (error) {
+      if (NoObjectGeneratedError.isInstance(error)) throw new LlmOutputInvalidError();
       throw new LlmUnavailableError();
     }
   }

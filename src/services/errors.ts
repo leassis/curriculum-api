@@ -115,3 +115,13 @@ export class DecryptionError extends DomainError {
     this.name = "DecryptionError";
   }
 }
+
+/** The model answered, but its reply did not parse against the requested schema. */
+export class LlmOutputInvalidError extends DomainError {
+  readonly code = "llm_output_invalid";
+  readonly status = 502;
+  constructor(message = "The language model returned invalid output") {
+    super(message);
+    this.name = "LlmOutputInvalidError";
+  }
+}
