@@ -344,6 +344,9 @@
   .career-cards {
     @apply flex flex-col gap-6;
   }
+  .career-toolbar {
+    @apply flex flex-wrap items-center justify-between gap-4;
+  }
   .career-card {
     @apply flex flex-col rounded-card border border-line bg-surface px-7 py-6;
   }

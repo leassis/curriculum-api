@@ -75,3 +75,25 @@ export function gesture(control: Tag): Gesture {
   }
   throw new Error("control has no hx request");
 }
+
+/** The fields a browser would submit for `form`: inputs, checked boxes, textareas, selected options. */
+export function formFields(form: string): Record<string, string> {
+  const fields: Record<string, string> = {};
+  for (const input of voidTags(form, "input")) {
+    const { name, type, value } = input.attrs;
+    if (!name) continue;
+    if (type === "checkbox") {
+      if ("checked" in input.attrs) fields[name] = value ?? "on";
+    } else fields[name] = value ?? "";
+  }
+  for (const area of tags(form, "textarea")) {
+    if (area.attrs.name)
+      fields[area.attrs.name] = decode(area.html.replace(/^<[^>]*>|<\/textarea>$/g, ""));
+  }
+  for (const select of tags(form, "select")) {
+    if (!select.attrs.name) continue;
+    const chosen = tags(select.html, "option").find((o) => "selected" in o.attrs);
+    fields[select.attrs.name] = chosen?.attrs.value ?? "";
+  }
+  return fields;
+}

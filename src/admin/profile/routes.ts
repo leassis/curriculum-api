@@ -1,25 +1,40 @@
+import type { Context } from "hono";
 import { Hono } from "hono";
 import type { Env } from "../../env.js";
 import { findPii } from "../../llm/pii-guard.js";
-import { NotFoundError, ValidationError } from "../../services/errors.js";
-import { FIELDS, ProfilePage, type Values } from "./view.js";
+import { KINDS, type Kind } from "../../services/career/item.js";
+import { LlmUnavailableError, NotFoundError, ValidationError } from "../../services/errors.js";
+import { cardsFrom, formFor } from "../career/model.js";
+import type { FormView } from "../career/view.js";
+import { CAREER_JS } from "../static/career-js.generated.js";
+import {
+  FIELDS,
+  ImportForm,
+  LibraryCards,
+  MarkdownEditor,
+  ProfilePage,
+  type Values,
+} from "./view.js";
 
 const EMPTY: Values = {
   fullName: "",
   headline: "",
-  masterCv: "",
+  summary: "",
   publicSystemPrompt: "",
   recruiterSystemPrompt: "",
   tailorSystemPrompt: "",
 };
 
-async function currentValues(c: { var: Env["Variables"] }): Promise<Values> {
+type Ctx = Context<Env>;
+type Fields = Record<string, string>;
+
+async function currentValues(c: Ctx): Promise<Values> {
   try {
     const p = await c.var.services.profile.get();
     return {
       fullName: p.fullName,
       headline: p.headline,
-      masterCv: p.masterCv,
+      summary: p.summary,
       publicSystemPrompt: p.publicSystemPrompt,
       recruiterSystemPrompt: p.recruiterSystemPrompt,
       tailorSystemPrompt: p.tailorSystemPrompt,
@@ -30,11 +45,65 @@ async function currentValues(c: { var: Env["Variables"] }): Promise<Values> {
   }
 }
 
+async function currentCards(c: Ctx) {
+  return cardsFrom((await c.var.services.career.library()).items);
+}
+
+async function cardsFragment(c: Ctx, form?: FormView) {
+  return LibraryCards({ basePath: c.var.config.basePath, cards: await currentCards(c), form });
+}
+
+function kindOf(value: unknown): Kind {
+  const found = KINDS.find((k) => k === value);
+  if (!found) throw new ValidationError("Unknown kind");
+  return found;
+}
+
+async function fields(c: Ctx): Promise<Fields> {
+  const body = await c.req.parseBody();
+  return Object.fromEntries(
+    Object.entries(body).filter(([, v]) => typeof v === "string"),
+  ) as Fields;
+}
+
+async function findItem(c: Ctx, id: string) {
+  const item = (await c.var.services.career.library()).items.find((i) => i.id === id);
+  if (!item) throw new NotFoundError("Career item not found");
+  return item;
+}
+
+/** Runs a change and re-renders the cards; a rejected change answers 400 with the form kept open. */
+async function change(
+  c: Ctx,
+  run: () => Promise<unknown>,
+  reopen: (error: string) => Promise<FormView>,
+) {
+  try {
+    await run();
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return c.html(await cardsFragment(c, await reopen(error.message)), 400);
+    }
+    throw error;
+  }
+  return c.html(await cardsFragment(c));
+}
+
 /** Mounted at `/admin`. */
 export const profileRouter = new Hono<Env>();
 
 profileRouter.get("/profile", async (c) =>
-  c.html(ProfilePage({ basePath: c.var.config.basePath, values: await currentValues(c) })),
+  c.html(
+    ProfilePage({
+      basePath: c.var.config.basePath,
+      values: await currentValues(c),
+      cards: await currentCards(c),
+    }),
+  ),
+);
+
+profileRouter.get("/profile/career.js", (c) =>
+  c.body(CAREER_JS, 200, { "Content-Type": "text/javascript; charset=utf-8" }),
 );
 
 profileRouter.post("/profile", async (c) => {
@@ -45,21 +114,115 @@ profileRouter.post("/profile", async (c) => {
     const raw = body[f.name];
     values[f.name] = typeof raw === "string" ? raw : "";
   }
-  const reject = (message: string) =>
-    c.html(ProfilePage({ basePath, values, error: message }), 400);
+  const reject = async (message: string) =>
+    c.html(ProfilePage({ basePath, values, cards: await currentCards(c), error: message }), 400);
 
   const missing = FIELDS.find((f) => f.required && values[f.name].trim() === "");
   if (missing) return reject(`${missing.label} is required`);
 
-  const found = findPii(values.masterCv, await c.var.services.personalInfo.allValues())[0];
+  const found = findPii(
+    `${values.headline}\n${values.summary}`,
+    await c.var.services.personalInfo.allValues(),
+  )[0];
   if (found)
     return reject(`Your ${found.label} is in the body — keep contact data in Personal info`);
 
   try {
-    await c.var.services.profile.update(values);
+    const existing = await c.var.services.profile.get().catch(() => null);
+    await c.var.services.profile.update({ ...values, masterCv: existing?.masterCv ?? "" });
   } catch (error) {
     if (error instanceof ValidationError) return reject(error.message);
     throw error;
   }
-  return c.html(ProfilePage({ basePath, values, saved: true }));
+  return c.html(ProfilePage({ basePath, values, cards: await currentCards(c), saved: true }));
+});
+
+profileRouter.get("/profile/items", async (c) => c.html(await cardsFragment(c)));
+
+profileRouter.get("/profile/items/new", async (c) =>
+  c.html(await cardsFragment(c, formFor(kindOf(c.req.query("kind"))))),
+);
+
+profileRouter.get("/profile/items/:id/edit", async (c) => {
+  const item = await findItem(c, c.req.param("id"));
+  return c.html(await cardsFragment(c, formFor(item.kind, { item })));
+});
+
+profileRouter.post("/profile/items", async (c) => {
+  const body = await fields(c);
+  const kind = kindOf(body.kind);
+  return change(
+    c,
+    () => c.var.services.career.add(kind, body),
+    async (error) => formFor(kind, { values: body, error }),
+  );
+});
+
+profileRouter.put("/profile/items/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await fields(c);
+  const item = await findItem(c, id);
+  return change(
+    c,
+    () => c.var.services.career.edit(id, body),
+    async (error) => formFor(item.kind, { item, values: body, error }),
+  );
+});
+
+profileRouter.post("/profile/items/:id/move", async (c) => {
+  const { direction } = await fields(c);
+  if (direction !== "up" && direction !== "down") throw new ValidationError("Unknown direction");
+  await c.var.services.career.move(c.req.param("id"), direction);
+  return c.html(await cardsFragment(c));
+});
+
+profileRouter.delete("/profile/items/:id", async (c) => {
+  await c.var.services.career.remove(c.req.param("id"));
+  return c.html(await cardsFragment(c));
+});
+
+profileRouter.get("/profile/markdown", async (c) =>
+  c.html(
+    MarkdownEditor({
+      basePath: c.var.config.basePath,
+      markdown: await c.var.services.career.markdown(),
+    }),
+  ),
+);
+
+profileRouter.put("/profile/markdown", async (c) => {
+  const { markdown = "" } = await fields(c);
+  try {
+    await c.var.services.career.saveMarkdown(markdown);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return c.html(
+        MarkdownEditor({ basePath: c.var.config.basePath, markdown, error: error.message }),
+        400,
+      );
+    }
+    throw error;
+  }
+  return c.html(await cardsFragment(c));
+});
+
+profileRouter.get("/profile/import", (c) =>
+  c.html(ImportForm({ basePath: c.var.config.basePath, text: "" })),
+);
+
+profileRouter.post("/profile/import", async (c) => {
+  const basePath = c.var.config.basePath;
+  const { text = "" } = await fields(c);
+  try {
+    const markdown = await c.var.services.career.importText(text);
+    return c.html(MarkdownEditor({ basePath, markdown }));
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return c.html(ImportForm({ basePath, text, error: error.message }), 400);
+    }
+    if (error instanceof LlmUnavailableError) {
+      return c.html(ImportForm({ basePath, text, error: error.message }), 503);
+    }
+    throw error;
+  }
 });
