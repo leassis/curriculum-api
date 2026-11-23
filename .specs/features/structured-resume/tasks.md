@@ -321,8 +321,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Integration tests: round-trip of `sampleDocument()`; recruiter read returns it and null for no link
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration tests: round-trip of `sampleDocument()`; recruiter read returns it and null for no link
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+
+**Status**: ✅ Complete
 
 **Tests**: integration
 **Gate**: full

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { recruiterChats, tailoredResumes } from "../../../src/db/schema";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { resetDb, testDb } from "../../support/db";
+import { sampleDocument } from "../../support/resume-document";
 
 const db = testDb();
 const repo = new ResumeRepository(db);
@@ -103,5 +104,18 @@ describe("resume repository", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.id).toBe(chat?.id);
     expect(rows[0]?.tailoredResumeId).toBeNull();
+  });
+
+  it("writes and reads back the resume document", async () => {
+    const created = await repo.insert(input("doc"));
+    expect(created.structured).toBeNull();
+    const updated = await repo.update(created.id, { structured: sampleDocument(), model: "m/x" });
+    expect(updated?.structured).toEqual(sampleDocument());
+    expect((await repo.find(created.id))?.structured).toEqual(sampleDocument());
+    expect((await repo.list())[0]?.structured).toEqual(sampleDocument());
+    await repo.update(created.id, { model: "m/y" });
+    expect((await repo.find(created.id))?.structured).toEqual(sampleDocument());
+    await repo.update(created.id, { structured: null });
+    expect((await repo.find(created.id))?.structured).toBeNull();
   });
 });

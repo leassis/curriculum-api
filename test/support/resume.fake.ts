@@ -41,6 +41,7 @@ export class FakeResumeRepo implements ResumeRepo {
     const next = { ...(this.rows[index] as ResumeRow) };
     if (patch.content !== undefined) next.content = patch.content;
     if (patch.model !== undefined) next.model = patch.model;
+    if (patch.structured !== undefined) next.structured = structuredClone(patch.structured);
     if (patch.customInstructions !== undefined) next.customInstructions = patch.customInstructions;
     if (patch.headerFields !== undefined) next.headerFields = patch.headerFields;
     next.updatedAt = new Date();

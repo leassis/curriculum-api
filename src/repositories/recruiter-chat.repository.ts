@@ -49,6 +49,8 @@ export interface RecruiterChatRepo {
   touch(id: string): Promise<void>;
   /** Content of a Tailored Resume, or null when the id is null or the resume is gone. */
   resumeContent(id: string | null): Promise<string | null>;
+  /** Raw stored Resume Document of a Tailored Resume; null when the id or the document is null or the resume is gone. */
+  resumeDocument(id: string | null): Promise<unknown>;
   resumeExists(id: string): Promise<boolean>;
   resumeOptions(): Promise<ResumeOption[]>;
   /** Stores messages in one statement, in array order; the chat's messages go with the chat. */
@@ -154,6 +156,15 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
       .from(tailoredResumes)
       .where(eq(tailoredResumes.id, id));
     return row?.content ?? null;
+  }
+
+  async resumeDocument(id: string | null): Promise<unknown> {
+    if (id === null) return null;
+    const [row] = await this.db
+      .select({ structured: tailoredResumes.structured })
+      .from(tailoredResumes)
+      .where(eq(tailoredResumes.id, id));
+    return row?.structured ?? null;
   }
 
   async resumeExists(id: string): Promise<boolean> {

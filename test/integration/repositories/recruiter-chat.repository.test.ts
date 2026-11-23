@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { RecruiterChatRepository } from "../../../src/repositories/recruiter-chat.repository";
 import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { resetDb, testDb } from "../../support/db";
+import { sampleDocument } from "../../support/resume-document";
 
 const db = testDb();
 const repo = new RecruiterChatRepository(db);
@@ -146,5 +147,25 @@ describe("recruiter chat repository", () => {
     const chat = await repo.insert(input({ tailoredResumeId: resume.id }));
     await resumes.delete(resume.id);
     expect((await repo.findById(chat.id))?.tailoredResumeId).toBeNull();
+  });
+
+  it("reads the linked resume document and null without one", async () => {
+    const linked = await resumes.insert({
+      title: "Linked",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
+    const blank = await resumes.insert({
+      title: "Blank",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
+    await resumes.update(linked.id, { structured: sampleDocument() });
+    expect(await repo.resumeDocument(linked.id)).toEqual(sampleDocument());
+    expect(await repo.resumeDocument(blank.id)).toBeNull();
+    expect(await repo.resumeDocument(null)).toBeNull();
+    expect(await repo.resumeDocument("00000000-0000-4000-8000-00000000ffff")).toBeNull();
   });
 });

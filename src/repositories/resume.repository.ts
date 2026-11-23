@@ -14,6 +14,8 @@ export interface ResumeInsert {
 export interface ResumePatch {
   content?: string;
   model?: string | null;
+  /** The Resume Document, already validated by the service; stored as jsonb. */
+  structured?: unknown;
   customInstructions?: string;
   /** `null` stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;

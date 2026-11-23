@@ -10,8 +10,8 @@ import type {
 /** In-memory chats; expiry is read from the row against the real clock, as `now()` would. */
 export class FakeRecruiterChatRepo implements RecruiterChatRepo {
   rows: RecruiterChatRow[] = [];
-  /** id -> { title, content }; the Tailored Resumes table. */
-  resumes = new Map<string, { title: string; content: string }>();
+  /** id -> { title, content, structured }; the Tailored Resumes table. */
+  resumes = new Map<string, { title: string; content: string; structured?: unknown }>();
   acquires = 0;
   /** chat id -> stored messages, oldest first; deleted with the chat. */
   transcripts = new Map<string, ChatMessageRow[]>();
@@ -97,6 +97,10 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
 
   async resumeContent(id: string | null): Promise<string | null> {
     return id === null ? null : (this.resumes.get(id)?.content ?? null);
+  }
+
+  async resumeDocument(id: string | null): Promise<unknown> {
+    return id === null ? null : (this.resumes.get(id)?.structured ?? null);
   }
 
   async resumeExists(id: string): Promise<boolean> {
