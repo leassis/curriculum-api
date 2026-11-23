@@ -192,8 +192,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: omissions ordered model → restore → collapse; one note per restored item with a shared title; no note for left-out project/publication/honour; a restored old role collapses; no items returned → every always-kept item restored with one note each; bound violation → `reason: "assessment"` (C8, C9, C14, C44)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: omissions ordered model → restore → collapse; one note per restored item with a shared title; no note for left-out project/publication/honour; a restored old role collapses; no items returned → every always-kept item restored with one note each; bound violation → `reason: "assessment"` (C8, C9, C14, C44)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
