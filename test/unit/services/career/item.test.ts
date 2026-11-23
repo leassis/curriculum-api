@@ -121,6 +121,11 @@ describe("career item schema", () => {
     expect(
       CareerItemSchema.safeParse(item("experience", { startYear: 2020, endYear: 2020 })).success,
     ).toBe(true);
+    expect(
+      CareerItemSchema.safeParse(
+        item("experience", { startYear: 2020, startMonth: 6, endYear: 2020 }),
+      ).success,
+    ).toBe(true);
   });
 
   it("clears the end date of a current item", () => {

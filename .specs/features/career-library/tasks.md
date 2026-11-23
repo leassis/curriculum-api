@@ -190,8 +190,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Markdown AC 3-7: order kept, unknown section, unrecognised date, item outside a section, field rule at its line, id reuse and new ids, round trip over ≥ 200 generated libraries
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Markdown AC 3-7: order kept, unknown section, unrecognised date, item outside a section, field rule at its line, id reuse and new ids, round trip over ≥ 200 generated libraries
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

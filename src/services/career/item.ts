@@ -224,9 +224,12 @@ function itemIssues(item: CareerItem): string[] {
     issues.push(`${label("endMonth")} needs a year`);
   }
   if (item.startYear !== null && item.endYear !== null) {
-    const start = item.startYear * 13 + (item.startMonth ?? 0);
-    const end = item.endYear * 13 + (item.endMonth ?? 0);
-    if (end < start) issues.push("End date is before start date");
+    const sameYear = item.endYear === item.startYear;
+    const monthsKnown = item.startMonth !== null && item.endMonth !== null;
+    const before =
+      item.endYear < item.startYear ||
+      (sameYear && monthsKnown && (item.endMonth as number) < (item.startMonth as number));
+    if (before) issues.push("End date is before start date");
   }
   for (const field of ONE_LINE) {
     if (/[\r\n]/.test(item[field as "title"])) issues.push(`${label(field)} must be one line`);
