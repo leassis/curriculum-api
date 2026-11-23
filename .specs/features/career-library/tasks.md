@@ -266,8 +266,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Integration tests: get on a fresh DB, update round trip, two concurrent `update` calls each moving an item both apply in sequence with unique positions
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration tests: get on a fresh DB, update round trip, two concurrent `update` calls each moving an item both apply in sequence with unique positions
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full
