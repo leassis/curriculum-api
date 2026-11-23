@@ -62,13 +62,10 @@ resumesRouter.get("/resumes/editor.js", (c) =>
 );
 
 async function editor(c: { var: Env["Variables"] }, resume: Resume) {
-  // Until the document form replaces the textarea, the editor shows the document as markdown.
-  const shown = resume.document
-    ? { ...resume, content: renderResumeMarkdown(resume.document) }
-    : resume;
   return {
     basePath: c.var.config.basePath,
-    resume: shown,
+    resume,
+    preview: resume.document ? renderResumeMarkdown(resume.document) : "",
     options: await c.var.services.resumes.headerOptions(),
   };
 }

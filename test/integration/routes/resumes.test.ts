@@ -95,7 +95,7 @@ describe("resumes with database", () => {
 
     const generated = await send("POST", `/admin/resumes/${id}/generate`);
     expect(generated.status).toBe(200);
-    expect(await generated.text()).toContain("### Staff Engineer — Globex (2020-2024)");
+    expect(await generated.text()).toContain('value="Staff Engineer — Globex (2020-2024)"');
     expect(calls).toHaveLength(1);
     expect(calls[0]?.maxOutputTokens).toBe(6000);
     for (const secret of [EMAIL, PHONE, "Ada Lovelace"]) {

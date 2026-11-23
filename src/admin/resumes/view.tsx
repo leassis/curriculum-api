@@ -10,10 +10,126 @@ export interface ResumeView {
   model: string | null;
   updatedAt: Date;
   jobDescription: string;
-  content: string;
   customInstructions: string;
   headerFields: string[] | null;
+  /** The Resume Document; null when not generated yet or when the stored value is invalid. */
+  document: DocumentView | null;
+  /** The stored document failed its schema. */
+  invalid: boolean;
 }
+
+/** The Resume Document as the editor form shows it. */
+export interface DocumentView {
+  sections: {
+    title: string;
+    kind: string;
+    text: string;
+    items: { heading: string; text: string; bullets: string[] }[];
+  }[];
+}
+
+export const NOT_GENERATED = "Not generated yet";
+export const INVALID_DOCUMENT = "This resume's stored data is invalid; generate it again";
+
+const OpButton = ({
+  url,
+  op,
+  target,
+  label,
+}: {
+  url: string;
+  op: "remove" | "up" | "down";
+  target: string;
+  label: string;
+}) => (
+  <button
+    type="button"
+    class={op === "remove" ? "btn-ghost btn-sm btn-danger" : "btn-ghost btn-sm"}
+    hx-post={`${url}/form`}
+    hx-vals={JSON.stringify({ op, target })}
+    hx-include="#resume-form"
+    hx-target="#document-form"
+    hx-swap="outerHTML"
+  >
+    {label}
+  </button>
+);
+
+/**
+ * The editable Resume Document: per section its title (read-only) and text, per item its
+ * heading, text and bullets (one per line). Remove / Move post the form and swap this block.
+ */
+export const DocumentForm = ({ doc, url }: { doc: DocumentView; url: string }) => (
+  <div
+    id="document-form"
+    class="doc-form"
+    hx-post={`${url}/preview`}
+    hx-trigger="input delay:400ms"
+    hx-include="#resume-form"
+    hx-target="#preview"
+  >
+    {doc.sections.map((section, i) => {
+      const s = `sections.${i}`;
+      return (
+        <section class="doc-section">
+          <h3 class="section-title">{section.title || "Introduction"}</h3>
+          <input type="hidden" name={`${s}.title`} value={section.title} />
+          <input type="hidden" name={`${s}.kind`} value={section.kind} />
+          <div class="field">
+            <label class="field-label" for={`s${i}-text`}>
+              Text
+            </label>
+            <textarea class="input" id={`s${i}-text`} name={`${s}.text`} rows={3}>
+              {section.text}
+            </textarea>
+          </div>
+          {section.items.map((item, j) => {
+            const f = `${s}.items.${j}`;
+            const id = `s${i}-i${j}`;
+            const target = `s${i}.i${j}`;
+            return (
+              <div class="doc-item">
+                <div class="field">
+                  <label class="field-label" for={`${id}-heading`}>
+                    Heading
+                  </label>
+                  <input
+                    class="input"
+                    id={`${id}-heading`}
+                    type="text"
+                    name={`${f}.heading`}
+                    value={item.heading}
+                  />
+                </div>
+                <div class="field">
+                  <label class="field-label" for={`${id}-text`}>
+                    Text
+                  </label>
+                  <textarea class="input" id={`${id}-text`} name={`${f}.text`} rows={3}>
+                    {item.text}
+                  </textarea>
+                </div>
+                <div class="field">
+                  <label class="field-label" for={`${id}-bullets`}>
+                    Bullets (one per line)
+                  </label>
+                  <textarea class="input" id={`${id}-bullets`} name={`${f}.bullets`} rows={4}>
+                    {item.bullets.join("\n")}
+                  </textarea>
+                </div>
+                <div class="actions">
+                  <OpButton url={url} op="up" target={target} label="Move up" />
+                  <OpButton url={url} op="down" target={target} label="Move down" />
+                  <OpButton url={url} op="remove" target={target} label="Remove" />
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      );
+    })}
+  </div>
+);
 
 export interface HeaderOption {
   key: string;
@@ -153,11 +269,14 @@ export const Editor = ({
   basePath,
   resume,
   options,
+  preview,
   error,
 }: {
   basePath: string;
   resume: ResumeView;
   options: HeaderOption[];
+  /** The document rendered to markdown, shown as the initial preview. */
+  preview: string;
   error?: string;
 }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
@@ -175,22 +294,11 @@ export const Editor = ({
         </details>
         <div class="editor-grid">
           <form id="resume-form" class="card-pad">
-            <div class="field">
-              <label class="field-label" for="content">
-                Markdown
-              </label>
-              <textarea
-                class="input mono"
-                id="content"
-                name="content"
-                rows={28}
-                hx-post={`${url}/preview`}
-                hx-trigger="input changed delay:400ms"
-                hx-target="#preview"
-              >
-                {resume.content}
-              </textarea>
-            </div>
+            {resume.document ? (
+              <DocumentForm doc={resume.document} url={url} />
+            ) : (
+              <p class="empty-state">{resume.invalid ? INVALID_DOCUMENT : NOT_GENERATED}</p>
+            )}
             <div class="field">
               <label class="field-label" for="custom-instructions">
                 Custom instructions
@@ -223,25 +331,25 @@ export const Editor = ({
                 hx-indicator="#generate-indicator"
                 hx-disabled-elt="this"
                 hx-include="#custom-instructions"
-                hx-confirm={
-                  resume.content.trim() === "" ? undefined : "Replace the current content?"
-                }
+                hx-confirm={resume.document ? "Replace the current content?" : undefined}
               >
                 Generate
               </button>{" "}
               <span id="generate-indicator" class="htmx-indicator muted">
                 Generating…
               </span>{" "}
-              <button
-                type="button"
-                class="btn-ghost"
-                hx-put={url}
-                hx-include="#resume-form"
-                hx-target="#editor-status"
-                hx-swap="innerHTML"
-              >
-                Save
-              </button>{" "}
+              {resume.document && (
+                <button
+                  type="button"
+                  class="btn-ghost"
+                  hx-put={url}
+                  hx-include="#resume-form"
+                  hx-target="#editor-status"
+                  hx-swap="innerHTML"
+                >
+                  Save
+                </button>
+              )}{" "}
               <a class="btn-ghost" href={`${url}/print`} target="_blank" rel="noopener">
                 Print
               </a>{" "}
@@ -258,7 +366,7 @@ export const Editor = ({
               Preview
             </h2>
             <div id="preview" class="paper">
-              {raw(renderMarkdown(resume.content))}
+              {raw(renderMarkdown(preview))}
             </div>
           </section>
         </div>
@@ -271,6 +379,7 @@ export const EditorPage = (p: {
   basePath: string;
   resume: ResumeView;
   options: HeaderOption[];
+  preview: string;
   error?: string;
 }) => (
   <Layout title={p.resume.title} basePath={p.basePath} section="resumes">

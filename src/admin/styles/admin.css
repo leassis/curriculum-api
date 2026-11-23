@@ -303,6 +303,15 @@
   .editor-grid {
     @apply grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] items-start gap-6;
   }
+  .doc-form {
+    @apply flex flex-col gap-6;
+  }
+  .doc-section {
+    @apply flex flex-col gap-4;
+  }
+  .doc-item {
+    @apply flex flex-col gap-3 rounded-control border border-line p-4;
+  }
   .transcript pre {
     @apply font-sans text-[15px];
   }

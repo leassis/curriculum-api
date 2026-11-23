@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { INVALID_DOCUMENT, NOT_GENERATED } from "../../../src/admin/resumes/view";
 import { profileInput } from "../../support/fakes/profile.fake";
 import {
   sampleCv,
@@ -109,7 +110,7 @@ describe("admin resumes", () => {
     expect(html).toContain("Backend at Acme");
     expect(html).toContain("Acme");
     expect(html).toContain("Needs &lt;Rust&gt;");
-    expect(html).toMatch(/<textarea[^>]*name="content"[^>]*>## Summary\n\nHello\n<\/textarea>/);
+    expect(html).toMatch(/<textarea[^>]*name="sections\.0\.text"[^>]*>Hello<\/textarea>/);
     expect(html).toMatch(/<input[^>]*name="headerFields"[^>]*value="EMAIL"[^>]*checked/);
     expect(html).not.toMatch(/<input[^>]*value="PHONE"[^>]*checked/);
     for (const label of ["Generate", "Save", "Print", "Download .md"]) {
@@ -128,8 +129,8 @@ describe("admin resumes", () => {
     const html = await res.text();
     expect(html.startsWith('<div id="editor">')).toBe(true);
     expect(html).not.toContain("<html");
-    expect(html).toContain(
-      "### Staff Engineer — Globex (2020-2024)\n\nFresh &lt;b&gt;body&lt;/b&gt;",
+    expect(html).toMatch(
+      /<textarea[^>]*name="sections\.1\.items\.0\.text"[^>]*>Fresh &lt;b&gt;body&lt;\/b&gt;<\/textarea>/,
     );
     expect(repo.rows[0]?.model).toBe("vendor/tailor");
     expect(JSON.stringify(repo.rows[0]?.structured)).toContain("Fresh <b>body</b>");
@@ -349,8 +350,8 @@ describe("admin resumes create flow", () => {
     const { post, get, repo } = await resumeApp({ mock: { text: freshReply() } });
     const res = await post("/admin/resumes", newResume);
     const html = await (await get(res.headers.get("location") ?? "")).text();
-    expect(html).toContain(
-      "### Staff Engineer — Globex (2020-2024)\n\nFresh &lt;b&gt;body&lt;/b&gt;",
+    expect(html).toMatch(
+      /<textarea[^>]*name="sections\.1\.items\.0\.text"[^>]*>Fresh &lt;b&gt;body&lt;\/b&gt;<\/textarea>/,
     );
     expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
     expect(html).toContain("Fresh &lt;b&gt;body&lt;/b&gt;</p>");
@@ -455,8 +456,8 @@ describe("admin resumes create flow", () => {
     expect(await (await get(location)).text()).toContain("Fill the master CV first");
     const res = await post(`/admin/resumes/${repo.rows[0]?.id}/generate`);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain(
-      "### BSc Computer Science — State University\n\n2012-2016\n</textarea>",
+    expect(await res.text()).toMatch(
+      /<input[^>]*name="sections\.2\.items\.0\.heading"[^>]*value="BSc Computer Science — State University"/,
     );
     expect(repo.rows[0]).toMatchObject({ structured: sampleDocument(), model: "vendor/tailor" });
   });
@@ -505,5 +506,171 @@ describe("admin resumes create flow", () => {
     const res = await post("/admin/resumes", newResume);
     expect(res.status).toBe(303);
     expect(repo.rows[0]?.headerFields).toBeNull();
+  });
+});
+
+const generateButton = (html: string) =>
+  html.match(/<button[^>]*hx-post="[^"]*\/generate"[^>]*>/)?.[0] ?? "";
+const attr = (s: string) =>
+  s
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+describe("admin resumes structured", () => {
+  it("editor shows the document as a form", async () => {
+    const { get, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const doc = sampleDocument();
+    expect(html).toContain('id="document-form"');
+    doc.sections.forEach((section, i) => {
+      if (section.title) expect(html).toContain(`<h3 class="section-title">${section.title}</h3>`);
+      expect(html).toMatch(
+        new RegExp(
+          `<input[^>]*type="hidden"[^>]*name="sections\\.${i}\\.title"[^>]*value="${section.title}"`,
+        ),
+      );
+      expect(html).toMatch(
+        new RegExp(
+          `<input[^>]*type="hidden"[^>]*name="sections\\.${i}\\.kind"[^>]*value="${section.kind}"`,
+        ),
+      );
+      expect(html).toMatch(
+        new RegExp(`<textarea[^>]*name="sections\\.${i}\\.text"[^>]*>${section.text}</textarea>`),
+      );
+      section.items.forEach((item, j) => {
+        const f = `sections\\.${i}\\.items\\.${j}`;
+        expect(html).toMatch(
+          new RegExp(
+            `<input[^>]*type="text"[^>]*name="${f}\\.heading"[^>]*value="${item.heading.replace(/[()]/g, "\\$&")}"`,
+          ),
+        );
+        expect(html).toMatch(
+          new RegExp(`<textarea[^>]*name="${f}\\.text"[^>]*>${item.text}</textarea>`),
+        );
+        const bullets = html.match(
+          new RegExp(`<textarea[^>]*name="${f}\\.bullets"[^>]*>([^<]*)</textarea>`),
+        );
+        expect(bullets?.[1]).toBe(item.bullets.join("\n"));
+      });
+    });
+    expect(html).toContain('<h3 class="section-title">Introduction</h3>');
+    expect(html).not.toContain(NOT_GENERATED);
+    expect(html).not.toMatch(/name="content"/);
+    // The preview starts from the stored document.
+    expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
+    expect(generateButton(html)).toContain('hx-confirm="Replace the current content?"');
+  });
+
+  it("wires remove move up and move down to the form route per item", async () => {
+    const { get, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const buttons = [...html.matchAll(/<button[^>]*hx-post="[^"]*\/form"[^>]*>([^<]*)<\/button>/g)];
+    // Three items, three buttons each.
+    expect(buttons).toHaveLength(9);
+    for (const [target, item] of [
+      ["s1.i0", 0],
+      ["s1.i1", 1],
+      ["s2.i0", 2],
+    ] as const) {
+      for (const [op, label] of [
+        ["up", "Move up"],
+        ["down", "Move down"],
+        ["remove", "Remove"],
+      ] as const) {
+        const button = buttons[item * 3 + ["up", "down", "remove"].indexOf(op)];
+        expect(button?.[1]).toBe(label);
+        const tag = button?.[0] ?? "";
+        expect(tag).toContain(`hx-post="/admin/resumes/${id}/form"`);
+        expect(tag).toContain(`hx-vals="${attr(JSON.stringify({ op, target }))}"`);
+        expect(tag).toContain('hx-include="#resume-form"');
+        expect(tag).toContain('hx-target="#document-form"');
+        expect(tag).toContain('hx-swap="outerHTML"');
+        expect(tag).toContain('type="button"');
+      }
+    }
+  });
+
+  it("escapes every document string in the form", async () => {
+    const { get, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, {
+      structured: {
+        version: 1,
+        sections: [
+          {
+            title: 'Exp <i>"x"</i>',
+            kind: "experience",
+            text: "<script>alert(1)</script>",
+            items: [{ heading: '"><b>h</b>', text: "</textarea><b>t</b>", bullets: ["<u>b</u>"] }],
+          },
+        ],
+      },
+    });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const form = html.slice(
+      html.indexOf('id="document-form"'),
+      html.indexOf('id="custom-instructions"'),
+    );
+    expect(form).toContain("Exp &lt;i&gt;&quot;x&quot;&lt;/i&gt;");
+    expect(form).toContain('value="&quot;&gt;&lt;b&gt;h&lt;/b&gt;"');
+    expect(form).toContain("&lt;script&gt;alert(1)&lt;/script&gt;</textarea>");
+    expect(form).toContain("&lt;/textarea&gt;&lt;b&gt;t&lt;/b&gt;</textarea>");
+    expect(form).toContain("&lt;u&gt;b&lt;/u&gt;</textarea>");
+    expect(form).not.toMatch(/<script|<b>|<u>|<i>/);
+  });
+
+  it("editor shows not generated yet without a document", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    expect(html).toContain(NOT_GENERATED);
+    expect(generateButton(html)).not.toBe("");
+    expect(generateButton(html)).not.toContain("hx-confirm");
+    expect(html).not.toContain('id="document-form"');
+    expect(html).not.toMatch(/name="sections\./);
+    expect(html).not.toMatch(/hx-put=/);
+    expect(html).not.toContain(INVALID_DOCUMENT);
+  });
+
+  it("shows the invalid data message for a corrupt stored document", async () => {
+    const { get, resumes, repo, logs } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: { version: 2, sections: [{ title: "SECRET-BODY" }] } });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    expect(html).toContain("This resume&#39;s stored data is invalid; generate it again");
+    expect(generateButton(html)).not.toBe("");
+    expect(generateButton(html)).not.toContain("hx-confirm");
+    expect(html).not.toContain('id="document-form"');
+    expect(html).not.toMatch(/name="sections\./);
+    expect(html).not.toContain(NOT_GENERATED);
+    expect(html).not.toContain("SECRET-BODY");
+    const logged = logs.find((l) => l.message === "stored resume document invalid");
+    expect(logged).toMatchObject({ level: "error", data: { id, path: "version" } });
+    expect(JSON.stringify(logged)).not.toContain("SECRET-BODY");
+  });
+
+  it("generate swaps in the form with the new document", async () => {
+    const { post, resumes } = await resumeApp({ mock: { text: freshReply() } });
+    const { id } = await resumes.create(newResume);
+    const res = await post(`/admin/resumes/${id}/generate`);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html.startsWith('<div id="editor">')).toBe(true);
+    expect(html).toContain('id="document-form"');
+    expect(html).not.toContain(NOT_GENERATED);
+    expect(html).toMatch(
+      /<input[^>]*name="sections\.1\.items\.0\.heading"[^>]*value="Staff Engineer — Globex \(2020-2024\)"/,
+    );
+    expect(html).toMatch(
+      /<textarea[^>]*name="sections\.1\.items\.0\.text"[^>]*>Fresh &lt;b&gt;body&lt;\/b&gt;<\/textarea>/,
+    );
+    expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
+    expect(generateButton(html)).toContain('hx-confirm="Replace the current content?"');
   });
 });

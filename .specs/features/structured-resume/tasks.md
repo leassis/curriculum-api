@@ -468,8 +468,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests (rendered HTML): Edit AC 1-2, Store AC 9 message, button `hx-vals`, escaping
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests (rendered HTML): Edit AC 1-2, Store AC 9 message, button `hx-vals`, escaping
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
