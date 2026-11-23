@@ -340,6 +340,68 @@
     @apply pl-5;
   }
 
+  /* ---------- Career cards ---------- */
+  .career-cards {
+    @apply flex flex-col gap-6;
+  }
+  .career-card {
+    @apply flex flex-col rounded-card border border-line bg-surface px-7 py-6;
+  }
+  .career-head {
+    @apply flex items-center justify-between gap-4 border-b-2 border-line pb-5;
+  }
+  .career-title {
+    @apply m-0 flex items-center gap-3 font-display text-h2 font-medium;
+  }
+  .badge {
+    @apply rounded-pill bg-subtle px-3 py-0.5 font-sans text-sm font-normal;
+  }
+  .career-add {
+    @apply inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 font-sans text-[15px] font-semibold text-primary-hover hover:text-primary-strong;
+  }
+  .career-empty {
+    @apply m-0 pt-5 pb-1 text-muted;
+  }
+  .career-rows {
+    @apply m-0 flex list-none flex-col p-0;
+  }
+  .career-row {
+    @apply flex items-center justify-between gap-4 border-b border-line py-5 last:border-b-0 last:pb-1;
+  }
+  .career-row:has(> .career-form) {
+    @apply block;
+  }
+  .career-row-text {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+  .career-row-title {
+    @apply text-base font-medium;
+  }
+  .career-row-meta {
+    @apply text-[15px] text-muted;
+  }
+  .career-row-controls {
+    @apply flex shrink-0 items-center gap-1;
+  }
+  .career-icon {
+    @apply inline-flex size-9 cursor-pointer items-center justify-center rounded-control border-0 bg-transparent text-ink hover:bg-subtle disabled:cursor-not-allowed disabled:text-line disabled:hover:bg-transparent;
+  }
+  .career-danger {
+    @apply text-danger hover:bg-danger-soft;
+  }
+  .career-form {
+    @apply mt-5 grid grid-cols-2 gap-x-6 gap-y-5 rounded-card border border-line p-6;
+  }
+  .career-wide {
+    @apply col-span-2;
+  }
+  .career-actions {
+    @apply flex items-center justify-end gap-6;
+  }
+  .career-cancel {
+    @apply cursor-pointer border-0 bg-transparent p-0 font-sans text-[15px] font-semibold text-ink;
+  }
+
   /* ---------- Messages / chat ---------- */
   .transcript {
     @apply m-0 flex list-none flex-col gap-3 p-0;

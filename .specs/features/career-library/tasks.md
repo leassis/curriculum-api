@@ -475,8 +475,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit render tests for Library AC 2-3, 9, 9a-9b, 11, 14-15 markup and kind order
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit render tests for Library AC 2-3, 9, 9a-9b, 11, 14-15 markup and kind order
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
