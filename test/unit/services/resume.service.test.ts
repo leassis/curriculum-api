@@ -10,6 +10,7 @@ import {
 } from "../../../src/services/resume.service";
 import type { ResumeDocument } from "../../../src/services/tailor/document";
 import { item, sampleDocumentV2, sampleLibrary, sampleReplyV2 } from "../../support/career";
+import { SAMPLE_MARKDOWN } from "../../support/career-markdown";
 import { FULL_NAME, failingFactory, JD, resumeSetup, TAILOR_PROMPT } from "../../support/resumes";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
@@ -977,7 +978,7 @@ describe("resume service v2 print", () => {
     const { id } = await resumes.create({ ...draft, headerKeys: ["EMAIL"] });
     const doc = sampleDocumentV2();
     await repo.update(id, { structured: doc });
-    const body = renderCareerBody(doc, doc.items);
+    const body = `Backend engineer\n\nTen years building payment systems.\n\n${SAMPLE_MARKDOWN}`;
     expect((await resumes.printData(id)).bodyHtml).toBe(renderMarkdown(body));
     expect((await resumes.download(id)).text).toBe(
       `# ${FULL_NAME}\nEmail: ada@example.com\n\n${body}`,
