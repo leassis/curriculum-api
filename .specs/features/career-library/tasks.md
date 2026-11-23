@@ -285,8 +285,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit test: the example block in the prompt parses with `parseItemsMarkdown`; the prompt holds no Personal Info placeholder
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test: the example block in the prompt parses with `parseItemsMarkdown`; the prompt holds no Personal Info placeholder
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
