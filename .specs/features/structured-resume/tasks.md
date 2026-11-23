@@ -132,8 +132,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests for every bound in spec Assumptions, `version` literal, `kind` enum, empty heading, 100 000-char total, path format, `stripPrefix` cases
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for every bound in spec Assumptions, `version` literal, `kind` enum, empty heading, 100 000-char total, path format, `stripPrefix` cases
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
@@ -151,8 +153,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests: intro, lead text, items, bullets vs text, deeper headings stay text, English/Portuguese kinds with accents and case, duplicate headings get distinct ids, no `## ` → null, annotated tags
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: intro, lead text, items, bullets vs text, deeper headings stay text, English/Portuguese kinds with accents and case, duplicate headings get distinct ids, no `## ` → null, annotated tags
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
