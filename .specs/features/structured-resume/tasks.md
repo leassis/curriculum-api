@@ -684,7 +684,7 @@ Proof: run unit | ✓ form codec > applies the op to the clicked item after an e
 ## Handoff
 
 **Settled mid-build:** Verifier round 1 - user: F1 "Reject with 400", F3 "Strip per line", F4 "400 before the call", walk "Yes, after the fixes" (spec Generate AC 12-15, edge, C41-C44). Batch models - user: "use sonnet for phase 1, opus for phase 2"; Phase 3 model - user: "Opus".
-**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at a78d9bc, returned at 2dbeff0; Phase 3 batch worker (opus) T19-T22 at 97435bf, returned at e2c757b; check_proofs 43 pass at e2c757b; Verifier round 1 at 4f59a97, returned at 618c035 (FAIL: F1-F4); fixer (opus) at <H>
+**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at a78d9bc, returned at 2dbeff0; Phase 3 batch worker (opus) T19-T22 at 97435bf, returned at e2c757b; check_proofs 43 pass at e2c757b; Verifier round 1 at 4f59a97, returned at 618c035 (FAIL: F1-F4); fixer (opus) at 815c40f
 **Walked:** none
 
 ---
