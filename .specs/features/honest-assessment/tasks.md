@@ -92,9 +92,9 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: `bandFor` at 0, 39, 40, 59, 60, 79, 80, 100; rubric lines `80–100 Strong match: …` … `0–39 Weak match: …`; rules block contains every rubric line and rules 1-7 text (C26, C28)
-- [ ] Gate check passes: `pnpm test:unit`
-- [ ] Test count: existing unit tests + new rubric tests pass
+- [x] Unit tests: `bandFor` at 0, 39, 40, 59, 60, 79, 80, 100; rubric lines `80–100 Strong match: …` … `0–39 Weak match: …`; rules block contains every rubric line and rules 1-7 text (C26, C28)
+- [x] Gate check passes: `pnpm test:unit`
+- [x] Test count: existing unit tests + new rubric tests pass
 
 **Tests**: unit
 **Gate**: quick
