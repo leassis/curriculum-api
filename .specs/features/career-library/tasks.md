@@ -95,8 +95,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for each kind's required fields, every bound in spec Edge Cases, year 1950-2100, month 1-12, month without year, end before start, `current` clearing the end, fields a kind lacks emptied, 200-item limit
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for each kind's required fields, every bound in spec Edge Cases, year 1950-2100, month 1-12, month without year, end before start, `current` clearing the end, fields a kind lacks emptied, 200-item limit
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
