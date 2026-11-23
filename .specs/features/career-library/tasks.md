@@ -152,8 +152,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Library AC 9c, 9d and `formValues(itemFromForm(x))` stability per kind
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Library AC 9c, 9d and `formValues(itemFromForm(x))` stability per kind
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
