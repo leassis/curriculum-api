@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseDocument } from "../../../../src/services/tailor/document";
-import { applyOp, documentFromForm } from "../../../../src/services/tailor/form";
+import { documentFromForm, type ItemOp } from "../../../../src/services/tailor/form";
 import { itemAt, sampleDocument, sectionAt } from "../../../support/resume-document";
 
 /** The flat dotted body an HTML form posts. */
@@ -81,27 +81,28 @@ describe("form codec", () => {
   });
 
   it("removes an item", () => {
-    const doc = applyOp(sampleDocument(), "remove", "s1.i0");
+    const body = formOf();
+    const doc = opDoc(body, "remove", "s1.i0");
     expect(sectionAt(doc, 1).items.map((i) => i.heading)).toEqual([
       "Engineer — Initech (2016-2020)",
     ]);
-    expect(sampleDocument().sections[1]?.items).toHaveLength(2);
+    expect(parseOk(body)).toEqual(sampleDocument());
   });
 
   it("moves items within their section and ignores moves past the edges", () => {
     const base = sampleDocument();
     const [a, b] = sectionAt(base, 1).items.map((i) => i.heading);
 
-    const down = applyOp(base, "down", "s1.i0");
+    const down = opDoc(formOf(base), "down", "s1.i0");
     expect(sectionAt(down, 1).items.map((i) => i.heading)).toEqual([b, a]);
-    const up = applyOp(down, "up", "s1.i1");
+    const up = opDoc(formOf(down), "up", "s1.i1");
     expect(sectionAt(up, 1).items.map((i) => i.heading)).toEqual([a, b]);
 
-    expect(applyOp(base, "up", "s1.i0")).toEqual(base);
-    expect(applyOp(base, "down", "s1.i1")).toEqual(base);
+    expect(opDoc(formOf(base), "up", "s1.i0")).toEqual(base);
+    expect(opDoc(formOf(base), "down", "s1.i1")).toEqual(base);
     // A single-item section never swaps with another section's item.
-    expect(applyOp(base, "down", "s2.i0")).toEqual(base);
-    expect(applyOp(base, "up", "s2.i0")).toEqual(base);
+    expect(opDoc(formOf(base), "down", "s2.i0")).toEqual(base);
+    expect(opDoc(formOf(base), "up", "s2.i0")).toEqual(base);
   });
 
   it("applies the op to the clicked item after an earlier section is emptied", () => {
@@ -140,13 +141,20 @@ describe("form codec", () => {
     const base = sampleDocument();
     for (const t of ["", "s9.i0", "s1.i9", "x", "s1.i-1"]) {
       for (const op of ["remove", "up", "down"] as const)
-        expect(applyOp(base, op, t)).toEqual(base);
+        expect(opDoc(formOf(base), op, t)).toEqual(base);
     }
   });
 });
 
 function parseOk(body: Record<string, string>) {
   const r = parseDocument(documentFromForm(body));
+  if (!r.ok) throw new Error(r.path);
+  return r.doc;
+}
+
+/** The document the live form path builds when `op` is posted with `body`. */
+function opDoc(body: Record<string, string>, op: ItemOp, target: string) {
+  const r = parseDocument(documentFromForm(body, { op, target }));
   if (!r.ok) throw new Error(r.path);
   return r.doc;
 }

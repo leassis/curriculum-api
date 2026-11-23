@@ -1,5 +1,3 @@
-import type { ResumeDocument } from "./document.js";
-
 type Leaf = string;
 
 /** Flattens Hono's `parseBody({ dot: true })` objects (or already dotted keys) into `a.b.c` -> string. */
@@ -115,27 +113,4 @@ export function documentFromForm(body: Record<string, unknown>, op?: FormOp): un
     return [{ title: (s.title ?? "").trim(), kind: s.kind ?? "other", text, items }];
   });
   return { version: 1, sections: built };
-}
-
-/** Removes an item or swaps it with its neighbour in the same section; edges and bad targets are no-ops. */
-export function applyOp(doc: ResumeDocument, op: ItemOp, target: string): ResumeDocument {
-  const m = TARGET.exec(target);
-  if (!m) return doc;
-  const si = Number(m[1]);
-  const ii = Number(m[2]);
-  const section = doc.sections[si];
-  if (!section || ii >= section.items.length) return doc;
-
-  const items = [...section.items];
-  if (op === "remove") {
-    items.splice(ii, 1);
-  } else {
-    const other = op === "up" ? ii - 1 : ii + 1;
-    const a = items[ii];
-    const b = items[other];
-    if (!a || !b) return doc;
-    items[ii] = b;
-    items[other] = a;
-  }
-  return { ...doc, sections: doc.sections.map((s, i) => (i === si ? { ...s, items } : s)) };
 }
