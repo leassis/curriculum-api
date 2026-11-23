@@ -1,9 +1,9 @@
 # structured-resume proofs
 
-**HEAD**: e2c757b
+**HEAD**: 0a4f83f
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 43 pass, 0 fail
+**Result**: 47 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -47,6 +47,10 @@
 | C38 | `run unit / ✓ recruiter chat service > falls back to the master cv when the linked resume has no document` | pass |
 | C39 | `run unit / ✓ resume service outputs > print and download show the empty state without a document` | pass |
 | C40 | `run unit / ✓ form codec > drops empty sections and stores blank bullets as an empty list` | pass |
+| C41 | `run unit / ✓ resume service structured generate > rejects a master cv that contains the full name before calli` | pass |
+| C42 | `run unit / ✓ resume service structured generate > rejects an empty or too long heading before calling the llm` | pass |
+| C43 | `run unit / ✓ assemble > strips prefixes on every text line and flattens headings and bullets` | pass |
+| C44 | `run unit / ✓ form codec > applies the op to the clicked item after an earlier section is emptied` | pass |
 | Build | `pnpm build` | pass |
 | Build | `pnpm typecheck` | pass |
 | Build | `pnpm lint` | pass |
@@ -82,7 +86,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:18106) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:33556) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
