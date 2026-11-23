@@ -307,8 +307,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: fixture job requires exactly one skill absent from every fixture item; fixture has one experience ended > 15 years ago with ≥ 3 bullets and one unrelated project; each check fails on a doc that breaks it and passes otherwise; exit 1 when any fails, 0 when all pass (C40-C42)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: fixture job requires exactly one skill absent from every fixture item; fixture has one experience ended > 15 years ago with ≥ 3 bullets and one unrelated project; each check fails on a doc that breaks it and passes otherwise; exit 1 when any fails, 0 when all pass (C40-C42)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
