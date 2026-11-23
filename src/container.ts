@@ -54,10 +54,11 @@ export function createContainer(config: ResolvedConfig): Services {
     personalInfo,
     createProvider(config.openrouterApiKey),
   );
+  const career = new CareerService(repos.career, personalInfo, profile, llm);
   return {
     config,
     profile,
-    career: new CareerService(repos.career, personalInfo, profile, llm),
+    career,
     settings,
     personalInfo,
     llm,
@@ -69,7 +70,7 @@ export function createContainer(config: ResolvedConfig): Services {
       personalInfo,
       llm,
     ),
-    resumes: new ResumeService(repos.resumes, profile, settings, personalInfo, llm),
+    resumes: new ResumeService(repos.resumes, profile, settings, personalInfo, llm, career),
     adminAuth: new AdminAuthService(repos.loginAttempts, config),
   };
 }

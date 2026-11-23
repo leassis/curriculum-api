@@ -2,6 +2,8 @@ import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
+import { renderCareerBody } from "./career/body.js";
+import { type CareerService, itemStrings } from "./career.service.js";
 import {
   LlmOutputInvalidError,
   LlmUnavailableError,
@@ -18,11 +20,8 @@ import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
 import { type AssembleFailure, assemble } from "./tailor/assemble.js";
-import { cleanLine, cleanText, parseDocument, type ResumeDocument } from "./tailor/document.js";
-import { documentFromForm, type FormOp, type ItemOp } from "./tailor/form.js";
-import { TailorOutputSchema } from "./tailor/output.js";
-import { type ParsedCv, parseMasterCv } from "./tailor/parse-cv.js";
-import { renderResumeMarkdown } from "./tailor/render.js";
+import { parseDocument, type ResumeDocument } from "./tailor/document.js";
+import { annotate, TailorOutputSchema } from "./tailor/output.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
 export type Resume = Omit<ResumeRow, "structured"> & {
@@ -68,68 +67,24 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
   return `Today's date: ${date}\n\n${steering}${dataBlock("JOB_DESCRIPTION", jobDescription)}`;
 }
 
-const MASTER_CV_REQUIRED = "Fill the master CV first";
-const MASTER_CV_UNSTRUCTURED = "Structure the master CV with ## sections and ### items";
-const MASTER_CV_HEADING = "A ### heading in the master CV is empty or longer than 200 characters";
-const MAX_HEADING = 200;
-const MASTER_CV_FULL_NAME = "Your full name is in the master CV — it is added when printed";
-const ITEM_OPS: readonly string[] = ["remove", "up", "down"] satisfies ItemOp[];
-const isItemOp = (op: string): op is ItemOp => ITEM_OPS.includes(op);
+const EMPTY_LIBRARY = "Add Career Items to your profile before generating";
+const LIBRARY_FULL_NAME = "Your full name is in the career library — it is added when printed";
 
 /** The create flow's error codes; the editor maps each to its message. */
-export type CreateError = "generate" | "master-cv" | "structure" | "full-name" | "heading";
+export type CreateError = "generate" | "empty-library" | "full-name";
 
-/** The Owner's full name appears in the Master CV, ignoring case (it must never reach the model). */
-function containsFullName(masterCv: string, fullName: string): boolean {
+/** The Owner's full name appears in a string, ignoring case (it must never reach the model). */
+function containsFullName(strings: string[], fullName: string): boolean {
   const name = fullName.trim().toLowerCase();
-  return name !== "" && masterCv.toLowerCase().includes(name);
-}
-
-function invalidDocument(path: string): ValidationError {
-  return new ValidationError(`Invalid resume field: ${path}`, { [path]: "is invalid" });
-}
-
-/** Every string of a document the Owner can write, for the PII Guard. */
-function documentStrings(doc: ResumeDocument): string[] {
-  return doc.sections.flatMap((s) => [
-    s.title,
-    s.text,
-    ...s.items.flatMap((i) => [i.heading, i.text, ...i.bullets]),
-  ]);
-}
-
-/**
- * Strips heading and bullet markers from every line of a text field, and flattens titles,
- * headings and bullets to one line; empty bullets go.
- */
-function stripDocument(doc: ResumeDocument): ResumeDocument {
-  return {
-    ...doc,
-    sections: doc.sections.map((s) => ({
-      ...s,
-      title: s.title.trim().replace(/[ \t]*\r?\n[ \t]*/g, " "),
-      text: cleanText(s.text),
-      items: s.items.map((i) => ({
-        heading: cleanLine(i.heading),
-        text: cleanText(i.text),
-        bullets: i.bullets.map(cleanLine).filter((b) => b !== ""),
-      })),
-    })),
-  };
+  return name !== "" && strings.some((s) => s.toLowerCase().includes(name));
 }
 
 /** The markdown of a resume's document; empty when it has none or it is invalid. */
 const markdownOf = (resume: Resume): string =>
-  resume.document ? renderResumeMarkdown(resume.document) : "";
+  resume.document ? renderCareerBody(resume.document, resume.document.items) : "";
 
 /** One model call, then one more when its output is rejected. */
 const TAILOR_ATTEMPTS = 2;
-
-/** The `<cv>` body of a tailor call: the annotated Master CV, then each section's id and kind. */
-function tailorBody(parsed: ParsedCv): string {
-  const kinds = parsed.sections.map((s) => `[${s.id}] ${s.kind}`).join(", ");
-  return `${parsed.annotated}\n\nSection kinds: ${kinds}`;
-}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -189,6 +144,7 @@ export class ResumeService {
     protected readonly settings: SettingsService,
     protected readonly personalInfo: PersonalInfoService,
     protected readonly llm: LlmService,
+    protected readonly career: CareerService,
     private readonly now: () => Date = () => new Date(),
     private readonly logger: ResumeLogger = console,
   ) {}
@@ -231,17 +187,11 @@ export class ResumeService {
       return { resume: await this.generate(created.id) };
     } catch (error) {
       if (error instanceof LlmUnavailableError) return { resume: created, error: "generate" };
-      if (error instanceof ValidationError && error.message === MASTER_CV_REQUIRED) {
-        return { resume: created, error: "master-cv" };
+      if (error instanceof ValidationError && error.message === EMPTY_LIBRARY) {
+        return { resume: created, error: "empty-library" };
       }
-      if (error instanceof ValidationError && error.message === MASTER_CV_UNSTRUCTURED) {
-        return { resume: created, error: "structure" };
-      }
-      if (error instanceof ValidationError && error.message === MASTER_CV_FULL_NAME) {
+      if (error instanceof ValidationError && error.message === LIBRARY_FULL_NAME) {
         return { resume: created, error: "full-name" };
-      }
-      if (error instanceof ValidationError && error.message === MASTER_CV_HEADING) {
-        return { resume: created, error: "heading" };
       }
       throw error;
     }
@@ -258,9 +208,9 @@ export class ResumeService {
   }
 
   /**
-   * Tailors the Master CV to the Job Description as a Resume Document. The model sees the
-   * annotated Master CV and rewrites bodies only; a rejected reply gets one more call, and a
-   * second rejection leaves the stored document and model unchanged.
+   * Tailors the Career Library to the Job Description as a Resume Document. The model sees the
+   * Career Body with an id per item and rewrites bodies only; a rejected reply gets one more call,
+   * and a second rejection leaves the stored document and model unchanged.
    */
   async generate(id: string, customInstructions?: string): Promise<Resume> {
     let resume = await this.get(id);
@@ -268,26 +218,21 @@ export class ResumeService {
       customInstructions === undefined
         ? undefined
         : this.checkInstructions(customInstructions, await this.personalInfo.allValues());
-    const profile = await this.loadProfile();
-    if (!profile || profile.masterCv.trim() === "") {
-      throw new ValidationError(MASTER_CV_REQUIRED);
-    }
-    if (containsFullName(profile.masterCv, profile.fullName)) {
-      throw new ValidationError(MASTER_CV_FULL_NAME);
-    }
-    const parsed = parseMasterCv(profile.masterCv);
-    if (!parsed) throw new ValidationError(MASTER_CV_UNSTRUCTURED);
-    const headings = parsed.sections.flatMap((sec) => sec.items.map((i) => i.heading));
-    if (headings.some((h) => h === "" || h.length > MAX_HEADING)) {
-      throw new ValidationError(MASTER_CV_HEADING);
+    const { items } = await this.career.library();
+    if (items.length === 0) throw new ValidationError(EMPTY_LIBRARY);
+    const profile = await this.profile.get();
+    const strings = [profile.headline, profile.summary, ...items.flatMap(itemStrings)];
+    if (containsFullName(strings, profile.fullName)) {
+      throw new ValidationError(LIBRARY_FULL_NAME);
     }
     if (instructions !== undefined) {
       resume = await this.update(id, { customInstructions: instructions });
     }
+    const ids = annotate(items);
     const request = {
       area: "tailor" as const,
       system: profile.tailorSystemPrompt,
-      body: tailorBody(parsed),
+      body: renderCareerBody(profile, items, { ids }),
       input: tailorInput(
         this.now().toISOString().slice(0, 10),
         resume.customInstructions,
@@ -301,7 +246,7 @@ export class ResumeService {
       let reason: AssembleFailure;
       try {
         const { object, model } = await this.llm.generateObject(request);
-        const assembled = assemble(parsed, object);
+        const assembled = assemble(items, ids, object);
         if (assembled.ok) return this.update(id, { structured: assembled.doc, model });
         reason = assembled.reason;
       } catch (error) {
@@ -313,13 +258,9 @@ export class ResumeService {
     throw new LlmUnavailableError();
   }
 
-  /**
-   * Saves the Resume Document built from the editor form, with the selected header keys, after
-   * the schema (400 naming the first failing path) and the PII Guard over every string.
-   */
-  async save(
+  /** Stores the header fields to print and, when given, the Custom Instructions. */
+  async updateOptions(
     id: string,
-    body: Record<string, unknown>,
     headerKeys: string[],
     customInstructions?: string,
   ): Promise<Resume> {
@@ -329,50 +270,13 @@ export class ResumeService {
       customInstructions === undefined
         ? undefined
         : this.checkInstructions(customInstructions, fields);
-    const doc = stripDocument(this.documentFrom(body));
-    const checked = parseDocument(doc);
-    if (!checked.ok) throw invalidDocument(checked.path);
-    const found = findPii(documentStrings(checked.doc).join("\n"), fields)[0];
-    if (found) {
-      throw new ValidationError(
-        `Your ${found.label} is in the body — keep contact data in Personal info`,
-      );
-    }
     return this.update(id, {
-      structured: checked.doc,
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),
       ),
       ...(instructions === undefined ? {} : { customInstructions: instructions }),
     });
-  }
-
-  /** Applies Remove / Move up / Move down to the posted form; returns the document unsaved. */
-  async formOp(
-    id: string,
-    body: Record<string, unknown>,
-    op: string,
-    target: string,
-  ): Promise<ResumeDocument> {
-    await this.get(id);
-    if (!isItemOp(op)) {
-      throw new ValidationError("Unknown item operation", { op: "is not remove, up or down" });
-    }
-    return this.documentFrom(body, { op, target });
-  }
-
-  /** The posted editor form as a Resume Document, unsaved (for the preview). */
-  async formDocument(id: string, body: Record<string, unknown>): Promise<ResumeDocument> {
-    await this.get(id);
-    return this.documentFrom(body);
-  }
-
-  /** The schema-valid document of an editor form; 400 naming the first failing path otherwise. */
-  private documentFrom(body: Record<string, unknown>, op?: FormOp): ResumeDocument {
-    const parsed = parseDocument(documentFromForm(body, op));
-    if (!parsed.ok) throw invalidDocument(parsed.path);
-    return parsed.doc;
   }
 
   async printData(id: string): Promise<PrintData> {

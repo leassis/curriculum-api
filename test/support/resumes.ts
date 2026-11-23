@@ -2,18 +2,21 @@ import { MockLanguageModelV4 } from "ai/test";
 import type { CurriculumApiConfig } from "../../src/config";
 import type { ModelFactory } from "../../src/llm/openrouter";
 import { signSession } from "../../src/security/session";
+import { CareerService } from "../../src/services/career.service";
 import { LlmService } from "../../src/services/llm.service";
 import { PersonalInfoService } from "../../src/services/personal-info.service";
 import { ProfileService } from "../../src/services/profile.service";
 import { ResumeService } from "../../src/services/resume.service";
 import { SettingsService } from "../../src/services/settings.service";
+import { sampleLibrary, sampleReplyV2 } from "./career";
 import { resolvedConfig, TEST_PII_KEY } from "./config";
+import { FakeCareerRepo } from "./fakes/career.fake";
 import { FakePersonalInfoRepo } from "./fakes/personal-info.fake";
 import { FakeProfileRepo, profileInput } from "./fakes/profile.fake";
 import { FakeSettingsRepo } from "./fakes/settings.fake";
 import { createRecordingModel, type RecordingModelOptions } from "./mock-llm";
 import { FakeResumeRepo } from "./resume.fake";
-import { sampleCv, sampleReply } from "./resume-document";
+import { sampleCv } from "./resume-document";
 import { createTestApp } from "./test-app";
 
 /** A Master CV with `##` sections and `###` items; the default reply tailors it. */
@@ -37,6 +40,7 @@ export async function resumeSetup(
     mock?: RecordingModelOptions;
     factory?: ModelFactory;
     cv?: string;
+    items?: unknown[];
     seed?: boolean;
     config?: Partial<CurriculumApiConfig>;
   } = {},
@@ -48,6 +52,8 @@ export async function resumeSetup(
     await profileRepo.upsert({
       ...profileInput,
       fullName: FULL_NAME,
+      headline: "Backend engineer",
+      summary: "Ten years building payment systems.",
       masterCv: opts.cv ?? CV,
       tailorSystemPrompt: TAILOR_PROMPT,
     });
@@ -56,7 +62,7 @@ export async function resumeSetup(
   const settings = new SettingsService(settingsRepo, config);
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY);
   const profile = new ProfileService(profileRepo);
-  const recording = createRecordingModel({ text: JSON.stringify(sampleReply()), ...opts.mock });
+  const recording = createRecordingModel({ text: JSON.stringify(sampleReplyV2()), ...opts.mock });
   const llm = new LlmService(config, settings, personalInfo, opts.factory ?? recording.factory, {
     info: () => {},
     warn: () => {},
@@ -66,7 +72,18 @@ export async function resumeSetup(
     error: (message: string, data?: unknown) => logs.push({ level: "error", message, data }),
     warn: (message: string, data?: unknown) => logs.push({ level: "warn", message, data }),
   };
-  const resumes = new ResumeService(repo, profile, settings, personalInfo, llm, undefined, logger);
+  const careerRepo = new FakeCareerRepo({ version: 1, items: opts.items ?? sampleLibrary().items });
+  const career = new CareerService(careerRepo, personalInfo, profile, llm);
+  const resumes = new ResumeService(
+    repo,
+    profile,
+    settings,
+    personalInfo,
+    llm,
+    career,
+    undefined,
+    logger,
+  );
   const addField = (key: string, label: string, value: string, sortOrder = 0) =>
     personalInfo.create({ key, label, value, visibility: "print", sortOrder });
   return {
@@ -79,6 +96,8 @@ export async function resumeSetup(
     profileRepo,
     llm,
     resumes,
+    career,
+    careerRepo,
     calls: recording.calls,
     addField,
     logs,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { CareerItem, CareerLibrary, Kind } from "../../src/services/career/item";
 import type { ResumeDocument } from "../../src/services/tailor/document";
+import type { TailorOutput } from "../../src/services/tailor/output";
 
 const VALID: Record<Kind, Partial<CareerItem>> = {
   experience: { title: "Engineer", organisation: "Acme", startYear: 2020 },
@@ -132,5 +133,13 @@ export function sampleDocumentV2(): ResumeDocument {
       id: i.id.replace(/^./, "b"),
       sourceId: i.id,
     })),
+  };
+}
+
+export function sampleReplyV2(library: CareerItem[] = sampleLibrary().items): TailorOutput {
+  return {
+    headline: "Backend engineer",
+    summary: "Ten years building payment systems.",
+    items: library.map((i, n) => ({ source_id: `c${n + 1}`, text: i.text, bullets: i.bullets })),
   };
 }

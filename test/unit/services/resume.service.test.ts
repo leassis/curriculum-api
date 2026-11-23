@@ -1,30 +1,22 @@
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
+import { renderCareerBody } from "../../../src/services/career/body";
 import { LlmUnavailableError } from "../../../src/services/errors";
 import {
   CUSTOM_INSTRUCTIONS_PREAMBLE,
   slugify,
   tailorInput,
 } from "../../../src/services/resume.service";
-import {
-  documentForm,
-  itemAt,
-  sampleDocument,
-  sampleReply,
-  textDocument,
-  textForm,
-} from "../../support/resume-document";
-import {
-  CV,
-  FULL_NAME,
-  failingFactory,
-  JD,
-  resumeSetup,
-  TAILOR_PROMPT,
-} from "../../support/resumes";
+import type { ResumeDocument } from "../../../src/services/tailor/document";
+import { item, sampleDocumentV2, sampleLibrary, sampleReplyV2 } from "../../support/career";
+import { FULL_NAME, failingFactory, JD, resumeSetup, TAILOR_PROMPT } from "../../support/resumes";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const draft = { title: "Backend at Acme", company: "Acme", jobDescription: JD };
+const shape = (doc: ResumeDocument | null) =>
+  doc && { ...doc, items: doc.items.map(({ id: _id, ...rest }) => rest) };
+const sampleShape = () => shape(sampleDocumentV2());
+const EMPTY_LIBRARY = "Add Career Items to your profile before generating";
 
 describe("resume service", () => {
   it("rejects an empty title or job description naming the field and creates nothing", async () => {
@@ -49,12 +41,12 @@ describe("resume service", () => {
       await expect(resumes.get(id)).rejects.toMatchObject({ status: 404 });
       await expect(resumes.delete(id)).rejects.toMatchObject({ status: 404 });
       await expect(resumes.generate(id)).rejects.toMatchObject({ status: 404 });
-      await expect(resumes.save(id, textForm("x"), [])).rejects.toMatchObject({ status: 404 });
+      await expect(resumes.updateOptions(id, [])).rejects.toMatchObject({ status: 404 });
       await expect(resumes.printData(id)).rejects.toMatchObject({ status: 404 });
     }
   });
 
-  it("calls the llm with area tailor, the tailor prompt, the master cv, the job description and 6000 tokens", async () => {
+  it("calls the llm with area tailor, the tailor prompt, the career body, the job description and 6000 tokens", async () => {
     const { resumes, calls } = await resumeSetup();
     const { id } = await resumes.create(draft);
     await resumes.generate(id);
@@ -63,8 +55,8 @@ describe("resume service", () => {
     expect(calls[0]?.maxOutputTokens).toBe(6000);
     const prompt = calls[0]?.prompt ?? "";
     expect(prompt).toContain(TAILOR_PROMPT);
-    expect(prompt).toContain("## Experience [s1]");
-    expect(prompt).toContain("- Cut p99 latency by 40% across the public API");
+    expect(prompt).toContain("### Staff Engineer [c1]");
+    expect(prompt).toContain("- Cut p99 latency by 40%");
     expect(prompt).toContain(JD);
   });
 
@@ -72,42 +64,29 @@ describe("resume service", () => {
     const { resumes, repo } = await resumeSetup();
     const { id } = await resumes.create(draft);
     const saved = await resumes.generate(id);
-    expect(saved).toMatchObject({ document: sampleDocument(), model: "vendor/tailor" });
-    expect(repo.rows[0]).toMatchObject({ structured: sampleDocument(), model: "vendor/tailor" });
+    expect(shape(saved.document)).toEqual(sampleShape());
+    expect(saved.model).toBe("vendor/tailor");
+    expect(shape(repo.rows[0]?.structured as ResumeDocument)).toEqual(sampleShape());
+    expect(repo.rows[0]?.model).toBe("vendor/tailor");
   });
 
   it("keeps the content when the llm is unavailable", async () => {
     const { resumes, repo } = await resumeSetup({ factory: failingFactory });
     const { id } = await resumes.create(draft);
-    await resumes.save(id, textForm("my edits"), []);
+    await repo.update(id, { structured: sampleDocumentV2() });
     await expect(resumes.generate(id)).rejects.toMatchObject({ code: "llm_unavailable" });
-    expect(repo.rows[0]?.structured).toEqual(textDocument("my edits"));
+    expect(repo.rows[0]?.structured).toEqual(sampleDocumentV2());
     expect(repo.rows[0]?.model).toBeNull();
   });
 
-  it("refuses to generate with an empty master cv and does not call the llm", async () => {
-    for (const opts of [{ cv: "  " }, { seed: false }]) {
-      const { resumes, calls } = await resumeSetup(opts);
-      const { id } = await resumes.create(draft);
-      await expect(resumes.generate(id)).rejects.toMatchObject({
-        status: 400,
-        message: "Fill the master CV first",
-      });
-      expect(calls).toHaveLength(0);
-    }
-  });
-
-  it("refuses to save content containing a personal info value", async () => {
-    const { resumes, repo, addField } = await resumeSetup();
-    await addField("EMAIL", "Email", "ada@example.com");
+  it("refuses to generate with an empty library and does not call the llm", async () => {
+    const { resumes, calls } = await resumeSetup({ items: [] });
     const { id } = await resumes.create(draft);
-    await expect(
-      resumes.save(id, textForm("Write to ada@example.com"), ["EMAIL"]),
-    ).rejects.toMatchObject({
+    await expect(resumes.generate(id)).rejects.toMatchObject({
       status: 400,
-      message: "Your Email is in the body — keep contact data in Personal info",
+      message: EMPTY_LIBRARY,
     });
-    expect(repo.rows[0]?.structured).toBeNull();
+    expect(calls).toHaveLength(0);
   });
 
   it("stores null when every field is selected and drops unknown keys", async () => {
@@ -115,31 +94,31 @@ describe("resume service", () => {
     await addField("EMAIL", "Email", "ada@example.com");
     await addField("PHONE", "Phone", "+44 20 7946 0958");
     const { id } = await resumes.create(draft);
-    await resumes.save(id, textForm("body"), ["EMAIL", "PHONE", "GONE"]);
+    await resumes.updateOptions(id, ["EMAIL", "PHONE", "GONE"]);
     expect(repo.rows[0]?.headerFields).toBeNull();
-    await resumes.save(id, textForm("body"), ["EMAIL", "GONE"]);
+    await resumes.updateOptions(id, ["EMAIL", "GONE"]);
     expect(repo.rows[0]?.headerFields).toEqual(["EMAIL"]);
-    await resumes.save(id, textForm("body"), []);
+    await resumes.updateOptions(id, []);
     expect(repo.rows[0]?.headerFields).toEqual([]);
   });
 
   it("builds the print header from the selected fields in sort order", async () => {
-    const { resumes, addField } = await resumeSetup();
+    const { resumes, repo, addField } = await resumeSetup();
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("CITY", "City", "London", 3);
     const { id } = await resumes.create(draft);
+    await repo.update(id, { structured: sampleDocumentV2() });
     expect((await resumes.printData(id)).header.map((h) => h.key)).toEqual([
       "EMAIL",
       "PHONE",
       "CITY",
     ]);
-    await resumes.save(id, textForm("Body"), ["CITY", "EMAIL"]);
+    await resumes.updateOptions(id, ["CITY", "EMAIL"]);
     const data = await resumes.printData(id);
     expect(data.header.map((h) => h.key)).toEqual(["EMAIL", "CITY"]);
     expect(data.fullName).toBe(FULL_NAME);
-    expect(data.bodyHtml).toContain("<h2>Summary</h2>");
-    expect(data.bodyHtml).toContain("<p>Body</p>");
+    expect(data.bodyHtml).toContain("<h2>Experience</h2>");
     expect(data.pageSize).toBe("A4");
   });
 
@@ -148,7 +127,7 @@ describe("resume service", () => {
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
     const { id } = await resumes.create(draft);
-    await resumes.save(id, textForm("body"), ["EMAIL"]);
+    await resumes.updateOptions(id, ["EMAIL"]);
     expect(repo.rows[0]?.headerFields).toEqual(["EMAIL"]);
     await personalInfo.delete("EMAIL");
     expect((await resumes.printData(id)).header).toEqual([]);
@@ -156,14 +135,16 @@ describe("resume service", () => {
   });
 
   it("builds the download text with name, header lines and content", async () => {
-    const { resumes, addField } = await resumeSetup();
+    const { resumes, repo, addField } = await resumeSetup();
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
     const { id } = await resumes.create(draft);
-    await resumes.save(id, textForm("Body text"), ["EMAIL", "PHONE"]);
+    const doc = sampleDocumentV2();
+    await repo.update(id, { structured: doc });
+    await resumes.updateOptions(id, ["EMAIL", "PHONE"]);
     const { text, filename } = await resumes.download(id);
     expect(text).toBe(
-      `# ${FULL_NAME}\nEmail: ada@example.com\nPhone: +44 20 7946 0958\n\n## Summary\n\nBody text\n`,
+      `# ${FULL_NAME}\nEmail: ada@example.com\nPhone: +44 20 7946 0958\n\n${renderCareerBody(doc, doc.items)}`,
     );
     expect(filename).toBe("backend-at-acme.md");
   });
@@ -221,9 +202,9 @@ describe("resume service custom instructions", () => {
     const { resumes, repo, addField } = await resumeSetup();
     await addField("EMAIL", "Email", "ada@example.com");
     const { id } = await resumes.create(draft);
-    const saved = await resumes.save(id, textForm("Body"), ["EMAIL"], "  Lead with platform work ");
+    const saved = await resumes.updateOptions(id, ["EMAIL"], "  Lead with platform work ");
     expect(saved).toMatchObject({
-      document: textDocument("Body"),
+      document: null,
       headerFields: null,
       customInstructions: "Lead with platform work",
     });
@@ -234,9 +215,9 @@ describe("resume service custom instructions", () => {
     const { resumes, repo } = await resumeSetup();
     const created = await resumes.create({ ...draft, customInstructions: " \n\t " });
     expect(created.customInstructions).toBe("");
-    await resumes.save(created.id, textForm("body"), [], "keep");
+    await resumes.updateOptions(created.id, [], "keep");
     expect(repo.rows[0]?.customInstructions).toBe("keep");
-    await resumes.save(created.id, textForm("body"), [], "   ");
+    await resumes.updateOptions(created.id, [], "   ");
     expect(repo.rows[0]?.customInstructions).toBe("");
   });
 
@@ -248,7 +229,7 @@ describe("resume service custom instructions", () => {
     const created = await resumes.create({ ...draft, customInstructions: ` ${max} ` });
     expect(created.customInstructions).toBe(max);
     const { id } = created;
-    await expect(resumes.save(id, textForm("x"), [], max)).resolves.toMatchObject({
+    await expect(resumes.updateOptions(id, [], max)).resolves.toMatchObject({
       customInstructions: max,
     });
 
@@ -258,14 +239,15 @@ describe("resume service custom instructions", () => {
     });
     expect(repo.rows).toHaveLength(1);
 
-    await resumes.save(id, textForm("before"), [], "kept");
-    await expect(resumes.save(id, textForm("after"), [], tooLong)).rejects.toMatchObject({
+    await resumes.updateOptions(id, [], "kept");
+    await repo.update(id, { structured: sampleDocumentV2() });
+    await expect(resumes.updateOptions(id, [], tooLong)).rejects.toMatchObject({
       status: 400,
       message,
     });
     await expect(resumes.generate(id, tooLong)).rejects.toMatchObject({ status: 400, message });
     expect(repo.rows[0]).toMatchObject({
-      structured: textDocument("before"),
+      structured: sampleDocumentV2(),
       customInstructions: "kept",
     });
     expect(calls).toHaveLength(0);
@@ -283,14 +265,15 @@ describe("resume service custom instructions", () => {
     expect(repo.rows).toHaveLength(0);
 
     const { id } = await resumes.create({ ...draft, customInstructions: "kept" });
-    await resumes.save(id, textForm("before"), [], "kept");
-    await expect(resumes.save(id, textForm("after"), [], leak)).rejects.toMatchObject({
+    await resumes.updateOptions(id, [], "kept");
+    await repo.update(id, { structured: sampleDocumentV2() });
+    await expect(resumes.updateOptions(id, [], leak)).rejects.toMatchObject({
       status: 400,
       message,
     });
     await expect(resumes.generate(id, leak)).rejects.toMatchObject({ status: 400, message });
     expect(repo.rows[0]).toMatchObject({
-      structured: textDocument("before"),
+      structured: sampleDocumentV2(),
       customInstructions: "kept",
     });
     expect(calls).toHaveLength(0);
@@ -361,27 +344,27 @@ describe("resume service custom instructions", () => {
     expect(prompt.match(/<<<JOB_DESCRIPTION_END>>>/g)).toHaveLength(1);
   });
 
-  it("keeps the tailor prompt, master cv and token limit", async () => {
+  it("keeps the tailor prompt, career body and token limit", async () => {
     const { resumes, calls } = await resumeSetup();
     const { id } = await resumes.create(draft);
     await resumes.generate(id, "One page");
     expect(calls).toHaveLength(1);
     expect(calls[0]?.system).toContain(TAILOR_PROMPT);
     expect(calls[0]?.system).not.toContain("One page");
-    expect(calls[0]?.system).toContain("### Staff Engineer — Globex (2020-2024) [i1]");
+    expect(calls[0]?.system).toContain("### Staff Engineer [c1]");
     expect(calls[0]?.maxOutputTokens).toBe(6000);
   });
 
   it("keeps the instructions saved and the content unchanged when the llm is unavailable", async () => {
     const { resumes, repo } = await resumeSetup({ factory: failingFactory });
     const { id } = await resumes.create(draft);
-    await resumes.save(id, textForm("my edits"), []);
+    await repo.update(id, { structured: sampleDocumentV2() });
     await expect(resumes.generate(id, "Lead with platform")).rejects.toMatchObject({
       code: "llm_unavailable",
     });
     expect(repo.rows[0]).toMatchObject({
       customInstructions: "Lead with platform",
-      structured: textDocument("my edits"),
+      structured: sampleDocumentV2(),
       model: null,
     });
   });
@@ -436,17 +419,16 @@ describe("resume service create flow", () => {
       customInstructions: " One page ",
     });
     expect(error).toBeUndefined();
-    expect(resume).toMatchObject({ document: sampleDocument(), model: "vendor/tailor" });
+    expect(shape(resume.document)).toEqual(sampleShape());
+    expect(resume.model).toBe("vendor/tailor");
     expect(repo.rows).toHaveLength(1);
-    expect(repo.rows[0]).toMatchObject({
-      structured: sampleDocument(),
-      customInstructions: "One page",
-    });
+    expect(shape(repo.rows[0]?.structured as ResumeDocument)).toEqual(sampleShape());
+    expect(repo.rows[0]?.customInstructions).toBe("One page");
     expect(calls).toHaveLength(1);
     expect(calls[0]?.maxOutputTokens).toBe(6000);
     const prompt = calls[0]?.prompt ?? "";
     expect(prompt).toContain(TAILOR_PROMPT);
-    expect(prompt).toContain("## Education [s2]");
+    expect(prompt).toContain("## Education");
     expect(prompt).toContain(JD);
     expect(prompt).toContain(CUSTOM_INSTRUCTIONS_PREAMBLE);
     expect(prompt).toContain("One page");
@@ -489,15 +471,23 @@ describe("resume service create flow", () => {
     });
   });
 
-  it("keeps the resume with error master-cv when the master cv is empty", async () => {
-    for (const opts of [{ cv: "  " }, { seed: false }]) {
-      const { resumes, repo, calls } = await resumeSetup(opts);
-      const { error } = await resumes.createAndGenerate(draft);
-      expect(error).toBe("master-cv");
-      expect(repo.rows).toHaveLength(1);
-      expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
-      expect(calls).toHaveLength(0);
-    }
+  it("keeps the resume with error empty-library when the library is empty", async () => {
+    const { resumes, repo, calls } = await resumeSetup({ items: [] });
+    const { error } = await resumes.createAndGenerate(draft);
+    expect(error).toBe("empty-library");
+    expect(repo.rows).toHaveLength(1);
+    expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps the resume with error full-name when the library holds the full name", async () => {
+    const { resumes, repo, calls } = await resumeSetup({
+      items: [item("honour", { title: `Award for ${FULL_NAME}` })],
+    });
+    const { error } = await resumes.createAndGenerate(draft);
+    expect(error).toBe("full-name");
+    expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
+    expect(calls).toHaveLength(0);
   });
 
   it("sends no personal info value or full name to the model on create", async () => {
@@ -550,16 +540,16 @@ describe("tailor input", () => {
   });
 });
 
-describe("resume service get", () => {
+describe("resume service v2 get", () => {
   it("returns the parsed stored document", async () => {
     const { resumes, repo, logs } = await resumeSetup();
     const { id } = await resumes.create(draft);
-    await repo.update(id, { structured: sampleDocument() });
+    await repo.update(id, { structured: sampleDocumentV2() });
     const resume = await resumes.get(id);
-    expect(resume.document).toEqual(sampleDocument());
+    expect(resume.document).toEqual(sampleDocumentV2());
     expect(resume.invalid).toBe(false);
     expect(resume).not.toHaveProperty("structured");
-    expect((await resumes.list())[0]?.document).toEqual(sampleDocument());
+    expect((await resumes.list())[0]?.document).toEqual(sampleDocumentV2());
     expect(logs).toEqual([]);
   });
 
@@ -571,151 +561,121 @@ describe("resume service get", () => {
     expect(logs).toEqual([]);
   });
 
-  it("flags an invalid stored document and logs its id and path without content", async () => {
+  it("treats an invalid document as not generated and logs it", async () => {
     const { resumes, repo, logs } = await resumeSetup();
     const { id } = await resumes.create(draft);
-    const broken = sampleDocument();
-    itemAt(broken, 1, 0).heading = "";
+    const broken = sampleDocumentV2();
+    (broken.items[0] as { title: string }).title = "";
     await repo.update(id, { structured: broken });
     const resume = await resumes.get(id);
     expect(resume).toMatchObject({ document: null, invalid: true });
     expect(logs).toEqual([
-      {
-        level: "error",
-        message: "stored resume document invalid",
-        data: { id, path: "sections.1.items.0.heading" },
-      },
+      { level: "error", message: "stored resume document invalid", data: { id, path: "items.0" } },
     ]);
     const logged = JSON.stringify(logs);
     for (const content of ["Cut p99 latency", "Led the platform team", "Backend engineer"]) {
       expect(logged).not.toContain(content);
     }
 
-    await repo.update(id, { structured: { version: 2, sections: [] } });
+    await repo.update(id, { structured: { version: 1, sections: [] } });
     expect(await resumes.get(id)).toMatchObject({ document: null, invalid: true });
     expect(logs[1]?.data).toEqual({ id, path: "version" });
   });
 });
 
-describe("resume service structured generate", () => {
-  const reply = (patch: (r: ReturnType<typeof sampleReply>) => void = () => {}) => {
-    const r = sampleReply();
+describe("resume service v2 generate", () => {
+  const reply = (patch: (r: ReturnType<typeof sampleReplyV2>) => void = () => {}) => {
+    const r = sampleReplyV2();
     patch(r);
     return JSON.stringify(r);
   };
   const unknownId = reply((r) => {
-    r.items.push({ source_item_id: "i9", text: "Invented", bullets: [] });
+    r.items.push({ source_id: "c99", text: "Invented", bullets: [] });
   });
   const duplicateId = reply((r) => {
-    r.items.push({ source_item_id: "i1", text: "Again", bullets: [] });
+    r.items.push({ source_id: "c1", text: "Again", bullets: [] });
   });
   const overBounds = reply((r) => {
     const first = r.items[0];
     if (first) first.bullets = ["x".repeat(601)];
   });
 
-  it("sends the annotated master cv with ids kinds and headings", async () => {
-    const { resumes, calls } = await resumeSetup();
+  it("sends annotated items and no personal header", async () => {
+    const { resumes, calls, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
     const { id } = await resumes.create(draft);
     await resumes.generate(id);
     const system = calls[0]?.system ?? "";
     const cv = system.slice(system.indexOf("<cv>"));
-    for (const line of [
-      "[s0]\nBackend engineer with ten years of experience.",
-      "## Experience [s1]",
-      "### Staff Engineer — Globex (2020-2024) [i1]",
-      "### Engineer — Initech (2016-2020) [i2]",
-      "## Education [s2]",
-      "### BSc Computer Science — State University [i3]",
-      "## Skills [s3]",
-      "Section kinds: [s0] intro, [s1] experience, [s2] education, [s3] other",
-    ]) {
-      expect(cv).toContain(line);
+    const library = sampleLibrary().items;
+    for (const [n, it] of library.entries()) {
+      expect(cv).toContain(`### ${it.title} [c${n + 1}]`);
     }
+    expect(cv).toContain("Backend engineer\n\nTen years building payment systems.");
+    expect(calls[0]?.prompt).toContain(JD);
     expect(calls[0]?.structured).toBe(true);
+    for (const secret of ["ada@example.com", FULL_NAME]) {
+      expect(calls[0]?.prompt).not.toContain(secret);
+    }
   });
 
-  it("stores source headings in source order and drops left-out items", async () => {
-    const out = {
-      sections: [{ source_id: "s1", text: "## Lead **text**" }],
-      items: [
-        { source_item_id: "i3", text: "### BSc Fake Heading", bullets: ["- Honours"] },
-        { source_item_id: "i1", text: "Staff Engineer — Fake Corp (1999)", bullets: ["* Shipped"] },
-      ],
-    };
+  it("stores library titles and dates for the items the model reworded", async () => {
+    const out = sampleReplyV2();
+    const [globex, initech] = out.items;
+    if (!globex || !initech) throw new Error("sample changed");
+    out.items = [{ ...globex, text: "## Reworded **lead**", bullets: ["* Shipped"] }, initech];
     const { resumes, repo } = await resumeSetup({ mock: { text: JSON.stringify(out) } });
     const { id } = await resumes.create(draft);
     const saved = await resumes.generate(id);
-    expect(saved.document).toEqual({
-      version: 1,
-      sections: [
-        {
-          title: "Experience",
-          kind: "experience",
-          text: "Lead **text**",
-          items: [
-            {
-              heading: "Staff Engineer — Globex (2020-2024)",
-              text: "Staff Engineer — Fake Corp (1999)",
-              bullets: ["Shipped"],
-            },
-          ],
-        },
-        {
-          title: "Education",
-          kind: "education",
-          text: "",
-          items: [
-            {
-              heading: "BSc Computer Science — State University",
-              text: "BSc Fake Heading",
-              bullets: ["Honours"],
-            },
-          ],
-        },
-      ],
+    const experiences = saved.document?.items.filter((i) => i.kind === "experience");
+    expect(experiences).toHaveLength(2);
+    expect(experiences?.[0]).toMatchObject({
+      title: "Staff Engineer",
+      organisation: "Globex",
+      startYear: 2020,
+      text: "Reworded **lead**",
+      bullets: ["Shipped"],
     });
+    expect(saved.document?.items.every((i) => i.sourceId !== null)).toBe(true);
     expect(repo.rows[0]?.structured).toEqual(saved.document);
   });
 
-  it("retries once on invalid output unknown id or duplicate id", async () => {
+  it("retries once then fails leaving the document unchanged", async () => {
+    const { resumes, repo, calls, logs } = await resumeSetup({
+      mock: { replies: [unknownId, "not json", JSON.stringify(sampleReplyV2())] },
+    });
+    const { id } = await resumes.create(draft);
+    await repo.update(id, { structured: sampleDocumentV2(), model: "vendor/old" });
+    const error = await resumes.generate(id).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(LlmUnavailableError);
+    expect(error).toMatchObject({ status: 502 });
+    expect(calls).toHaveLength(2);
+    expect(repo.rows[0]).toMatchObject({ structured: sampleDocumentV2(), model: "vendor/old" });
+    expect(logs.map((l) => l.data)).toEqual([{ reason: "unknown_id" }, { reason: "schema" }]);
+  });
+
+  it("retries once on invalid output unknown id or duplicate id and keeps the second reply", async () => {
     for (const [bad, reason] of [
       ["not json", "schema"],
-      [JSON.stringify({ sections: [] }), "schema"],
+      [JSON.stringify({ items: [] }), "schema"],
       [overBounds, "schema"],
       [unknownId, "unknown_id"],
       [duplicateId, "duplicate_id"],
     ] as const) {
       const { resumes, repo, calls, logs } = await resumeSetup({
-        mock: { replies: [bad, JSON.stringify(sampleReply())] },
+        mock: { replies: [bad, JSON.stringify(sampleReplyV2())] },
       });
       const { id } = await resumes.create(draft);
       const saved = await resumes.generate(id, "One page");
       expect(calls, reason).toHaveLength(2);
       expect(calls[1]?.prompt).toBe(calls[0]?.prompt);
       expect(calls[1]?.system).toBe(calls[0]?.system);
-      expect(saved.document).toEqual(sampleDocument());
-      expect(repo.rows[0]?.structured).toEqual(sampleDocument());
+      expect(shape(saved.document)).toEqual(sampleShape());
+      expect(repo.rows[0]?.structured).toEqual(saved.document);
       expect(logs).toEqual([
         { level: "warn", message: "tailor output rejected", data: { reason } },
       ]);
     }
-  });
-
-  it("leaves the resume unchanged after two failed attempts", async () => {
-    const { resumes, repo, calls, logs } = await resumeSetup({
-      mock: { replies: [unknownId, "not json", JSON.stringify(sampleReply())] },
-    });
-    const { id } = await resumes.create(draft);
-    const before = sampleDocument();
-    before.sections = before.sections.slice(0, 1);
-    await repo.update(id, { structured: before, model: "vendor/old" });
-    const error = await resumes.generate(id).catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(LlmUnavailableError);
-    expect(error).toMatchObject({ status: 502 });
-    expect(calls).toHaveLength(2);
-    expect(repo.rows[0]).toMatchObject({ structured: before, model: "vendor/old" });
-    expect(logs.map((l) => l.data)).toEqual([{ reason: "unknown_id" }, { reason: "schema" }]);
   });
 
   it("does not retry when the provider is unavailable", async () => {
@@ -736,50 +696,22 @@ describe("resume service structured generate", () => {
     expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
   });
 
-  it("rejects a master cv without sections before calling the llm", async () => {
-    for (const cv of ["Ten years building backends.", "# Ada\n### Engineer\n- Built things"]) {
-      const { resumes, repo, calls } = await resumeSetup({ cv });
+  it("rejects an empty library before calling the llm", async () => {
+    for (const opts of [{ items: [] }, { items: [], seed: false }]) {
+      const { resumes, repo, calls } = await resumeSetup(opts);
       const { id } = await resumes.create(draft);
       await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
         status: 400,
-        message: "Structure the master CV with ## sections and ### items",
+        message: EMPTY_LIBRARY,
       });
       expect(calls).toHaveLength(0);
       expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
-      const flow = await resumes.createAndGenerate(draft);
-      expect(flow.error).toBe("structure");
-      expect(calls).toHaveLength(0);
     }
-  });
-
-  it("rejects an empty or too long heading before calling the llm", async () => {
-    const message = "A ### heading in the master CV is empty or longer than 200 characters";
-    for (const heading of ["", "   ", "x".repeat(201)]) {
-      const cv = CV.replace("### Engineer — Initech (2016-2020)", `### ${heading}`);
-      const { resumes, repo, calls } = await resumeSetup({ cv });
-      const { id } = await resumes.create(draft);
-      await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
-        status: 400,
-        message,
-      });
-      expect(calls).toHaveLength(0);
-      expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
-      const flow = await resumes.createAndGenerate(draft);
-      expect(flow.error).toBe("heading");
-      expect(calls).toHaveLength(0);
-    }
-    // 200 characters is within the bound.
-    const atBound = await resumeSetup({
-      cv: CV.replace("### Engineer — Initech (2016-2020)", `### ${"x".repeat(200)}`),
-    });
-    const { id } = await atBound.resumes.create(draft);
-    await atBound.resumes.generate(id);
-    expect(atBound.calls).toHaveLength(1);
   });
 
   it("sends no personal info and no full name to the model", async () => {
     const { resumes, calls, addField } = await resumeSetup({
-      mock: { replies: ["not json", JSON.stringify(sampleReply())] },
+      mock: { replies: ["not json", JSON.stringify(sampleReplyV2())] },
     });
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
@@ -795,24 +727,16 @@ describe("resume service structured generate", () => {
         expect(call.prompt).not.toContain(secret);
       }
     }
-
-    // A Master CV that carries the full name would send it if nothing guarded it.
-    const named = await resumeSetup({ cv: `# ${FULL_NAME}\n\n${CV}` });
-    const created = await named.resumes.create(draft);
-    await expect(named.resumes.generate(created.id)).rejects.toMatchObject({ status: 400 });
-    await named.resumes.createAndGenerate(draft);
-    expect(named.calls).toHaveLength(0);
-    for (const call of named.calls) expect(call.prompt).not.toContain(FULL_NAME);
   });
 
-  it("rejects a master cv that contains the full name before calling the llm", async () => {
-    const message = "Your full name is in the master CV — it is added when printed";
-    for (const cv of [
-      `# ${FULL_NAME}\n\n${CV}`,
-      `${CV}\n\nReferences: ask ${FULL_NAME.toUpperCase()} directly.`,
-      CV.replace("## Skills", `## Skills of ada lovelace`),
+  it("rejects a library holding the full name before calling the llm", async () => {
+    const message = "Your full name is in the career library — it is added when printed";
+    const named = (title: string) => [...sampleLibrary().items, item("honour", { title })];
+    for (const items of [
+      named(`Award for ${FULL_NAME.toUpperCase()}`),
+      [item("experience", { text: `Mentored by ada lovelace` })],
     ]) {
-      const { resumes, repo, calls } = await resumeSetup({ cv });
+      const { resumes, repo, calls } = await resumeSetup({ items });
       const { id } = await resumes.create(draft);
       await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
         status: 400,
@@ -820,15 +744,12 @@ describe("resume service structured generate", () => {
       });
       expect(calls).toHaveLength(0);
       expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
-      const flow = await resumes.createAndGenerate(draft);
-      expect(flow.error).toBe("full-name");
-      expect(calls).toHaveLength(0);
     }
   });
 
   it("keeps structured null until the first successful generation", async () => {
     const { resumes, repo } = await resumeSetup({
-      mock: { replies: ["not json", "not json", JSON.stringify(sampleReply())] },
+      mock: { replies: ["not json", "not json", JSON.stringify(sampleReplyV2())] },
     });
     const created = await resumes.create(draft);
     expect(created.document).toBeNull();
@@ -837,164 +758,11 @@ describe("resume service structured generate", () => {
     expect(repo.rows[0]?.structured).toBeNull();
     expect((await resumes.get(created.id)).document).toBeNull();
     await resumes.generate(created.id);
-    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
-  });
-});
-
-describe("resume service save", () => {
-  const withDocument = async () => {
-    const setup = await resumeSetup();
-    const { id } = await setup.resumes.create(draft);
-    await setup.resumes.save(id, documentForm(sampleDocument()), ["EMAIL"], "Kept");
-    return { ...setup, id };
-  };
-
-  it("parses the document before writing", async () => {
-    const { resumes, repo } = await resumeSetup();
-    const { id } = await resumes.create(draft);
-    const form = {
-      ...documentForm(sampleDocument()),
-      "sections.1.items.0.bullets":
-        "  Cut p99 latency by 40%\n\n   \n- Mentored **six** engineers\n",
-      "sections.1.items.1.heading": "### Engineer — Initech (2016-2020)",
-      headerFields: "EMAIL",
-      customInstructions: "ignored here",
-    };
-    const saved = await resumes.save(id, form, []);
-    expect(saved.document).toEqual(sampleDocument());
-    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
-
-    for (const [field, value] of [
-      ["sections.1.kind", "projects"],
-      ["sections.1.items.0.bullets", "x".repeat(601)],
-    ] as const) {
-      await expect(
-        resumes.save(id, { ...documentForm(sampleDocument()), [field]: value }, []),
-      ).rejects.toMatchObject({ status: 400, message: expect.stringContaining(field) });
-    }
-    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
-  });
-
-  it("strips prefixes on every text line and flattens headings on save", async () => {
-    const { resumes, repo } = await resumeSetup();
-    const { id } = await resumes.create(draft);
-    const form = {
-      ...documentForm(sampleDocument()),
-      "sections.0.text": "Backend engineer\n## Injected Section\n  - listed",
-      "sections.1.items.0.heading": "### Staff Engineer\r\n## Injected Role",
-      "sections.1.items.0.text": "Led the team.\n### Fake Role\n* starred",
-    };
-    const saved = await resumes.save(id, form, []);
-    const expected = sampleDocument();
-    const [intro, experience] = expected.sections;
-    if (!intro || !experience?.items[0]) throw new Error("sample changed");
-    intro.text = "Backend engineer\nInjected Section\nlisted";
-    experience.items[0] = {
-      ...experience.items[0],
-      heading: "Staff Engineer ## Injected Role",
-      text: "Led the team.\nFake Role\nstarred",
-    };
-    expect(saved.document).toEqual(expected);
-    expect(repo.rows[0]?.structured).toEqual(expected);
-  });
-
-  it("stores blank bullet lines as no bullets and drops an emptied section", async () => {
-    const { resumes, repo } = await resumeSetup();
-    const { id } = await resumes.create(draft);
-    const form = documentForm(sampleDocument());
-    form["sections.1.items.1.bullets"] = " \n\n ";
-    for (const key of Object.keys(form)) {
-      if (key.startsWith("sections.2.items.")) delete form[key];
-    }
-    await resumes.save(id, form, []);
-    const stored = repo.rows[0]?.structured as ReturnType<typeof sampleDocument>;
-    expect(stored.sections.map((s) => s.title)).toEqual(["", "Experience"]);
-    expect(itemAt(stored, 1, 1).bullets).toEqual([]);
-  });
-
-  it("rejects an invalid document with the failing path and stores nothing", async () => {
-    const { resumes, repo, id } = await withDocument();
-    const before = structuredClone(repo.rows[0]);
-    for (const [field, value, path] of [
-      ["sections.1.items.0.heading", "  ", "sections.1.items.0.heading"],
-      ["sections.1.items.1.heading", "h".repeat(201), "sections.1.items.1.heading"],
-      ["sections.0.text", "x".repeat(4001), "sections.0.text"],
-    ] as const) {
-      const form = { ...documentForm(sampleDocument()), [field]: value };
-      await expect(resumes.save(id, form, [], "Changed")).rejects.toMatchObject({
-        status: 400,
-        message: expect.stringContaining(path),
-      });
-    }
-    expect(repo.rows[0]).toEqual(before);
-  });
-
-  it("rejects personal info in any document string", async () => {
-    const { resumes, repo, addField, id } = await withDocument();
-    await addField("EMAIL", "Email", "ada@example.com", 1);
-    const before = structuredClone(repo.rows[0]);
-    for (const field of [
-      "sections.0.text",
-      "sections.1.title",
-      "sections.1.items.0.heading",
-      "sections.1.items.0.text",
-      "sections.1.items.1.bullets",
-    ]) {
-      const form = { ...documentForm(sampleDocument()), [field]: "Write to ADA@example.com" };
-      await expect(resumes.save(id, form, ["EMAIL"]), field).rejects.toMatchObject({
-        status: 400,
-        message: "Your Email is in the body — keep contact data in Personal info",
-      });
-    }
-    expect(repo.rows[0]).toEqual(before);
-  });
-
-  it("removes and moves items in the returned form without saving", async () => {
-    const { resumes, repo, id } = await withDocument();
-    const before = structuredClone(repo.rows[0]);
-    const form = documentForm(sampleDocument());
-
-    const removed = await resumes.formOp(id, form, "remove", "s1.i0");
-    expect(removed.sections[1]?.items.map((i) => i.heading)).toEqual([
-      "Engineer — Initech (2016-2020)",
-    ]);
-    const moved = await resumes.formOp(id, form, "up", "s1.i1");
-    expect(moved.sections[1]?.items.map((i) => i.heading)).toEqual([
-      "Engineer — Initech (2016-2020)",
-      "Staff Engineer — Globex (2020-2024)",
-    ]);
-    expect(await resumes.formOp(id, form, "down", "s1.i1")).toEqual(sampleDocument());
-    expect(repo.rows[0]).toEqual(before);
-
-    await resumes.save(id, documentForm(moved), []);
-    expect(repo.rows[0]?.structured).toEqual(moved);
-
-    await expect(resumes.formOp(id, form, "explode", "s1.i0")).rejects.toMatchObject({
-      status: 400,
-    });
-    await expect(
-      resumes.formOp(id, { ...form, "sections.1.items.0.heading": "" }, "up", "s1.i1"),
-    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("heading") });
-    await expect(resumes.formOp(MISSING, form, "up", "s1.i1")).rejects.toMatchObject({
-      status: 404,
-    });
+    expect(shape(repo.rows[0]?.structured as ResumeDocument)).toEqual(sampleShape());
   });
 });
 
 describe("resume service outputs", () => {
-  const MARKDOWN = [
-    "Backend engineer with 10 years of experience.",
-    "## Experience",
-    "### Staff Engineer — Globex (2020-2024)",
-    "Led the platform team.",
-    "- Cut p99 latency by 40%\n- Mentored **six** engineers",
-    "### Engineer — Initech (2016-2020)",
-    "- Built the billing service",
-    "## Education",
-    "### BSc Computer Science — State University",
-    "2012-2016",
-  ].join("\n\n");
-
   const stored = async (structured: unknown) => {
     const setup = await resumeSetup();
     await setup.addField("EMAIL", "Email", "ada@example.com", 1);
@@ -1005,30 +773,19 @@ describe("resume service outputs", () => {
   };
 
   it("print view renders the document", async () => {
-    const { resumes, id } = await stored(sampleDocument());
+    const { resumes, id } = await stored(sampleDocumentV2());
     const data = await resumes.printData(id);
     expect(data.empty).toBe(false);
     expect(data.fullName).toBe(FULL_NAME);
     expect(data.header.map((h) => `${h.label}: ${h.value}`)).toEqual(["Email: ada@example.com"]);
     const html = data.bodyHtml;
-    expect(html).toContain("<p>Backend engineer with 10 years of experience.</p>");
-    expect(html.match(/<h2>/g)).toHaveLength(2);
     expect(html).toContain("<h2>Experience</h2>");
-    expect(html).toContain("<h3>Staff Engineer — Globex (2020-2024)</h3>");
+    expect(html).toContain("<h3>Staff Engineer</h3>");
     expect(html).toContain("<li>Cut p99 latency by 40%</li>");
-    expect(html).toContain("<strong>six</strong>");
-    expect(html).toContain("<h3>BSc Computer Science — State University</h3>");
     const at = (s: string) => html.indexOf(s);
     expect(at("<h2>Experience</h2>")).toBeLessThan(at("Globex"));
     expect(at("Globex")).toBeLessThan(at("Initech"));
     expect(at("Initech")).toBeLessThan(at("<h2>Education</h2>"));
-  });
-
-  it("markdown download renders the document", async () => {
-    const { resumes, id } = await stored(sampleDocument());
-    const { text, filename } = await resumes.download(id);
-    expect(text).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\n${MARKDOWN}\n`);
-    expect(filename).toBe("backend-at-acme.md");
   });
 
   it("print and download show the empty state without a document", async () => {
