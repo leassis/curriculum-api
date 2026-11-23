@@ -240,7 +240,7 @@ describe("public chat route", () => {
       visibility: "public",
     });
     const current = await setup.profile.get();
-    await setup.profile.update({ ...current, masterCv: "Mail ada@example.com" });
+    await setup.profile.update({ ...current, headline: "Mail ada@example.com" });
     const { app } = createTestApp({ services: servicesOf(setup) });
     const res = await chat(app, await SESSION(setup), valid);
     expect(res.status).toBe(500);

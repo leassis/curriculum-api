@@ -5,10 +5,10 @@ import { ResumeRepository } from "../../../src/repositories/resume.repository";
 import { signSession } from "../../../src/security/session";
 import { LlmService } from "../../../src/services/llm.service";
 import { RecruiterChatService } from "../../../src/services/recruiter-chat.service";
+import { textDocumentV2 } from "../../support/career";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
 import { createRecordingModel } from "../../support/mock-llm";
-import { textDocument } from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -33,15 +33,21 @@ async function setup() {
     services.settings,
     services.personalInfo,
     llm,
+    services.career,
   );
   const { app } = createTestApp({ config: options, services: { llm, recruiterChat } });
   await services.profile.update({
     fullName: "Ada Lovelace",
     headline: "Engineer",
-    masterCv: "Ten years of backend work.",
+    masterCv: "legacy",
     publicSystemPrompt: "p",
     recruiterSystemPrompt: "Answer for recruiters.",
     tailorSystemPrompt: "t",
+  });
+  await services.career.add("experience", {
+    title: "Backend work",
+    organisation: "Acme",
+    startYear: "2020",
   });
   await services.personalInfo.create({
     key: "EMAIL",
@@ -118,7 +124,7 @@ describe("recruiter chat with database", () => {
     expect(s.calls).toHaveLength(1);
   });
 
-  it("keeps working with the master cv after the linked resume is deleted", async () => {
+  it("keeps working with the library after the linked resume is deleted", async () => {
     const s = await setup();
     const resumes = new ResumeRepository(db);
     const resume = await resumes.insert({
@@ -127,14 +133,14 @@ describe("recruiter chat with database", () => {
       jobDescription: "jd",
       customInstructions: "",
     });
-    await resumes.update(resume.id, { structured: textDocument("Resume-only text.") });
+    await resumes.update(resume.id, { structured: textDocumentV2("Resume-only text.") });
     const chat = await s.create({ tailoredResumeId: resume.id });
     const cookie = await s.cookieFor(chat.id);
     expect((await s.ask(chat.token, cookie)).status).toBe(200);
     await resumes.delete(resume.id);
     expect((await s.ask(chat.token, cookie)).status).toBe(200);
     expect(s.calls[0]?.prompt).toContain("Resume-only text.");
-    expect(s.calls[1]?.prompt).toContain("Ten years of backend work.");
+    expect(s.calls[1]?.prompt).toContain("### Backend work");
     expect(s.calls[1]?.prompt).not.toContain("Resume-only text.");
   });
 

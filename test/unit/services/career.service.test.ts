@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { IMPORT_PROMPT } from "../../../src/llm/import-prompt";
+import { renderCareerBody } from "../../../src/services/career/body";
 import type { CareerLibrary } from "../../../src/services/career/item";
 import { renderItemsMarkdown } from "../../../src/services/career/markdown";
 import { LlmUnavailableError } from "../../../src/services/errors";
@@ -250,6 +251,26 @@ describe("career service", () => {
       career.saveMarkdown(`## Honours\n\n### Award for ${FULL_NAME}`),
     ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("full name") });
     expect(repo.writes).toBe(0);
+  });
+
+  it("keeps personal info and the full name out of the career body", async () => {
+    const { career, profile, addField } = careerSetup();
+    await addField("EMAIL", "Email", "ada.private@example.com");
+    await addField("PHONE", "Phone", "+55 11 91234-5678");
+    const secrets = ["ada.private@example.com", "+55 11 91234-5678", FULL_NAME];
+    const leaks = [
+      { ...experience, details: "Mail ada.private@example.com" },
+      { ...experience, details: "- call +55 11 91234-5678" },
+      { ...experience, title: `${FULL_NAME} the engineer` },
+    ];
+    for (const body of leaks) await expect(career.add("experience", body)).rejects.toBeDefined();
+    await expect(
+      career.saveMarkdown(`## Experience\n\n### Engineer\n*Acme · 2020 – Present*\n${secrets[0]}`),
+    ).rejects.toBeDefined();
+    await career.add("experience", { ...experience, details: "Built payment systems." });
+    const body = renderCareerBody(await profile.get(), (await career.library()).items);
+    expect(body).toContain("Built payment systems.");
+    for (const secret of secrets) expect(body.toLowerCase()).not.toContain(secret.toLowerCase());
   });
 });
 

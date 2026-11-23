@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { verifySession } from "../../../src/security/session";
+import { textDocumentV2 } from "../../support/career";
 import { COMPANY, EMAIL, PHONE, RECRUITER, recruiterApp } from "../../support/recruiter-chat";
-import { textDocument } from "../../support/resume-document";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -217,12 +217,12 @@ describe("recruiter chat", () => {
     expect((await s.ask(chat.token, cookie)).status).toBe(404);
   });
 
-  it("keeps working with the master cv after the linked resume is deleted", async () => {
+  it("keeps working with the library after the linked resume is deleted", async () => {
     const s = await recruiterApp();
     const id = "00000000-0000-4000-8000-000000000042";
     s.repo.resumes.set(id, {
       title: "R",
-      structured: textDocument("Resume-only text."),
+      structured: textDocumentV2("Resume-only text."),
     });
     const chat = await s.newChat({ tailoredResumeId: id });
     const cookie = await s.cookieFor(chat.id);
@@ -230,7 +230,7 @@ describe("recruiter chat", () => {
     s.repo.deleteResume(id);
     expect((await s.ask(chat.token, cookie)).status).toBe(200);
     expect(s.calls[0]?.prompt).toContain("Resume-only text.");
-    expect(s.calls[1]?.prompt).toContain("Ten years building backends");
+    expect(s.calls[1]?.prompt).toContain("### Backend Engineer");
     expect(s.calls[1]?.prompt).not.toContain("Resume-only text.");
   });
 });

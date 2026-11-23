@@ -31,6 +31,7 @@ async function setup(mock: RecordingModelOptions = { chunks: ["Ten ", "years."] 
     services.settings,
     services.personalInfo,
     llm,
+    services.career,
   );
   const { app } = createTestApp({ config: options, services: { llm, recruiterChat } });
   await services.profile.update({

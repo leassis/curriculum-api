@@ -143,3 +143,7 @@ export function sampleReplyV2(library: CareerItem[] = sampleLibrary().items): Ta
     items: library.map((i, n) => ({ source_id: `c${n + 1}`, text: i.text, bullets: i.bullets })),
   };
 }
+
+export function textDocumentV2(summary: string): ResumeDocument {
+  return { version: 2, headline: "", summary, items: [] };
+}

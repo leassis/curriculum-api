@@ -27,15 +27,21 @@ async function setup() {
     services.profile,
     services.settings,
     llm,
+    services.career,
   );
   const { app } = createTestApp({ config: options, services: { llm, publicChat } });
   await services.profile.update({
     fullName: "Ada Lovelace",
     headline: "Engineer",
-    masterCv: "Ten years of backend work.",
+    masterCv: "legacy",
     publicSystemPrompt: "Answer about the candidate.",
     recruiterSystemPrompt: "r",
     tailorSystemPrompt: "t",
+  });
+  await services.career.add("experience", {
+    title: "Backend work",
+    organisation: "Acme",
+    startYear: "2020",
   });
   await services.personalInfo.create({
     key: "EMAIL",
@@ -79,7 +85,10 @@ describe("public chat with database", () => {
     await ask("How can I contact you?");
     await ask(`Is ${EMAIL} your address?`, "203.0.113.8");
     expect(calls).toHaveLength(2);
-    for (const call of calls) expect(call.prompt).not.toContain(EMAIL);
+    for (const call of calls) {
+      expect(call.prompt).not.toContain(EMAIL);
+      expect(call.prompt).toContain("### Backend work");
+    }
     expect(calls[1]?.prompt).toContain("[redacted]");
   });
 });

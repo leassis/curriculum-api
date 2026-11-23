@@ -456,8 +456,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Career Body AC 2-4 and the recruiter fallback; integration tests in `public-chat.test.ts` and `recruiter-chat.test.ts` updated to seed the library
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Unit tests for Career Body AC 2-4 and the recruiter fallback; integration tests in `public-chat.test.ts` and `recruiter-chat.test.ts` updated to seed the library
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

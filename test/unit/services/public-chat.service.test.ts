@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { renderCareerBody } from "../../../src/services/career/body";
 import { LimitReachedError, NotFoundError } from "../../../src/services/errors";
-import { CV, publicChatSetup, readAll } from "../../support/public-chat";
+import { LIBRARY, publicChatSetup, readAll } from "../../support/public-chat";
 
 const ask = [{ role: "user" as const, content: "What do you do?" }];
 
@@ -20,8 +21,9 @@ describe("public chat service", () => {
     expect(calls[0]?.maxOutputTokens).toBe(500);
     const prompt = calls[0]?.prompt ?? "";
     expect(prompt).toContain("Answer about the candidate only.");
-    expect(prompt).toContain(CV);
-    expect(prompt.indexOf("Answer about the candidate only.")).toBeLessThan(prompt.indexOf(CV));
+    const body = renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY);
+    expect(prompt).toContain(body);
+    expect(prompt.indexOf("Answer about the candidate only.")).toBeLessThan(prompt.indexOf(body));
     for (const m of history) expect(prompt).toContain(m.content);
   });
 
@@ -34,8 +36,19 @@ describe("public chat service", () => {
     expect(usage.usedBy("h1")).toBe(5);
   });
 
-  it("tells the model the cv is empty", async () => {
-    const { publicChat, calls } = await publicChatSetup({ cv: "" });
+  it("sends the career body rendered from the library", async () => {
+    const { publicChat, calls } = await publicChatSetup();
+    await readAll((await publicChat.ask("h1", ask)).stream);
+    const system = calls[0]?.system ?? "";
+    const body = system.slice(system.indexOf("<cv>\n") + 5, system.lastIndexOf("\n</cv>"));
+    expect(body).toBe(renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY));
+    expect(body).toContain("### Backend Engineer");
+    expect(body).toContain("### Billing rewrite");
+    expect(system).not.toContain("legacy master cv");
+  });
+
+  it("sends the empty cv body when the library is empty", async () => {
+    const { publicChat, calls } = await publicChatSetup({ items: [] });
     await readAll((await publicChat.ask("h1", ask)).stream);
     expect(calls[0]?.prompt).toContain("Master CV is empty");
   });
@@ -55,7 +68,7 @@ describe("public chat service", () => {
       visibility: "public",
     });
     const current = await profile.get();
-    await profile.update({ ...current, masterCv: "Reach me at ada@example.com" });
+    await profile.update({ ...current, headline: "Reach me at ada@example.com" });
     await expect(publicChat.ask("h1", ask)).rejects.toMatchObject({ code: "internal_error" });
     expect(usage.usedBy("h1")).toBe(0);
   });

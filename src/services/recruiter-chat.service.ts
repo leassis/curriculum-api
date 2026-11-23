@@ -7,6 +7,7 @@ import type {
   ResumeOption,
 } from "../repositories/recruiter-chat.repository.js";
 import { renderCareerBody } from "./career/body.js";
+import type { CareerService } from "./career.service.js";
 import {
   ChatExpiredError,
   ChatRevokedError,
@@ -18,7 +19,7 @@ import {
 } from "./errors.js";
 import type { ChatMessage, LlmService } from "./llm.service.js";
 import type { ContactItem, PersonalInfoService } from "./personal-info.service.js";
-import type { ProfileService } from "./profile.service.js";
+import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import { parseDocument } from "./tailor/document.js";
 
@@ -106,6 +107,7 @@ export class RecruiterChatService {
     protected readonly settings: SettingsService,
     protected readonly personalInfo: PersonalInfoService,
     protected readonly llm: LlmService,
+    protected readonly career: CareerService,
   ) {}
 
   async list(): Promise<RecruiterChat[]> {
@@ -207,7 +209,7 @@ export class RecruiterChatService {
     try {
       const profile = await this.profile.get();
       const resume = await this.resumeMarkdown(granted.tailoredResumeId);
-      const content = resume ?? profile.masterCv;
+      const content = resume ?? (await this.libraryBody(profile));
       const jd = granted.jobDescriptionShort;
       const { stream } = await this.llm.stream({
         area: "recruiter",
@@ -273,6 +275,11 @@ export class RecruiterChatService {
         },
       }),
     );
+  }
+
+  private async libraryBody(profile: Profile): Promise<string> {
+    const { items } = await this.career.library();
+    return items.length === 0 ? "" : renderCareerBody(profile, items);
   }
 
   /** The linked resume's document as markdown; null when unlinked, missing, invalid or empty. */

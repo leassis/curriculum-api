@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { renderCareerBody } from "../../../src/services/career/body";
 import {
   ChatExpiredError,
   ChatRevokedError,
@@ -7,18 +8,18 @@ import {
   NotFoundError,
   ValidationError,
 } from "../../../src/services/errors";
+import { sampleDocumentV2, textDocumentV2 } from "../../support/career";
 import { readAll } from "../../support/public-chat";
 import {
   COMPANY,
-  CV,
   EMAIL,
   JD,
+  LIBRARY,
   PHONE,
   RECRUITER,
   RECRUITER_PROMPT,
   recruiterSetup,
 } from "../../support/recruiter-chat";
-import { itemAt, sampleDocument, textDocument } from "../../support/resume-document";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const messages = [{ role: "user" as const, content: "What do you do?" }];
@@ -149,7 +150,7 @@ describe("recruiter chat service", () => {
     const resumeId = "00000000-0000-4000-8000-000000000042";
     repo.resumes.set(resumeId, {
       title: "Tailored",
-      structured: textDocument("Tailored body about Postgres."),
+      structured: textDocumentV2("Tailored body about Postgres."),
     });
     const chat = await newChat({ tailoredResumeId: resumeId });
     const answer = await recruiterChat.ask(chat, messages);
@@ -161,13 +162,13 @@ describe("recruiter chat service", () => {
     expect(prompt).toContain(RECRUITER_PROMPT);
     expect(prompt).toContain("Tailored body about Postgres.");
     expect(prompt).toContain(JD);
-    expect(prompt).not.toContain(CV);
+    expect(prompt).not.toContain("Backend Engineer");
     expect(calls[0]?.system).toContain(JD);
     expect(calls[0]?.system).toContain(RECRUITER_PROMPT);
     expect(calls[0]?.system).toContain("Tailored body about Postgres.");
   });
 
-  it("falls back to the master cv when the resume is missing or empty", async () => {
+  it("sends the resume career body or the library body", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const emptyId = "00000000-0000-4000-8000-000000000043";
     repo.resumes.set(emptyId, { title: "Empty", structured: null });
@@ -176,38 +177,27 @@ describe("recruiter chat service", () => {
     const plain = await newChat({ tailoredResumeId: undefined });
     await recruiterChat.ask(plain, messages);
     expect(calls).toHaveLength(2);
-    for (const call of calls) expect(call.prompt).toContain(CV);
+    for (const call of calls) expect(call.prompt).toContain("### Backend Engineer");
   });
 
   it("sends the linked resume document rendered as markdown", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
     const resumeId = "00000000-0000-4000-8000-000000000044";
-    repo.resumes.set(resumeId, { title: "Tailored", structured: sampleDocument() });
+    const doc = sampleDocumentV2();
+    repo.resumes.set(resumeId, { title: "Tailored", structured: doc });
     const chat = await newChat({ tailoredResumeId: resumeId });
     await readAll((await recruiterChat.ask(chat, messages)).stream);
     const system = calls[0]?.system ?? "";
     const body = system.slice(system.indexOf("<cv>\n") + 5, system.lastIndexOf("\n</cv>"));
-    expect(body).toBe(
-      [
-        "Backend engineer with 10 years of experience.",
-        "## Experience",
-        "### Staff Engineer — Globex (2020-2024)",
-        "Led the platform team.",
-        "- Cut p99 latency by 40%\n- Mentored **six** engineers",
-        "### Engineer — Initech (2016-2020)",
-        "- Built the billing service",
-        "## Education",
-        "### BSc Computer Science — State University",
-        "2012-2016\n",
-      ].join("\n\n"),
-    );
-    expect(system).not.toContain(CV);
+    expect(body).toBe(renderCareerBody(doc, doc.items));
+    expect(system).not.toContain("legacy master cv");
+    expect(system).not.toContain("Backend Engineer");
   });
 
-  it("falls back to the master cv when the linked resume has no document", async () => {
+  it("falls back to the library body when the linked resume has no valid document", async () => {
     const { recruiterChat, repo, calls, newChat } = await recruiterSetup();
-    const broken = sampleDocument();
-    itemAt(broken, 1, 0).heading = "";
+    const broken = sampleDocumentV2();
+    (broken.items[0] as { title: string }).title = "";
     const cases = [
       ["00000000-0000-4000-8000-000000000045", null],
       ["00000000-0000-4000-8000-000000000046", broken],
@@ -219,10 +209,17 @@ describe("recruiter chat service", () => {
       await readAll((await recruiterChat.ask(chat, messages)).stream);
     }
     expect(calls).toHaveLength(3);
+    const library = renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY);
     for (const call of calls) {
-      expect(call.system).toContain(`<cv>\n${CV}\n</cv>`);
+      expect(call.system).toContain(`<cv>\n${library}\n</cv>`);
       expect(call.system).not.toContain("Staff Engineer");
     }
+  });
+
+  it("tells the model the cv is empty when there is no resume and no library item", async () => {
+    const { recruiterChat, calls, newChat } = await recruiterSetup({ items: [] });
+    await readAll((await recruiterChat.ask(await newChat(), messages)).stream);
+    expect(calls[0]?.system).toContain("Master CV is empty");
   });
 
   it("answers revoked, expired or limit reached without calling the llm", async () => {
