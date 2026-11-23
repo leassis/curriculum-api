@@ -162,6 +162,10 @@ const MAX_BULLET = 600;
 const MAX_SKILLS = 50;
 const MAX_SKILL = 100;
 const SEPARATOR = " · ";
+const DATE_PART = "(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) )?\\d{4}";
+const DATE_LIKE = new RegExp(
+  `^(?:${DATE_PART}|(?:${DATE_PART} )?[–-] (?:${DATE_PART}|Present|No expiry))$`,
+);
 const ONE_LINE: Field[] = ["title", "organisation", "location", "level"];
 
 function isEmpty(value: unknown): boolean {
@@ -236,6 +240,7 @@ function itemIssues(item: CareerItem): string[] {
   }
   for (const field of ["organisation", "location"] as const) {
     if (item[field].includes(SEPARATOR)) issues.push(`${label(field)} cannot contain " · "`);
+    if (DATE_LIKE.test(item[field].trim())) issues.push(`${label(field)} cannot read as a date`);
   }
   if (item.bullets.some((b) => /[\r\n]/.test(b))) issues.push("A bullet must be one line");
   if (item.skills.some((s) => /[\r\n,]/.test(s))) {

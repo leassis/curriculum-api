@@ -248,6 +248,20 @@ describe("career item schema", () => {
     );
   });
 
+  it("rejects an organisation or location that reads as a date", () => {
+    for (const value of ["2019", "Mar 2019", "2018 – 2019", "2018 - Present", "– No expiry"]) {
+      expect(firstMessage(item("honour", { organisation: value }))).toBe(
+        "Awarded by cannot read as a date",
+      );
+      expect(firstMessage(item("experience", { location: value }))).toBe(
+        "Location cannot read as a date",
+      );
+    }
+    expect(CareerItemSchema.safeParse(item("honour", { organisation: "Acme 2019" })).success).toBe(
+      true,
+    );
+  });
+
   it("limits the library to 200 items", () => {
     const items = Array.from({ length: 200 }, () => item("honour"));
     expect(CareerLibrarySchema.safeParse({ version: 1, items }).success).toBe(true);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { groupByKind } from "../../../../src/services/career/display";
 import {
   type CareerItem,
+  CareerItemSchema,
   CareerLibrarySchema,
   KIND_META,
   KINDS,
@@ -84,6 +85,19 @@ const WORDS = [
 ];
 const FIRST_LINES = ["Plain text", "*wrapped*", "\\*already escaped*", "Stack overflow tales", "a"];
 
+const ORGANISATIONS: ((words: (max: number) => string) => string)[] = [
+  (words) => words(2),
+  (words) => words(2),
+  (words) => `${words(1)} 2019`,
+  (words) => `${words(1)} - ${words(1)}`,
+  () => "Present",
+  () => "No expiry",
+  () => "2019",
+  () => "Mar 2019",
+  () => "2018 – 2019",
+  () => "– Present",
+];
+
 function generateItem(random: () => number, kind: Kind): CareerItem {
   const pick = <T>(list: readonly T[]): T => list[Math.floor(random() * list.length)] as T;
   const words = (max: number) =>
@@ -112,7 +126,7 @@ function generateItem(random: () => number, kind: Kind): CareerItem {
   }
   return item(kind, {
     title: words(3),
-    organisation: has("organisation") && random() < 0.8 ? words(2) : "",
+    organisation: has("organisation") && random() < 0.8 ? pick(ORGANISATIONS)(words) : "",
     location: has("location") && random() < 0.5 ? words(2) : "",
     startYear,
     startMonth,
@@ -125,6 +139,8 @@ function generateItem(random: () => number, kind: Kind): CareerItem {
     level: has("level") ? words(2) : "",
   });
 }
+
+const rejected = { count: 0 };
 
 function generateLibrary(random: () => number, size: number): CareerItem[] {
   const items: CareerItem[] = [];
@@ -141,6 +157,13 @@ function generateLibrary(random: () => number, size: number): CareerItem[] {
         !candidate.organisation
       ) {
         candidate.organisation = "School";
+      }
+      const checked = CareerItemSchema.safeParse(candidate);
+      if (!checked.success) {
+        const messages = checked.error.issues.map((issue) => issue.message);
+        expect(messages.every((message) => message.endsWith("cannot read as a date"))).toBe(true);
+        rejected.count++;
+        continue;
       }
       items.push(candidate);
     }
@@ -250,6 +273,7 @@ describe("library markdown parsing", () => {
       });
       expect(parseItemsMarkdown(md, []).ok).toBe(true);
     }
+    expect(rejected.count).toBeGreaterThan(0);
   });
 
   it("round trips an interleaved library with each kind in its order", () => {
