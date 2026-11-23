@@ -16,6 +16,7 @@ export function testDb(): Db {
 
 const TABLES = [
   "profile",
+  "career_library",
   "settings",
   "personal_info",
   "tailored_resumes",

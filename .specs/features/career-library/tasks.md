@@ -247,8 +247,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Integration test: after migrate, the singleton check rejects id 2, the default document is an empty library, `summary` defaults to ''
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration test: after migrate, the singleton check rejects id 2, the default document is an empty library, `summary` defaults to ''
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

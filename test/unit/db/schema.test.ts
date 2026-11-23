@@ -18,10 +18,11 @@ describe("drizzle config", () => {
 });
 
 describe("schema", () => {
-  it("declares eight tables in curriculum_api", () => {
+  it("declares nine tables in curriculum_api", () => {
     const tables = Object.values(schema).filter((v) => is(v, PgTable));
     expect(tables.map((t) => getTableName(t)).sort()).toEqual([
       "admin_login_attempts",
+      "career_library",
       "personal_info",
       "profile",
       "public_usage",

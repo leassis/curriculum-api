@@ -33,7 +33,7 @@ async function publicObjectCounts() {
 describe("migrate", () => {
   beforeEach(dropSchema);
 
-  it("creates eight tables and the migrations table in curriculum_api", async () => {
+  it("creates nine tables and the migrations table in curriculum_api", async () => {
     await migrate(TEST_DATABASE_URL);
     const tables = await rows<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'curriculum_api' ORDER BY table_name",
@@ -41,6 +41,7 @@ describe("migrate", () => {
     expect(tables.map((t) => t.table_name)).toEqual([
       "__drizzle_migrations",
       "admin_login_attempts",
+      "career_library",
       "personal_info",
       "profile",
       "public_usage",
@@ -61,7 +62,7 @@ describe("migrate", () => {
     const before = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
     await expect(migrate(TEST_DATABASE_URL)).resolves.toBeUndefined();
     const after = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
-    expect(before).toHaveLength(5);
+    expect(before).toHaveLength(6);
     expect(after).toEqual(before);
   });
 });

@@ -224,9 +224,10 @@ describe("repo layout", () => {
       "0002_crazy_lake.sql",
       "0003_zippy_frank_castle.sql",
       "0004_woozy_bloodaxe.sql",
+      "0005_little_kronos.sql",
     ]);
     const journal = JSON.parse(read("drizzle/meta/_journal.json"));
-    expect(journal.entries).toHaveLength(5);
+    expect(journal.entries).toHaveLength(6);
     expect(JSON.parse(read("package.json")).files).toContain("drizzle");
   });
 

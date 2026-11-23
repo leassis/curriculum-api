@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { profile } from "../../../src/db/schema";
+import { careerLibrary, profile } from "../../../src/db/schema";
 import { seed } from "../../../src/db/seed";
 import { resetDb, TEST_DATABASE_URL, testDb } from "../../support/db";
 
@@ -25,6 +25,14 @@ describe("seed", () => {
     ]) {
       expect(prompt?.length).toBeGreaterThan(0);
     }
+  });
+
+  it("creates the empty career library and summary", async () => {
+    await seed(TEST_DATABASE_URL);
+    const [library] = await db.select().from(careerLibrary);
+    expect(library?.document).toEqual({ version: 1, items: [] });
+    const [row] = await db.select().from(profile);
+    expect(row?.summary).toBe("");
   });
 
   it("leaves an existing profile unchanged", async () => {

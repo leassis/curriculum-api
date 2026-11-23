@@ -21,6 +21,7 @@ export const profile = curriculum.table(
     id: integer().primaryKey().default(1),
     fullName: text().notNull(),
     headline: text().notNull(),
+    summary: text().notNull().default(""),
     masterCv: text().notNull(),
     publicSystemPrompt: text().notNull(),
     recruiterSystemPrompt: text().notNull(),
@@ -28,6 +29,16 @@ export const profile = curriculum.table(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [check("profile_singleton", sql`${t.id} = 1`)],
+);
+
+export const careerLibrary = curriculum.table(
+  "career_library",
+  {
+    id: integer().primaryKey().default(1),
+    document: jsonb().notNull().default(sql`'{"version":1,"items":[]}'::jsonb`),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("career_library_singleton", sql`${t.id} = 1`)],
 );
 
 export const settings = curriculum.table("settings", {

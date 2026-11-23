@@ -16,7 +16,7 @@ const full = {
 
 function setup(seed: boolean) {
   const repo = new FakeProfileRepo();
-  if (seed) repo.row = { ...full, id: 1, updatedAt: new Date() };
+  if (seed) repo.row = { ...full, summary: "", id: 1, updatedAt: new Date() };
   const config = resolvedConfig();
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), config.piiEncryptionKey);
   const profile = new ProfileService(repo);
