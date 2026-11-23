@@ -336,6 +336,12 @@ export class ResumeService {
     return applyOp(this.documentFrom(body), op, target);
   }
 
+  /** The posted editor form as a Resume Document, unsaved (for the preview). */
+  async formDocument(id: string, body: Record<string, unknown>): Promise<ResumeDocument> {
+    await this.get(id);
+    return this.documentFrom(body);
+  }
+
   /** The schema-valid document of an editor form; 400 naming the first failing path otherwise. */
   private documentFrom(body: Record<string, unknown>): ResumeDocument {
     const parsed = parseDocument(documentFromForm(body));

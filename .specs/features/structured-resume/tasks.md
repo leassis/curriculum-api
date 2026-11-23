@@ -489,9 +489,11 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests (test app) for every touched route: happy, 400, 502
-- [ ] Integration test: generate → remove → move → save → reload shows the change
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Unit tests (test app) for every touched route: happy, 400, 502 (save, form and preview make no model call, so only create/generate have a 502 path)
+- [x] Integration test: generate → remove → move → save → reload shows the change
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+
+**Status**: ✅ Complete
 
 **Tests**: integration
 **Gate**: full

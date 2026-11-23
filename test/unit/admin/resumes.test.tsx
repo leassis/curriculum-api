@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import { INVALID_DOCUMENT, NOT_GENERATED } from "../../../src/admin/resumes/view";
 import { profileInput } from "../../support/fakes/profile.fake";
 import {
+  editorForm,
+  itemAt,
+  opVals,
   sampleCv,
   sampleDocument,
   sampleReply,
+  sectionAt,
   textDocument,
   textForm,
 } from "../../support/resume-document";
@@ -90,13 +94,14 @@ describe("admin resumes", () => {
       const statuses = [
         (await get(base)).status,
         (await del(base)).status,
-        (await put(base, { content: "x" })).status,
+        (await put(base, textForm("x"))).status,
         (await post(`${base}/generate`)).status,
-        (await post(`${base}/preview`, { content: "x" })).status,
+        (await post(`${base}/preview`, textForm("x"))).status,
+        (await post(`${base}/form`, { ...textForm("x"), op: "remove", target: "s0.i0" })).status,
         (await get(`${base}/print`)).status,
         (await get(`${base}/download.md`)).status,
       ];
-      expect(statuses).toEqual([404, 404, 404, 404, 404, 404, 404]);
+      expect(statuses).toEqual([404, 404, 404, 404, 404, 404, 404, 404]);
     }
   });
 
@@ -173,10 +178,12 @@ describe("admin resumes", () => {
   it("preview returns sanitized html", async () => {
     const { post, resumes } = await resumeApp();
     const { id } = await resumes.create(newResume);
-    const res = await post(`/admin/resumes/${id}/preview`, {
-      content:
+    const res = await post(
+      `/admin/resumes/${id}/preview`,
+      textForm(
         "<script>alert(1)</script>**x** <img src=x onerror=alert(1)> [l](javascript:alert(1))",
-    });
+      ),
+    );
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("<strong>x</strong>");
@@ -653,6 +660,164 @@ describe("admin resumes structured", () => {
     const logged = logs.find((l) => l.message === "stored resume document invalid");
     expect(logged).toMatchObject({ level: "error", data: { id, path: "version" } });
     expect(JSON.stringify(logged)).not.toContain("SECRET-BODY");
+  });
+
+  it("create maps an unstructured master cv to the structure error", async () => {
+    const { post, get, repo, calls } = await resumeApp({ cv: "Plain text CV without sections" });
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    expect(repo.rows).toHaveLength(1);
+    const location = res.headers.get("location") ?? "";
+    expect(location).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=structure`);
+    expect(calls).toHaveLength(0);
+    const html = await (await get(location)).text();
+    expect(html.match(/<p[^>]*id="editor-status"[^>]*>([\s\S]*?)<\/p>/)?.[1]).toBe(
+      '<span class="text-danger">Structure the master CV with ## sections and ### items</span>',
+    );
+  });
+
+  it("save stores the form document and answers saved", async () => {
+    const { get, put, resumes, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const posted = editorForm(await (await get(`/admin/resumes/${id}`)).text());
+    // The Owner edits a heading, a text and the bullets (with blank lines), unchecks Phone.
+    posted["sections.1.items.0.heading"] = "Principal Engineer — Globex (2020-2024)";
+    posted["sections.0.text"] = "Edited intro.";
+    posted["sections.1.items.1.bullets"] = "\nBuilt billing\n   \n\nRan upgrades\n";
+    posted.headerFields = ["EMAIL"];
+    posted.customInstructions = "One page";
+    const res = await put(`/admin/resumes/${id}`, posted);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Saved");
+    const expected = sampleDocument();
+    sectionAt(expected, 0).text = "Edited intro.";
+    itemAt(expected, 1, 0).heading = "Principal Engineer — Globex (2020-2024)";
+    itemAt(expected, 1, 1).bullets = ["Built billing", "Ran upgrades"];
+    expect(repo.rows[0]).toMatchObject({
+      structured: expected,
+      headerFields: ["EMAIL"],
+      customInstructions: "One page",
+    });
+    const reloaded = await (await get(`/admin/resumes/${id}`)).text();
+    expect(editorForm(reloaded)["sections.1.items.1.bullets"]).toBe("Built billing\nRan upgrades");
+  });
+
+  it("save answers 400 naming the failing path and stores nothing", async () => {
+    const { get, put, resumes, repo, addField } = await resumeApp();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const posted = editorForm(await (await get(`/admin/resumes/${id}`)).text());
+    const empty = await put(`/admin/resumes/${id}`, {
+      ...posted,
+      "sections.1.items.1.heading": "  ",
+    });
+    expect(empty.status).toBe(400);
+    expect(await empty.text()).toContain("sections.1.items.1.heading");
+    const leak = await put(`/admin/resumes/${id}`, {
+      ...posted,
+      "sections.2.items.0.text": "mail ada@example.com",
+    });
+    expect(leak.status).toBe(400);
+    expect(await leak.text()).toContain(
+      "Your Email is in the body — keep contact data in Personal info",
+    );
+    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
+  });
+
+  it("remove and move return the edited form unsaved", async () => {
+    const { get, post, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const posted = editorForm(html);
+    const headings = (fragment: string) =>
+      [
+        ...fragment.matchAll(/name="sections\.(\d+)\.items\.\d+\.heading"[^>]*value="([^"]*)"/g),
+      ].map((m) => `${m[1]}:${m[2]}`);
+
+    const removed = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Remove", "s1.i0"),
+    });
+    expect(removed.status).toBe(200);
+    const removedHtml = await removed.text();
+    expect(removedHtml.startsWith('<div id="document-form"')).toBe(true);
+    expect(headings(removedHtml)).toEqual([
+      "1:Engineer — Initech (2016-2020)",
+      "2:BSc Computer Science — State University",
+    ]);
+    expect(removedHtml).toMatch(/<div id="preview"[^>]*hx-swap-oob="true"/);
+    expect(removedHtml).not.toContain("<h3>Staff Engineer");
+
+    const moved = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Move down", "s1.i0"),
+    });
+    const movedHtml = await moved.text();
+    expect(headings(movedHtml)).toEqual([
+      "1:Engineer — Initech (2016-2020)",
+      "1:Staff Engineer — Globex (2020-2024)",
+      "2:BSc Computer Science — State University",
+    ]);
+    const up = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Move up", "s1.i1"),
+    });
+    expect(headings(await up.text())).toEqual(headings(movedHtml));
+    const edge = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Move up", "s1.i0"),
+    });
+    expect(headings(await edge.text())).toEqual(headings(html));
+    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
+  });
+
+  it("form answers 400 for an unknown op or an invalid form", async () => {
+    const { get, post, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const posted = editorForm(await (await get(`/admin/resumes/${id}`)).text());
+    const unknown = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      op: "drop",
+      target: "s1.i0",
+    });
+    expect(unknown.status).toBe(400);
+    expect(await unknown.text()).toContain("Unknown item operation");
+    const invalid = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      "sections.1.items.0.heading": "",
+      op: "remove",
+      target: "s1.i1",
+    });
+    expect(invalid.status).toBe(400);
+    expect(await invalid.text()).toContain("sections.1.items.0.heading");
+  });
+
+  it("preview renders the posted form", async () => {
+    const { get, post, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const posted = editorForm(await (await get(`/admin/resumes/${id}`)).text());
+    posted["sections.1.items.0.heading"] = "Typed <b>heading</b>";
+    posted["sections.1.items.0.bullets"] = "First\n\n**Second**";
+    const res = await post(`/admin/resumes/${id}/preview`, posted);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("<h2>Experience</h2>");
+    expect(html).toContain("<h3>Typed &lt;b&gt;heading&lt;/b&gt;</h3>");
+    expect(html).toMatch(/<li>First<\/li>\s*<li><strong>Second<\/strong><\/li>/);
+    expect(html).toContain("<p>Backend engineer with 10 years of experience.</p>");
+    expect(html).not.toContain("<b>heading");
+    const bad = await post(`/admin/resumes/${id}/preview`, {
+      ...posted,
+      "sections.1.items.0.heading": "",
+    });
+    expect(bad.status).toBe(400);
   });
 
   it("generate swaps in the form with the new document", async () => {

@@ -124,3 +124,59 @@ export function textDocument(text: string): ResumeDocument {
 
 /** The editor form of `textDocument(text)`. */
 export const textForm = (text: string) => documentForm(textDocument(text));
+
+const unescapeHtml = (s: string) =>
+  s
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&amp;", "&");
+
+const attrOf = (tag: string, name: string) => {
+  const m = tag.match(new RegExp(`\\s${name}="([^"]*)"`));
+  return m ? unescapeHtml(m[1] ?? "") : undefined;
+};
+
+/**
+ * The fields a browser posts for `#resume-form` in rendered editor HTML: inputs with a name
+ * (checkboxes only when checked) and textareas, in document order. Repeated names collect.
+ */
+export function editorForm(html: string): Record<string, string | string[]> {
+  const start = html.indexOf('id="resume-form"');
+  if (start < 0) throw new Error("no #resume-form in the html");
+  return formFields(html.slice(start, html.indexOf("</form>", start)));
+}
+
+/** The named inputs (checkboxes only when checked) and textareas of an html fragment. */
+export function formFields(form: string): Record<string, string | string[]> {
+  const fields: Record<string, string | string[]> = {};
+  const add = (name: string, value: string) => {
+    const prev = fields[name];
+    if (prev === undefined) fields[name] = value;
+    else fields[name] = Array.isArray(prev) ? [...prev, value] : [prev, value];
+  };
+  for (const m of form.matchAll(/<input\b[^>]*>|<textarea\b([^>]*)>([^<]*)<\/textarea>/g)) {
+    const tag = m[0];
+    const name = attrOf(tag, "name");
+    if (name === undefined) continue;
+    if (tag.startsWith("<textarea")) {
+      add(name, unescapeHtml(m[2] ?? ""));
+      continue;
+    }
+    if (attrOf(tag, "type") === "checkbox" && !/\schecked(?:[\s=>/])/.test(tag)) continue;
+    add(name, attrOf(tag, "value") ?? "");
+  }
+  return fields;
+}
+
+/** The `hx-vals` of the item button labelled `label` for `target` (`s<i>.i<j>`), parsed. */
+export function opVals(html: string, label: string, target: string): Record<string, string> {
+  for (const m of html.matchAll(/<button\b[^>]*>([^<]*)<\/button>/g)) {
+    const vals = attrOf(m[0], "hx-vals");
+    if (m[1] !== label || vals === undefined) continue;
+    const parsed = JSON.parse(vals) as Record<string, string>;
+    if (parsed.target === target) return parsed;
+  }
+  throw new Error(`no ${label} button for ${target}`);
+}

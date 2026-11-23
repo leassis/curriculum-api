@@ -375,6 +375,24 @@ export const Editor = ({
   );
 };
 
+/** The answer to Remove / Move: the edited form, and the preview swapped out of band. */
+export const FormSwap = ({
+  doc,
+  url,
+  preview,
+}: {
+  doc: DocumentView;
+  url: string;
+  preview: string;
+}) => (
+  <>
+    <DocumentForm doc={doc} url={url} />
+    <div id="preview" class="paper" hx-swap-oob="true">
+      {raw(renderMarkdown(preview))}
+    </div>
+  </>
+);
+
 export const EditorPage = (p: {
   basePath: string;
   resume: ResumeView;

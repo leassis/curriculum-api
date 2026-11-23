@@ -7,7 +7,17 @@ import { ResumeService } from "../../../src/services/resume.service";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
 import { createRecordingModel } from "../../support/mock-llm";
-import { sampleCv, sampleReply, textForm } from "../../support/resume-document";
+import {
+  editorForm,
+  formFields,
+  itemAt,
+  opVals,
+  sampleCv,
+  sampleDocument,
+  sampleReply,
+  sectionAt,
+  textForm,
+} from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -168,5 +178,68 @@ describe("resumes with database", () => {
     const rows = await db.select().from(recruiterChats);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.tailoredResumeId).toBeNull();
+  });
+});
+
+describe("resumes structured editing", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  it("removes an item and saves without it", async () => {
+    const { send, create } = await setup();
+    const id = await create();
+    expect((await send("POST", `/admin/resumes/${id}/generate`)).status).toBe(200);
+    const page = await (await send("GET", `/admin/resumes/${id}`)).text();
+    const outside = Object.fromEntries(
+      Object.entries(editorForm(page)).filter(([k]) => !k.startsWith("sections.")),
+    );
+    const headings = (html: string) =>
+      [...html.matchAll(/name="sections\.\d+\.items\.\d+\.heading"[^>]*value="([^"]*)"/g)].map(
+        (m) => m[1],
+      );
+
+    // Move the first role down, then remove it from its new place.
+    const moved = await send("POST", `/admin/resumes/${id}/form`, {
+      ...editorForm(page),
+      ...opVals(page, "Move down", "s1.i0"),
+    });
+    expect(moved.status).toBe(200);
+    const movedHtml = await moved.text();
+    expect(headings(movedHtml).slice(0, 2)).toEqual([
+      "Engineer — Initech (2016-2020)",
+      "Staff Engineer — Globex (2020-2024)",
+    ]);
+    const removed = await send("POST", `/admin/resumes/${id}/form`, {
+      ...outside,
+      ...formFields(movedHtml),
+      ...opVals(movedHtml, "Remove", "s1.i1"),
+    });
+    expect(removed.status).toBe(200);
+    const removedHtml = await removed.text();
+    expect(headings(removedHtml)).toEqual([
+      "Engineer — Initech (2016-2020)",
+      "BSc Computer Science — State University",
+    ]);
+    // Nothing is stored before Save.
+    const [before] = await db.select().from(tailoredResumes);
+    expect(before?.structured).toEqual(sampleDocument());
+
+    const saved = await send("PUT", `/admin/resumes/${id}`, {
+      ...outside,
+      ...formFields(removedHtml),
+    });
+    expect(await saved.text()).toBe("Saved");
+
+    const expected = sampleDocument();
+    sectionAt(expected, 1).items = [itemAt(sampleDocument(), 1, 1)];
+    const [row] = await db.select().from(tailoredResumes);
+    expect(row?.structured).toEqual(expected);
+    const reloaded = await (await send("GET", `/admin/resumes/${id}`)).text();
+    expect(headings(reloaded)).toEqual([
+      "Engineer — Initech (2016-2020)",
+      "BSc Computer Science — State University",
+    ]);
+    expect(reloaded).not.toContain("Staff Engineer — Globex");
   });
 });

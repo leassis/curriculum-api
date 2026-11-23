@@ -7,7 +7,7 @@ import type { Resume } from "../../services/resume.service.js";
 import { renderResumeMarkdown } from "../../services/tailor/render.js";
 import { ErrorFragment } from "../error-fragment.js";
 import { EDITOR_JS } from "../static/resumes-js.generated.js";
-import { Editor, EditorPage, ResumesPage } from "./view.js";
+import { Editor, EditorPage, FormSwap, ResumesPage } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
@@ -16,6 +16,7 @@ const optionalText = (value: unknown) => (typeof value === "string" ? value : un
 const CREATE_ERRORS: Record<string, string> = {
   generate: "Generation failed, try again",
   "master-cv": "Fill the master CV first",
+  structure: "Structure the master CV with ## sections and ### items",
 };
 
 const createError = (code: string | undefined): string | undefined =>
@@ -94,13 +95,27 @@ resumesRouter.post("/resumes/:id/generate", async (c) => {
 });
 
 resumesRouter.post("/resumes/:id/preview", async (c) => {
-  await c.var.services.resumes.get(c.req.param("id"));
-  const body = await c.req.parseBody();
-  return c.html(raw(renderMarkdown(text(body.content))));
+  const body = await c.req.parseBody({ all: true, dot: true });
+  const doc = await c.var.services.resumes.formDocument(c.req.param("id"), body);
+  return c.html(raw(renderMarkdown(renderResumeMarkdown(doc))));
+});
+
+/** Remove / Move up / Move down: applies the op to the posted form and returns it unsaved. */
+resumesRouter.post("/resumes/:id/form", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.parseBody({ all: true, dot: true });
+  const doc = await c.var.services.resumes.formOp(id, body, text(body.op), text(body.target));
+  return c.html(
+    FormSwap({
+      doc,
+      url: `${c.var.config.basePath}/admin/resumes/${id}`,
+      preview: renderResumeMarkdown(doc),
+    }),
+  );
 });
 
 resumesRouter.put("/resumes/:id", async (c) => {
-  const body = await c.req.parseBody({ all: true });
+  const body = await c.req.parseBody({ all: true, dot: true });
   const keys = headerKeys(body.headerFields);
   await c.var.services.resumes.save(
     c.req.param("id"),
