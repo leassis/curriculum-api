@@ -70,7 +70,7 @@
 | C60 | `test/unit/services/tailor/assemble.test.ts` `assemble v2 > copies typed fields from the library and bodies from the model` | yes |
 | C61 | `test/unit/services/tailor/assemble.test.ts` `assemble v2 > sets source id to the library item id` | yes |
 | C62 | `test/unit/services/tailor/assemble.test.ts` `assemble v2 > restores omitted experience and education after the model items` | yes - one restored item per kind; my 2-omitted probe passed |
-| C63 | `test/unit/services/resume.service.test.ts` `resume service v2 generate > retries once then fails leaving the document unchanged` | no - asserts status 502; the criterion fixes 503 (F2) |
+| C63 | `test/unit/admin/resumes.test.tsx` `admin resumes > generate answers 503 after one retry when the model names an unknown id twice` | yes - asserts 503 after two bad replies (F2 fixed) |
 | C64 | `test/unit/services/resume.service.test.ts` `resume service v2 generate > rejects an empty library before calling the llm` | yes |
 | C65 | `captures/header-experience.running.png` `browser capture` | yes - Header card (name, headline, summary on expand) and cards match the capture; AD-012 approved |
 | C66 | `test/integration/routes/resumes.test.ts` `admin resumes career routes > edits the resume copy and leaves the library unchanged` | yes - route covers edit, move, delete; add is held by the unit sibling (F4) |

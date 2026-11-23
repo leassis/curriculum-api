@@ -1,15 +1,15 @@
 # career-library proofs
 
-**HEAD**: d1b332a
+**HEAD**: c79fb21
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 73 pass, 3 fail
+**Result**: 76 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
 | C1 | `run unit / ✓ career cards > renders the cards in kind order` | pass |
 | C2 | `browser captures/education-certifications-courses.running.png` | pass |
-| C3 | `browser captures/skills-publications-honours.running.png` | **diverges** (screens.md) |
+| C3 | `browser captures/skills-publications-honours.running.png` | pass |
 | C4 | `run unit / ✓ career cards > shows the item count next to a card with items` | pass |
 | C5 | `run unit / ✓ career cards > shows nothing here yet and no badge for an empty kind` | pass |
 | C6 | `run unit / ✓ display > builds experience and project meta lines without empty parts` | pass |
@@ -18,7 +18,7 @@
 | C9 | `run unit / ✓ display > formats dates and ranges` | pass |
 | C10 | `run unit / ✓ display > ends current experience with present and current certification with no expiry` | pass |
 | C11 | `run unit / ✓ admin profile career > add opens an empty form at the end of the card` | pass |
-| C12 | `browser captures/project-form.running.png` | **diverges** (screens.md) |
+| C12 | `browser captures/project-form.running.png` | pass |
 | C13 | `run unit / ✓ career cards item form > shows the kind fields and its ongoing label` | pass |
 | C14 | `run unit / ✓ career form > splits details into text and bullets and joins them back` | pass |
 | C15 | `run unit / ✓ career form > splits the tech stack on commas and joins it back` | pass |
@@ -71,7 +71,7 @@
 | C62 | `run unit / ✓ assemble v2 > restores omitted experience and education after the model items` | pass |
 | C63 | `run unit / ✓ admin resumes > generate answers 503 after one retry when the model names an unknown id twice` | pass |
 | C64 | `run unit / ✓ resume service v2 generate > rejects an empty library before calling the llm` | pass |
-| C65 | `browser captures/header-experience.running.png` | **diverges** (screens.md) |
+| C65 | `browser captures/header-experience.running.png` | pass |
 | C66 | `run int / ✓ admin resumes career routes > edits the resume copy and leaves the library unchanged` | pass |
 | C67 | `run unit / ✓ resume service items > adds an item with a null source id` | pass |
 | C68 | `run unit / ✓ resume service items > keeps a tailored item whose library item was deleted` | pass |
@@ -115,7 +115,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:15440) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:18900) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
