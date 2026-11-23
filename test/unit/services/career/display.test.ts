@@ -29,6 +29,13 @@ describe("display", () => {
     expect(
       dateRange(item("certification", { startYear: 2021, startMonth: 6, current: true })),
     ).toBe("Jun 2021 – No expiry");
+    const row = { organisation: "Globex", startYear: 2020, startMonth: 1, current: true };
+    expect(metaLine(item("experience", { ...row, location: "Remote" }))).toBe(
+      "Globex · Remote · Jan 2020 – Present",
+    );
+    expect(metaLine(item("certification", { ...row, organisation: "Issuer" }))).toBe(
+      "Issuer · Jan 2020 – No expiry",
+    );
   });
 
   it("builds experience and project meta lines without empty parts", () => {
