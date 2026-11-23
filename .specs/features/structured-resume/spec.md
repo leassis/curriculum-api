@@ -78,6 +78,10 @@ A Tailored Resume is one markdown text. Code cannot tell a role from a bullet, s
 9. WHEN Custom Instructions are non-empty THEN the tailor input SHALL wrap them in `<custom_instructions>`…`</custom_instructions>` under the existing preamble, with both tags removed from the text first (AD-007).
 10. WHEN Custom Instructions are empty THEN the tailor input SHALL contain no `<custom_instructions>` tag.
 11. The system SHALL send the model no Personal Info Field value and no `profile.fullName`.
+12. IF the Master CV contains `profile.fullName` (case-insensitive) THEN Generate SHALL answer 400 "Your full name is in the master CV — it is added when printed" and SHALL not call the LLM.
+13. IF a `### ` heading of the Master CV is empty or longer than 200 characters THEN Generate SHALL answer 400 "A ### heading in the master CV is empty or longer than 200 characters" and SHALL not call the LLM.
+14. WHEN a returned or saved text field has a line starting with 1-6 `#`, `- ` or `* ` followed by a space THEN the system SHALL store that line without the prefix.
+15. WHEN a returned or saved heading or bullet contains line breaks THEN the system SHALL store it with each line break replaced by one space.
 
 **Independent Test**: Mock model returns text for two of three items with altered heading text in a body: stored document has source headings, two items, source order.
 
@@ -152,6 +156,7 @@ A Tailored Resume is one markdown text. Code cannot tell a role from a bullet, s
 - WHEN a section has no `###` items THEN its lead text SHALL be its only content.
 - WHEN the Owner removes every item of a section and its text is empty THEN Save SHALL drop the section.
 - IF a bullets field holds only blank lines THEN the item SHALL be stored with `bullets: []`.
+- WHEN the Owner empties a text-only section and then uses Remove, Move up or Move down on an item in a later section THEN the op SHALL act on the item whose button was used.
 
 Dimensions sweep (Large):
 - Input validation & bounds → Store AC 4-9, Edit AC 6-7, bounds in Assumptions.
@@ -176,7 +181,9 @@ Dimensions sweep (Large):
 | SR-04 | Generate AC 7: CV without structure | Specify | Pending |
 | SR-05 | Generate AC 8: prefix stripping | Specify | Pending |
 | SR-06 | Generate AC 9-10: Custom Instructions delimiter | Specify | Pending |
-| SR-07 | Generate AC 11: no PII to the LLM | Specify | Pending |
+| SR-07 | Generate AC 11-12: no PII or full name to the LLM | Specify | Pending |
+| SR-16 | Generate AC 13: bad heading rejected before the call | Specify | Pending |
+| SR-17 | Generate AC 14-15: multi-line strings cleaned | Specify | Pending |
 | SR-08 | Store AC 1-3: migration, rows kept, NULL until generated |
 | SR-15 | Store AC 4-9: zod `ResumeDocumentSchema` on every write and read | Specify | Pending |
 | SR-09 | Edit AC 1-2: form and not-generated state | Specify | Pending |
@@ -186,11 +193,13 @@ Dimensions sweep (Large):
 | SR-13 | Outputs AC 1-3, 6: markdown renderer, print, download | Specify | Pending |
 | SR-14 | Outputs AC 4-5: recruiter context | Specify | Pending |
 
-**Coverage:** 15 total, 0 mapped to tasks, 15 unmapped ⚠️ (tasks not written yet)
+**Coverage:** 17 total, 0 mapped to tasks, 17 unmapped ⚠️ (tasks not written yet)
 
 ---
 
 ## Sources
+
+- User answers to Verifier round 1 (2026-11-23): F1 "Reject with 400", F3 "Strip per line", F4 "400 before the call"; walk "Yes, after the fixes".
 
 - User (2026-11-23): "the tailored resume should also be save in json, because it opens a oportunity to create custom pdf versions."; "at resumes we are phasing out markdowns. it should be only JSON and we edit the JSON."
 - User answers (2026-11-23): split, structured-resume first; structured form; drop old resumes; Print View, markdown download and recruiter context from JSON; heading line + bullets; parse markdown headings (AD-006); source order; own delimiter (AD-007).

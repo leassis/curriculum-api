@@ -667,10 +667,24 @@ Proof: run unit | ✓ form codec > drops empty sections and stores blank bullets
 
 ---
 
+**C41** - A Master CV containing `profile.fullName` answers 400 "Your full name is in the master CV — it is added when printed" with no LLM call (SR-07, Generate AC 12)
+Proof: run unit | ✓ resume service structured generate > rejects a master cv that contains the full name before calling the llm
+
+**C42** - An empty or over-200-character `### ` heading answers 400 "A ### heading in the master CV is empty or longer than 200 characters" with no LLM call (SR-16, Generate AC 13)
+Proof: run unit | ✓ resume service structured generate > rejects an empty or too long heading before calling the llm
+
+**C43** - Text lines starting with a heading or bullet prefix are stripped, and line breaks in headings and bullets become one space, on Generate and Save (SR-17, Generate AC 14-15)
+Proof: run unit | ✓ assemble > strips prefixes on every text line and flattens headings and bullets
+
+**C44** - Remove / Move act on the clicked item after a text-only section above it was emptied (SR-10, edge)
+Proof: run unit | ✓ form codec > applies the op to the clicked item after an earlier section is emptied
+
+---
+
 ## Handoff
 
-**Settled mid-build:** Batch models - user: "use sonnet for phase 1, opus for phase 2"; Phase 3 model - user: "Opus".
-**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at a78d9bc, returned at 2dbeff0; Phase 3 batch worker (opus) T19-T22 at 97435bf, returned at e2c757b; check_proofs 43 pass at e2c757b; Verifier round 1 at dba4750
+**Settled mid-build:** Verifier round 1 - user: F1 "Reject with 400", F3 "Strip per line", F4 "400 before the call", walk "Yes, after the fixes" (spec Generate AC 12-15, edge, C41-C44). Batch models - user: "use sonnet for phase 1, opus for phase 2"; Phase 3 model - user: "Opus".
+**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at a78d9bc, returned at 2dbeff0; Phase 3 batch worker (opus) T19-T22 at 97435bf, returned at e2c757b; check_proofs 43 pass at e2c757b; Verifier round 1 at 4f59a97, returned at 618c035 (FAIL: F1-F4); fixer (opus) at <H>
 **Walked:** none
 
 ---
