@@ -105,10 +105,9 @@ resumesRouter.post("/resumes/:id/preview", async (c) => {
 resumesRouter.put("/resumes/:id", async (c) => {
   const body = await c.req.parseBody({ all: true });
   const keys = headerKeys(body.headerFields);
-  const content = Array.isArray(body.content) ? text(body.content[0]) : text(body.content);
   await c.var.services.resumes.save(
     c.req.param("id"),
-    content,
+    body,
     keys,
     optionalText(body.customInstructions),
   );

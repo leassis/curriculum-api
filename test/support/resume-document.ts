@@ -100,3 +100,27 @@ export function itemAt(
   if (!it) throw new Error(`no item ${i}.${j}`);
   return it;
 }
+
+/** The editor form fields of a document, as the form posts them: one bullet per line. */
+export function documentForm(doc: ResumeDocument): Record<string, string> {
+  const form: Record<string, string> = {};
+  doc.sections.forEach((s, i) => {
+    form[`sections.${i}.title`] = s.title;
+    form[`sections.${i}.kind`] = s.kind;
+    form[`sections.${i}.text`] = s.text;
+    s.items.forEach((it, j) => {
+      form[`sections.${i}.items.${j}.heading`] = it.heading;
+      form[`sections.${i}.items.${j}.text`] = it.text;
+      form[`sections.${i}.items.${j}.bullets`] = it.bullets.join("\n");
+    });
+  });
+  return form;
+}
+
+/** A document of one "Summary" section holding `text`. */
+export function textDocument(text: string): ResumeDocument {
+  return { version: 1, sections: [{ title: "Summary", kind: "other", text, items: [] }] };
+}
+
+/** The editor form of `textDocument(text)`. */
+export const textForm = (text: string) => documentForm(textDocument(text));

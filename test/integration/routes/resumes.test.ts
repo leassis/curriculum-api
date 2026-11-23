@@ -7,7 +7,7 @@ import { ResumeService } from "../../../src/services/resume.service";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
 import { createRecordingModel } from "../../support/mock-llm";
-import { sampleCv, sampleReply } from "../../support/resume-document";
+import { sampleCv, sampleReply, textForm } from "../../support/resume-document";
 import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
@@ -105,7 +105,7 @@ describe("resumes with database", () => {
     expect(calls[0]?.prompt).toContain("## Experience [s1]");
 
     const saved = await send("PUT", `/admin/resumes/${id}`, {
-      content: "## Edited\n\n<script>alert(1)</script>**safe**",
+      ...textForm("<script>alert(1)</script>**safe**"),
       headerFields: ["EMAIL"],
     });
     expect(await saved.text()).toBe("Saved");
@@ -125,7 +125,7 @@ describe("resumes with database", () => {
       'attachment; filename="backend-at-acme.md"',
     );
     expect(await download.text()).toBe(
-      `# Ada Lovelace\nEmail: ${EMAIL}\n\n## Edited\n\n<script>alert(1)</script>**safe**`,
+      `# Ada Lovelace\nEmail: ${EMAIL}\n\n## Summary\n\n<script>alert(1)</script>**safe**\n`,
     );
 
     const profilePrint = await (await send("GET", "/admin/profile/print")).text();

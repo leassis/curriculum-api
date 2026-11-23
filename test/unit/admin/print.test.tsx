@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { documentForm, textForm } from "../../support/resume-document";
 import { FULL_NAME, resumeApp } from "../../support/resumes";
 
 async function withResume(opts: Parameters<typeof resumeApp>[0] = {}) {
@@ -16,10 +17,15 @@ async function withResume(opts: Parameters<typeof resumeApp>[0] = {}) {
 describe("admin print", () => {
   it("prints the name, the selected header fields in order and the sanitized body", async () => {
     const { get, resumes, id } = await withResume();
-    await resumes.save(id, "## Experience\n\n<script>alert(1)</script>**Built** things", [
-      "EMAIL",
-      "PHONE",
-    ]);
+    const body = "<script>alert(1)</script>**Built** things";
+    await resumes.save(
+      id,
+      documentForm({
+        version: 1,
+        sections: [{ title: "Experience", kind: "experience", text: body, items: [] }],
+      }),
+      ["EMAIL", "PHONE"],
+    );
     const res = await get(`/admin/resumes/${id}/print`);
     expect(res.status).toBe(200);
     const html = await res.text();
@@ -118,11 +124,11 @@ describe("admin print", () => {
 
   it("downloads markdown with the attachment filename and header lines", async () => {
     const { get, resumes, id } = await withResume();
-    await resumes.save(id, "## Body", ["EMAIL"]);
+    await resumes.save(id, textForm("Body"), ["EMAIL"]);
     const res = await get(`/admin/resumes/${id}/download.md`);
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
     expect(res.headers.get("content-disposition")).toBe('attachment; filename="backend-acme.md"');
-    expect(await res.text()).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\n## Body`);
+    expect(await res.text()).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\n## Summary\n\nBody\n`);
   });
 });

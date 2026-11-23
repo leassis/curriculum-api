@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { profileInput } from "../../support/fakes/profile.fake";
-import { sampleCv, sampleDocument, sampleReply } from "../../support/resume-document";
+import {
+  sampleCv,
+  sampleDocument,
+  sampleReply,
+  textDocument,
+  textForm,
+} from "../../support/resume-document";
 import { failingFactory, resumeApp } from "../../support/resumes";
 
 /** A reply whose first item text carries raw HTML, to prove it is escaped. */
@@ -98,19 +104,20 @@ describe("admin resumes", () => {
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
     const { id } = await resumes.create({ ...newResume, jobDescription: "Needs <Rust>" });
-    await resumes.save(id, "## Hello", ["EMAIL"]);
+    await resumes.save(id, textForm("Hello"), ["EMAIL"]);
     const html = await (await get(`/admin/resumes/${id}`)).text();
     expect(html).toContain("Backend at Acme");
     expect(html).toContain("Acme");
     expect(html).toContain("Needs &lt;Rust&gt;");
-    expect(html).toMatch(/<textarea[^>]*name="content"[^>]*>## Hello<\/textarea>/);
+    expect(html).toMatch(/<textarea[^>]*name="content"[^>]*>## Summary\n\nHello\n<\/textarea>/);
     expect(html).toMatch(/<input[^>]*name="headerFields"[^>]*value="EMAIL"[^>]*checked/);
     expect(html).not.toMatch(/<input[^>]*value="PHONE"[^>]*checked/);
     for (const label of ["Generate", "Save", "Print", "Download .md"]) {
       expect(html).toContain(label);
     }
     expect(html).toContain(`href="/admin/resumes/${id}/download.md"`);
-    expect(html).toContain("<h2>Hello</h2>");
+    expect(html).toContain("<h2>Summary</h2>");
+    expect(html).toContain("<p>Hello</p>");
   });
 
   it("generate returns the editor fragment with the new content", async () => {
@@ -138,7 +145,7 @@ describe("admin resumes", () => {
     expect(button(empty)).toContain('hx-disabled-elt="this"');
     expect(button(empty)).not.toContain("hx-confirm");
     expect(empty).toContain('id="generate-indicator"');
-    await resumes.save(id, "edited", []);
+    await resumes.save(id, textForm("edited"), []);
     const filled = await (await get(`/admin/resumes/${id}`)).text();
     expect(button(filled)).toContain('hx-confirm="Replace the current content?"');
   });
@@ -146,11 +153,11 @@ describe("admin resumes", () => {
   it("generate answers 502 with the failure text and keeps the content", async () => {
     const { post, resumes, repo } = await resumeApp({ factory: failingFactory });
     const { id } = await resumes.create(newResume);
-    await resumes.save(id, "my edits", []);
+    await resumes.save(id, textForm("my edits"), []);
     const res = await post(`/admin/resumes/${id}/generate`);
     expect(res.status).toBe(502);
     expect(await res.text()).toContain("Generation failed, try again");
-    expect(repo.rows[0]?.content).toBe("my edits");
+    expect(repo.rows[0]?.structured).toEqual(textDocument("my edits"));
   });
 
   it("generate answers 400 with the master cv text", async () => {
@@ -180,11 +187,14 @@ describe("admin resumes", () => {
     await addField("EMAIL", "Email", "ada@example.com", 1);
     await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
     const { id } = await resumes.create(newResume);
-    const res = await put(`/admin/resumes/${id}`, { content: "# Mine", headerFields: ["PHONE"] });
+    const res = await put(`/admin/resumes/${id}`, { ...textForm("Mine"), headerFields: ["PHONE"] });
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("Saved");
-    expect(repo.rows[0]).toMatchObject({ content: "# Mine", headerFields: ["PHONE"] });
-    await put(`/admin/resumes/${id}`, { content: "# Mine", headerFields: ["EMAIL", "PHONE"] });
+    expect(repo.rows[0]).toMatchObject({
+      structured: textDocument("Mine"),
+      headerFields: ["PHONE"],
+    });
+    await put(`/admin/resumes/${id}`, { ...textForm("Mine"), headerFields: ["EMAIL", "PHONE"] });
     expect(repo.rows[0]?.headerFields).toBeNull();
   });
 
@@ -192,12 +202,12 @@ describe("admin resumes", () => {
     const { put, resumes, repo, addField } = await resumeApp();
     await addField("EMAIL", "Email", "ada@example.com", 1);
     const { id } = await resumes.create(newResume);
-    const res = await put(`/admin/resumes/${id}`, { content: "mail ada@example.com" });
+    const res = await put(`/admin/resumes/${id}`, textForm("mail ada@example.com"));
     expect(res.status).toBe(400);
     expect(await res.text()).toContain(
       "Your Email is in the body — keep contact data in Personal info",
     );
-    expect(repo.rows[0]?.content).toBe("");
+    expect(repo.rows[0]?.structured).toBeNull();
   });
 });
 
@@ -215,16 +225,16 @@ describe("admin resumes custom instructions", () => {
     const { put, resumes, repo } = await resumeApp();
     const { id } = await resumes.create(newResume);
     const res = await put(`/admin/resumes/${id}`, {
-      content: "# Mine",
+      ...textForm("Mine"),
       customInstructions: " Lead with platform work ",
     });
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("Saved");
     expect(repo.rows[0]).toMatchObject({
-      content: "# Mine",
+      structured: textDocument("Mine"),
       customInstructions: "Lead with platform work",
     });
-    await put(`/admin/resumes/${id}`, { content: "# Again" });
+    await put(`/admin/resumes/${id}`, textForm("Again"));
     expect(repo.rows[0]?.customInstructions).toBe("Lead with platform work");
   });
 

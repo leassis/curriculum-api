@@ -18,9 +18,11 @@ import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
 import { type AssembleFailure, assemble } from "./tailor/assemble.js";
-import { parseDocument, type ResumeDocument } from "./tailor/document.js";
+import { parseDocument, type ResumeDocument, stripPrefix } from "./tailor/document.js";
+import { applyOp, documentFromForm, type ItemOp } from "./tailor/form.js";
 import { TailorOutputSchema } from "./tailor/output.js";
 import { type ParsedCv, parseMasterCv } from "./tailor/parse-cv.js";
+import { renderResumeMarkdown } from "./tailor/render.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
 export type Resume = Omit<ResumeRow, "structured"> & {
@@ -68,6 +70,39 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 
 const MASTER_CV_REQUIRED = "Fill the master CV first";
 const MASTER_CV_UNSTRUCTURED = "Structure the master CV with ## sections and ### items";
+const ITEM_OPS: readonly string[] = ["remove", "up", "down"] satisfies ItemOp[];
+const isItemOp = (op: string): op is ItemOp => ITEM_OPS.includes(op);
+
+function invalidDocument(path: string): ValidationError {
+  return new ValidationError(`Invalid resume field: ${path}`, { [path]: "is invalid" });
+}
+
+/** Every string of a document the Owner can write, for the PII Guard. */
+function documentStrings(doc: ResumeDocument): string[] {
+  return doc.sections.flatMap((s) => [
+    s.title,
+    s.text,
+    ...s.items.flatMap((i) => [i.heading, i.text, ...i.bullets]),
+  ]);
+}
+
+/** Strips a leading heading or bullet marker from every editable string; empty bullets go. */
+function stripDocument(doc: ResumeDocument): ResumeDocument {
+  const clean = (v: string) => stripPrefix(v).trim();
+  return {
+    ...doc,
+    sections: doc.sections.map((s) => ({
+      ...s,
+      text: clean(s.text),
+      items: s.items.map((i) => ({
+        heading: clean(i.heading),
+        text: clean(i.text),
+        bullets: i.bullets.map(clean).filter((b) => b !== ""),
+      })),
+    })),
+  };
+}
+
 /** One model call, then one more when its output is rejected. */
 const TAILOR_ATTEMPTS = 2;
 
@@ -248,10 +283,13 @@ export class ResumeService {
     throw new LlmUnavailableError();
   }
 
-  /** Saves the markdown and the selected header keys after the PII Guard. */
+  /**
+   * Saves the Resume Document built from the editor form, with the selected header keys, after
+   * the schema (400 naming the first failing path) and the PII Guard over every string.
+   */
   async save(
     id: string,
-    content: string,
+    body: Record<string, unknown>,
     headerKeys: string[],
     customInstructions?: string,
   ): Promise<Resume> {
@@ -261,20 +299,46 @@ export class ResumeService {
       customInstructions === undefined
         ? undefined
         : this.checkInstructions(customInstructions, fields);
-    const found = findPii(content, fields)[0];
+    const doc = stripDocument(this.documentFrom(body));
+    const checked = parseDocument(doc);
+    if (!checked.ok) throw invalidDocument(checked.path);
+    const found = findPii(documentStrings(checked.doc).join("\n"), fields)[0];
     if (found) {
       throw new ValidationError(
         `Your ${found.label} is in the body — keep contact data in Personal info`,
       );
     }
     return this.update(id, {
-      content,
+      structured: checked.doc,
+      // Kept in step until print and download render from the document.
+      content: renderResumeMarkdown(checked.doc),
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),
       ),
       ...(instructions === undefined ? {} : { customInstructions: instructions }),
     });
+  }
+
+  /** Applies Remove / Move up / Move down to the posted form; returns the document unsaved. */
+  async formOp(
+    id: string,
+    body: Record<string, unknown>,
+    op: string,
+    target: string,
+  ): Promise<ResumeDocument> {
+    await this.get(id);
+    if (!isItemOp(op)) {
+      throw new ValidationError("Unknown item operation", { op: "is not remove, up or down" });
+    }
+    return applyOp(this.documentFrom(body), op, target);
+  }
+
+  /** The schema-valid document of an editor form; 400 naming the first failing path otherwise. */
+  private documentFrom(body: Record<string, unknown>): ResumeDocument {
+    const parsed = parseDocument(documentFromForm(body));
+    if (!parsed.ok) throw invalidDocument(parsed.path);
+    return parsed.doc;
   }
 
   async printData(id: string): Promise<PrintData> {
