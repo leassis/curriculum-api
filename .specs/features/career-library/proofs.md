@@ -1,6 +1,6 @@
 # career-library proofs
 
-**HEAD**: 35ef532
+**HEAD**: 73273f3
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 72 pass, 4 fail
@@ -89,20 +89,20 @@
 `Run unit` - exit 0
 
 ```
-PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
-    at LlmService.prepare (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:121:13)
-    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:55:45)
-    at PublicChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/public-chat.service.ts:35:26)
-    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/public.ts:69:33)
+stderr | test/unit/routes/recruiter.test.ts > recruiter chat > answers 502 llm_unavailable and gives the question back
+LlmUnavailableError: The language model is unavailable
+    at firstChunk (/Users/leassis/workspace/curriculum-api/src/llm/first-chunk.ts:28:57)
+    at LlmService.stream (/Users/leassis/workspace/curriculum-api/src/services/llm.service.ts:64:20)
+    at RecruiterChatService.ask (/Users/leassis/workspace/curriculum-api/src/services/recruiter-chat.service.ts:214:26)
+    at Object.handler (/Users/leassis/workspace/curriculum-api/src/routes/recruiter.ts:81:33)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at Object.handler (/Users/leassis/workspace/curriculum-api/src/middleware/require-session.ts:15:5)
     at async dispatch (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35) {
-  fieldKey: 'EMAIL',
-  code: 'internal_error',
-  status: 500
+  code: 'llm_unavailable',
+  status: 502
 }
 ```
 
@@ -115,7 +115,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:9309) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:9857) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
