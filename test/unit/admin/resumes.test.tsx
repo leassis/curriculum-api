@@ -344,7 +344,10 @@ describe("admin resumes create flow", () => {
     for (const [fields, message] of cases) {
       const res = await post("/admin/resumes", fields);
       expect(res.status).toBe(400);
-      expect(await res.text()).toContain(message);
+      const body = await res.text();
+      expect(body).toContain(message);
+      expect(body).toContain('class="error"');
+      expect(body).toContain('role="alert"');
     }
     expect(repo.rows).toHaveLength(0);
     expect(calls).toHaveLength(0);
