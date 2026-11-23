@@ -37,6 +37,8 @@ pnpm dev                           # http://localhost:3001
 `pnpm dev` first rebuilds the admin page scripts (`pnpm build:js`) so the generated files match their sources. To edit a page script (`src/admin/<page>/client.ts`), run `pnpm dev:assets` in a second terminal (rebuilds on save; reload the browser), then commit the regenerated `src/admin/static/*-js.generated.ts`. `pnpm build:assets` rebuilds CSS and scripts; `pnpm lint` fails when a generated script is stale.
 After `pnpm build` the same commands exist as `node dist/cli.js <migrate|seed|hash-password|cleanup>`.
 
+Migration `0004` drops the generated markdown of every Tailored Resume (and clears its model); rows, Job Descriptions, Custom Instructions, header fields and Recruiter Chat links stay, and each resume shows "Not generated yet" until it is generated again. It cannot be undone: do not run `migrate` against production without the Owner's go-ahead.
+
 ## URLs (port 3001)
 
 - `/admin` - HTML/HTMX admin (login, Master CV, personal info, settings, resumes, recruiter chats)

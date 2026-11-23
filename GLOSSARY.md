@@ -47,8 +47,12 @@ The Owner's display name, headline, Master CV and the three system prompts.
 _Avoid_: Account, settings
 
 **Tailored Resume**:
-A Career Body rewritten by the tailor model for one Job Description, editable by the Owner.
+The Master CV rewritten by the tailor model for one Job Description, stored as a Resume Document and editable by the Owner.
 _Avoid_: Custom CV, variant
+
+**Resume Document**:
+The JSON form of a Tailored Resume: ordered sections (title, kind, text) holding items (heading, text, bullets), whose titles and headings come from the Master CV. Rendered to markdown to become a Career Body for print, download and Recruiter Chats.
+_Avoid_: Resume JSON, structured content, resume markdown
 
 **Custom Instructions**:
 Owner-written steering text of one Tailored Resume, sent to the tailor model; never a source of facts.

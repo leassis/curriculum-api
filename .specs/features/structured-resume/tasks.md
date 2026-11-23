@@ -533,7 +533,9 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+
+**Status**: ✅ Complete
 
 **Tests**: none
 **Gate**: build
