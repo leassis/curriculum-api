@@ -150,7 +150,7 @@ T1 → T2 → T3 → T4 → T5
 **Done when**:
 
 - [x] Unit tests C1, C7, C15 pass
-- [ ] Walk: create a resume with one box unchecked, see the editor with the draft; make the model fail and see the error - recorded in `## Handoff` (NOT a browser walk, see Handoff)
+- [x] Walk: create a resume with one box unchecked, see the editor with the draft; make the model fail and see the error - recorded in `## Handoff` (NOT a browser walk, see Handoff)
 - [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
@@ -227,8 +227,8 @@ Proof: run int | ✓ resume repository > stores headerFields on insert and reads
 ## Handoff
 
 **Settled mid-build:** (a) Create-form busy state uses `hx-boost` + `hx-disabled-elt` + `hx-indicator` and loads `editor.js` on `/admin/resumes` (reuses `swapErrorsInto("editor-status")` so 400s show in the form), not the inline `onsubmit` of the design: the admin CSP (`script-src 'self'`) blocks inline handlers (`SPEC_DEVIATION` in `view.tsx`). (b) `ResumeInsert` gained optional `headerFields` (`src/repositories/resume.repository.ts`, commit `fix(repositories): accept headerFields on resume insert`). (c) `test/support/resume.fake.ts` now honours `headerFields` on insert. (d) `test/integration/routes/resumes.test.ts` helper `create` resets `calls` after the POST (create now generates once); no assertion changed.
-**Dispatched:** Verifier over HEAD b6f330a (sent, not returned)
-**Walked:** NOT a browser walk. The app was not run (no dev DB work by the worker). Verified through unit tests on rendered HTML and routes against fakes, and the integration suite on a throwaway Neon branch: form has the Personal header fieldset (all checked, hidden `headerFieldsPosted`), create generates and 303s to the editor holding the draft, failures keep the resume and redirect with `?error=generate|master-cv`, editor status line shows the fixed text. NOT verified: real browser, htmx behaviour (boosted submit, button disabled, "Generating…" visible, 303 followed by XHR and URL pushed, 400 shown in `#editor-status`), layout and styling of the fieldset. Reach: sign in at `/admin`, open `/admin/resumes`, scroll to "New resume".
+**Dispatched:** Verifier over HEAD 8d30e08 (returned, FAIL, 6 findings; fix pass d131c59..766068b; round 2 = check_proofs)
+**Walked:** 2026-11-23 in Chrome against `pnpm dev` on http://localhost:3001 (admin already signed in). Reach: /admin/resumes, form "New resume" at the bottom. Create story: filled Title and Job Description, clicked Create; the button was disabled and "Generating…" showed beside it; ~15 s later the browser landed on /admin/resumes/<id> with the generated draft in the Markdown field and the preview (resume "Walk test backend" is left in the dev DB). Validation: blank Job Description -> red "Job Description is required" below the form, typed values kept, button enabled again, no resume created. Failure story: /admin/resumes/<id>?error=generate shows "Generation failed, try again" in the status line (the LLM-failure and empty-Master-CV redirects themselves are proved by unit tests C9/C10, not forced in the browser). Not walked: the Personal header fieldset on the create form, because the dev DB has no Personal Info Fields so the form omits it (the C15 case); checked-by-default and unchecked storage are proved by C1, C5, C6, C17, C19, C20.
 
 ---
 
