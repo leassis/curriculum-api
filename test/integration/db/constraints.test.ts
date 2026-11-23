@@ -99,3 +99,22 @@ describe("constraints", () => {
     expect(chat?.tailoredResumeId).toBeNull();
   });
 });
+
+describe("tailored resumes structured column", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  it("new rows have a null structured document", async () => {
+    const [row] = await db
+      .insert(tailoredResumes)
+      .values({ title: "Backend", jobDescription: "jd" })
+      .returning();
+    expect(row?.structured).toBeNull();
+    const [read] = await db
+      .select({ structured: tailoredResumes.structured })
+      .from(tailoredResumes)
+      .where(eq(tailoredResumes.id, row?.id ?? ""));
+    expect(read).toEqual({ structured: null });
+  });
+});

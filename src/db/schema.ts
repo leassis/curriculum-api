@@ -5,6 +5,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgSchema,
   primaryKey,
   text,
@@ -58,6 +59,8 @@ export const tailoredResumes = curriculum.table("tailored_resumes", {
   customInstructions: text().notNull().default(""),
   headerFields: text().array(),
   model: text(),
+  /** The Resume Document; NULL until the first successful generation. Parsed by the service. */
+  structured: jsonb(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

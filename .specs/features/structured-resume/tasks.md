@@ -300,8 +300,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Integration test: a new row reads `structured === null`
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Integration test: a new row reads `structured === null`
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+
+**Status**: ✅ Complete
 
 **Tests**: integration
 **Gate**: full

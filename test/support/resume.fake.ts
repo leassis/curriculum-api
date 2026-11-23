@@ -27,6 +27,7 @@ export class FakeResumeRepo implements ResumeRepo {
       content: "",
       headerFields: input.headerFields ?? null,
       model: null,
+      structured: null,
       createdAt: at,
       updatedAt: at,
     };
