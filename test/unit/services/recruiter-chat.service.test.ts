@@ -176,8 +176,17 @@ describe("recruiter chat service", () => {
     await recruiterChat.ask(empty, messages);
     const plain = await newChat({ tailoredResumeId: undefined });
     await recruiterChat.ask(plain, messages);
-    expect(calls).toHaveLength(2);
-    for (const call of calls) expect(call.prompt).toContain("### Backend Engineer");
+    const linkedId = "00000000-0000-4000-8000-000000000048";
+    repo.resumes.set(linkedId, {
+      title: "Linked",
+      structured: textDocumentV2("Linked resume body."),
+    });
+    const linked = await newChat({ tailoredResumeId: linkedId });
+    await recruiterChat.ask(linked, messages);
+    expect(calls).toHaveLength(3);
+    for (const call of calls.slice(0, 2)) expect(call.prompt).toContain("### Backend Engineer");
+    expect(calls[2]?.prompt).toContain("Linked resume body.");
+    expect(calls[2]?.prompt).not.toContain("### Backend Engineer");
   });
 
   it("sends the linked resume document rendered as markdown", async () => {
