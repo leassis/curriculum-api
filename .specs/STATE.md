@@ -68,10 +68,10 @@
 
 ## Handoff
 
-- **Feature**: `foundation`, Execute phase: T1-T35 done, one commit each on `main` (local, nothing pushed).
-- **Gate at HEAD**: `pnpm build && pnpm typecheck && pnpm lint && pnpm test` green; `check_proofs.py foundation` 80 pass, 0 fail (`proofs.md`).
-- **Next**: dispatch the Verifier (validate.md) over HEAD, fix findings in one pass, rerun `check_proofs.py`, then `validate_verification.py foundation`. No captures cited, so no screens sub-agent.
-- **Notes**: `ai` major 7 (`MockLanguageModelV4`); `typescript` pinned 6.0.3 because tsup dts breaks on TypeScript 7; vitest output is rewritten by the RTK hook, use `rtk proxy pnpm vitest ... --reporter=verbose` for raw lines.
+- **Feature**: `structured-resume` done on branch `feat/structured-resume` (local, not pushed): T1-T22, Verifier round 1 F1-F4 fixed, `validate_verification.py` exits 0, proofs 47/47 at f976b30, walk logged in tasks.md.
+- **Next**: user review/merge of `feat/structured-resume`; then `honest-assessment` (spec written, not approved) builds on it.
+- **Before deploy**: migration `0004` drops `tailored_resumes.content` (generated texts lost); running it in production needs the Owner's go-ahead. The Owner's real Master CV is plain text with no `##`/`###` headings and contains the full name, so Generate will answer 400 until it is restructured.
+- **Notes**: Neon Local dev branch has the fixture Master CV and a "Walk - Platform Engineer" resume from the walk (temporary branch). Lessons L-001..L-004 recorded as candidates.
 - **Blockers**: none.
 
 ### AD-005

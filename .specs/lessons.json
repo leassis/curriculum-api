@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 5,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "weak_test::a test that proves a value never reaches the llm must feed that value into every input the model sees including the master cv body",
+      "text": "A test that proves a value never reaches the LLM must feed that value into every input the model sees, including the Master CV body",
+      "signal": "weak_test",
+      "scope": "llm",
+      "status": "candidate",
+      "features": [
+        "structured-resume"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C16 resume.service.test.ts (llm)"
+      ],
+      "created": "2026-11-23T15:59:38Z",
+      "last_seen": "2026-11-23T15:59:38Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::resolve form button targets against the form as posted before any normalization drops or reorders entries",
+      "text": "Resolve form button targets against the form as posted, before any normalization drops or reorders entries",
+      "signal": "ac_gap",
+      "scope": "admin-forms",
+      "status": "candidate",
+      "features": [
+        "structured-resume"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F2 src/services/tailor/form.ts:78 (admin-forms)"
+      ],
+      "created": "2026-11-23T15:59:38Z",
+      "last_seen": "2026-11-23T15:59:38Z"
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::sanitize model returned strings per line not only at their start before they are rendered as markdown",
+      "text": "Sanitize model-returned strings per line, not only at their start, before they are rendered as markdown",
+      "signal": "ac_gap",
+      "scope": "llm",
+      "status": "candidate",
+      "features": [
+        "structured-resume"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F3 src/services/tailor/assemble.ts:10 (llm)"
+      ],
+      "created": "2026-11-23T15:59:38Z",
+      "last_seen": "2026-11-23T15:59:38Z"
+    },
+    {
+      "id": "L-004",
+      "key": "ac_gap::validate source data against the output schema bounds before a paid model call so a bad source fails fast instead of after retries",
+      "text": "Validate source data against the output schema bounds before a paid model call, so a bad source fails fast instead of after retries",
+      "signal": "ac_gap",
+      "scope": "llm",
+      "status": "candidate",
+      "features": [
+        "structured-resume"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F4 src/services/tailor/parse-cv.ts:107 (llm)"
+      ],
+      "created": "2026-11-23T15:59:38Z",
+      "last_seen": "2026-11-23T15:59:38Z"
+    }
+  ]
+}
