@@ -1,6 +1,6 @@
 # career-library proofs
 
-**HEAD**: c79fb21
+**HEAD**: a8ca7ef
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 76 pass, 0 fail
@@ -115,7 +115,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:18900) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:19525) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
