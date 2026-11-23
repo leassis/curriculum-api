@@ -195,8 +195,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests 1:1 to Generate AC 3-5, 8 and edges (duplicate headings, section with no items)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests 1:1 to Generate AC 3-5, 8 and edges (duplicate headings, section with no items)
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
