@@ -1,5 +1,6 @@
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
+import { renderMarkdown } from "../../../src/lib/markdown";
 import { renderCareerBody } from "../../../src/services/career/body";
 import { LlmUnavailableError } from "../../../src/services/errors";
 import {
@@ -966,5 +967,20 @@ describe("resume service items", () => {
       message: "Your full name is in the resume — it is added when printed",
     });
     expect(doc()).toEqual(before);
+  });
+});
+
+describe("resume service v2 print", () => {
+  it("renders print and download with the career body", async () => {
+    const { resumes, repo, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const { id } = await resumes.create({ ...draft, headerKeys: ["EMAIL"] });
+    const doc = sampleDocumentV2();
+    await repo.update(id, { structured: doc });
+    const body = renderCareerBody(doc, doc.items);
+    expect((await resumes.printData(id)).bodyHtml).toBe(renderMarkdown(body));
+    expect((await resumes.download(id)).text).toBe(
+      `# ${FULL_NAME}\nEmail: ada@example.com\n\n${body}`,
+    );
   });
 });

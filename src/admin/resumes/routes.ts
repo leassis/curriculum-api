@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import { raw } from "hono/html";
 import type { Env } from "../../env.js";
 import { renderMarkdown } from "../../lib/markdown.js";
+import { renderCareerBody } from "../../services/career/body.js";
 import { LlmUnavailableError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
-import { renderResumeMarkdown } from "../../services/tailor/render.js";
 import { ErrorFragment } from "../error-fragment.js";
 import { EDITOR_JS } from "../static/resumes-js.generated.js";
 import { Editor, EditorPage, FormSwap, ResumesPage } from "./view.js";
@@ -68,7 +68,7 @@ async function editor(c: { var: Env["Variables"] }, resume: Resume) {
   return {
     basePath: c.var.config.basePath,
     resume,
-    preview: resume.document ? renderResumeMarkdown(resume.document) : "",
+    preview: resume.document ? renderCareerBody(resume.document, resume.document.items) : "",
     options: await c.var.services.resumes.headerOptions(),
   };
 }
@@ -99,7 +99,7 @@ resumesRouter.post("/resumes/:id/generate", async (c) => {
 resumesRouter.post("/resumes/:id/preview", async (c) => {
   const body = await c.req.parseBody({ all: true, dot: true });
   const doc = await c.var.services.resumes.formDocument(c.req.param("id"), body);
-  return c.html(raw(renderMarkdown(renderResumeMarkdown(doc))));
+  return c.html(raw(renderMarkdown(renderCareerBody(doc, doc.items))));
 });
 
 /** Remove / Move up / Move down: applies the op to the posted form and returns it unsaved. */
@@ -111,7 +111,7 @@ resumesRouter.post("/resumes/:id/form", async (c) => {
     FormSwap({
       doc,
       url: `${c.var.config.basePath}/admin/resumes/${id}`,
-      preview: renderResumeMarkdown(doc),
+      preview: renderCareerBody(doc, doc.items),
     }),
   );
 });

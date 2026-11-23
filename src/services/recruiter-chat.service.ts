@@ -6,6 +6,7 @@ import type {
   RecruiterChatRow,
   ResumeOption,
 } from "../repositories/recruiter-chat.repository.js";
+import { renderCareerBody } from "./career/body.js";
 import {
   ChatExpiredError,
   ChatRevokedError,
@@ -20,7 +21,6 @@ import type { ContactItem, PersonalInfoService } from "./personal-info.service.j
 import type { ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import { parseDocument } from "./tailor/document.js";
-import { renderResumeMarkdown } from "./tailor/render.js";
 
 export type { ChatMessageRow, ResumeOption };
 
@@ -281,7 +281,7 @@ export class RecruiterChatService {
     if (stored === null) return null;
     const parsed = parseDocument(stored);
     if (!parsed.ok) return null;
-    const markdown = renderResumeMarkdown(parsed.doc);
+    const markdown = renderCareerBody(parsed.doc, parsed.doc.items);
     return markdown.trim() === "" ? null : markdown;
   }
 
