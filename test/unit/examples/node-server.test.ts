@@ -7,6 +7,7 @@ describe("node example", () => {
       DATABASE_URL: "postgres://x",
       OPENROUTER_API_KEY: "key",
       MODEL_PUBLIC: "vendor/model",
+      MODEL_IMPORT: "vendor/import",
     });
     expect(options.port).toBe(3001);
     expect(options.secureCookies).toBe(false);
@@ -16,6 +17,7 @@ describe("node example", () => {
       public: "vendor/model",
       tailor: undefined,
       recruiter: undefined,
+      import: "vendor/import",
     });
   });
 });

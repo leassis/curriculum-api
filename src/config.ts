@@ -18,7 +18,7 @@ export interface CurriculumApiConfig {
   /** Default true; false for local http development. */
   secureCookies?: boolean;
   /** OpenRouter model IDs; the settings table overrides them. */
-  models?: { public?: string; tailor?: string; recruiter?: string };
+  models?: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits?: Partial<Limits>;
 }
 
@@ -44,7 +44,7 @@ export interface ResolvedConfig {
   piiEncryptionKey: string;
   basePath: string;
   secureCookies: boolean;
-  models: { public?: string; tailor?: string; recruiter?: string };
+  models: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits: Limits;
 }
 
@@ -88,6 +88,7 @@ const schema = z.object({
       public: z.string().optional(),
       tailor: z.string().optional(),
       recruiter: z.string().optional(),
+      import: z.string().optional(),
     })
     .optional(),
   limits: z

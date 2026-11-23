@@ -44,6 +44,12 @@ describe("config", () => {
     );
   });
 
+  it("accepts models.import", () => {
+    expect(resolveConfig(validConfig({ models: { import: "vendor/import" } })).models.import).toBe(
+      "vendor/import",
+    );
+  });
+
   it("applies documented defaults", () => {
     const { secureCookies: _omit, ...rest } = validConfig();
     const resolved = resolveConfig(rest);

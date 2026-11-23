@@ -228,8 +228,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests: `model("import")` returns the `model.import` override, else `models.import`, else `ConfigError`; config accepts `models.import`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: `model("import")` returns the `model.import` override, else `models.import`, else `ConfigError`; config accepts `models.import`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

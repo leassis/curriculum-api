@@ -1,6 +1,6 @@
 import type { LimitName } from "../config.js";
 
-export const MODEL_AREAS = ["public", "tailor", "recruiter"] as const;
+export const MODEL_AREAS = ["public", "tailor", "recruiter", "import"] as const;
 export type ModelArea = (typeof MODEL_AREAS)[number];
 
 export const LIMIT_NAMES = [

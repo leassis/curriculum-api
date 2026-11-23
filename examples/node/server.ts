@@ -12,6 +12,7 @@ export function serverOptions(
     public: env.MODEL_PUBLIC || undefined,
     tailor: env.MODEL_TAILOR || undefined,
     recruiter: env.MODEL_RECRUITER || undefined,
+    import: env.MODEL_IMPORT || undefined,
   };
   return {
     port: PORT,

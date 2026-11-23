@@ -9,6 +9,7 @@ const KEYS = [
   "model.public",
   "model.tailor",
   "model.recruiter",
+  "model.import",
   "limits.publicQuestionsPerIpPerDay",
   "limits.recruiterQuestionsDefault",
   "limits.publicMaxOutputTokens",

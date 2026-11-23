@@ -20,6 +20,24 @@ describe("SettingsService", () => {
     expect(error.fields).toEqual(["model.recruiter"]);
   });
 
+  it("resolves the import model from override then config", async () => {
+    const config = resolvedConfig({ models: { import: "cfg/import" } });
+    const overridden = new SettingsService(
+      new FakeSettingsRepo({ "model.import": "ovr/import" }),
+      config,
+    );
+    expect(await overridden.model("import")).toBe("ovr/import");
+    expect(await new SettingsService(new FakeSettingsRepo(), config).model("import")).toBe(
+      "cfg/import",
+    );
+
+    const error = await new SettingsService(new FakeSettingsRepo(), resolvedConfig())
+      .model("import")
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(ConfigError);
+    expect(error.fields).toEqual(["model.import"]);
+  });
+
   it("limit prefers override then config", async () => {
     const repo = new FakeSettingsRepo({ "limits.maxQuestionChars": "250" });
     const service = new SettingsService(
