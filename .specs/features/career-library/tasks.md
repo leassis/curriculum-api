@@ -806,8 +806,8 @@ Proof: run int | ✓ career migration > drops the master cv and discards v1 docu
 
 The feature's live state, written as it happens - a compaction gives no warning.
 
-**Settled mid-build:** none
-**Dispatched:** batch 1 (T1-T7) done; batch 2 (T8-T13) -> sonnet sub-agent, 2026-11-23
+**Settled mid-build:** import route (T22) maps LlmUnavailableError to 503 explicitly (service error is 502); C57 test owed in T20
+**Dispatched:** batches 1-2 (T1-T13) done; batch 3 (T14-T20) -> sonnet sub-agent, 2026-11-23
 **Walked:** none
 
 ---
