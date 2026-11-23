@@ -12,7 +12,7 @@ import {
   textDocument,
   textForm,
 } from "../../support/resume-document";
-import { failingFactory, resumeApp } from "../../support/resumes";
+import { CV, FULL_NAME, failingFactory, resumeApp } from "../../support/resumes";
 
 /** A reply whose first item text carries raw HTML, to prove it is escaped. */
 const freshReply = () => {
@@ -673,6 +673,19 @@ describe("admin resumes structured", () => {
     const html = await (await get(location)).text();
     expect(html.match(/<p[^>]*id="editor-status"[^>]*>([\s\S]*?)<\/p>/)?.[1]).toBe(
       '<span class="text-danger">Structure the master CV with ## sections and ### items</span>',
+    );
+  });
+
+  it("create maps a master cv with the full name to the full-name error", async () => {
+    const { post, get, repo, calls } = await resumeApp({ cv: `# ${FULL_NAME}\n\n${CV}` });
+    const res = await post("/admin/resumes", newResume);
+    expect(res.status).toBe(303);
+    const location = res.headers.get("location") ?? "";
+    expect(location).toBe(`/admin/resumes/${repo.rows[0]?.id}?error=full-name`);
+    expect(calls).toHaveLength(0);
+    const html = await (await get(location)).text();
+    expect(html.match(/<p[^>]*id="editor-status"[^>]*>([\s\S]*?)<\/p>/)?.[1]).toBe(
+      '<span class="text-danger">Your full name is in the master CV — it is added when printed</span>',
     );
   });
 

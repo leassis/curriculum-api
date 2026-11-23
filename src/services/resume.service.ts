@@ -70,8 +70,18 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 
 const MASTER_CV_REQUIRED = "Fill the master CV first";
 const MASTER_CV_UNSTRUCTURED = "Structure the master CV with ## sections and ### items";
+const MASTER_CV_FULL_NAME = "Your full name is in the master CV — it is added when printed";
 const ITEM_OPS: readonly string[] = ["remove", "up", "down"] satisfies ItemOp[];
 const isItemOp = (op: string): op is ItemOp => ITEM_OPS.includes(op);
+
+/** The create flow's error codes; the editor maps each to its message. */
+export type CreateError = "generate" | "master-cv" | "structure" | "full-name";
+
+/** The Owner's full name appears in the Master CV, ignoring case (it must never reach the model). */
+function containsFullName(masterCv: string, fullName: string): boolean {
+  const name = fullName.trim().toLowerCase();
+  return name !== "" && masterCv.toLowerCase().includes(name);
+}
 
 function invalidDocument(path: string): ValidationError {
   return new ValidationError(`Invalid resume field: ${path}`, { [path]: "is invalid" });
@@ -210,9 +220,7 @@ export class ResumeService {
   }
 
   /** Creates the resume, then generates it. A failed generation keeps the resume and reports why. */
-  async createAndGenerate(
-    input: ResumeInput,
-  ): Promise<{ resume: Resume; error?: "generate" | "master-cv" | "structure" }> {
+  async createAndGenerate(input: ResumeInput): Promise<{ resume: Resume; error?: CreateError }> {
     const created = await this.create(input);
     try {
       return { resume: await this.generate(created.id) };
@@ -223,6 +231,9 @@ export class ResumeService {
       }
       if (error instanceof ValidationError && error.message === MASTER_CV_UNSTRUCTURED) {
         return { resume: created, error: "structure" };
+      }
+      if (error instanceof ValidationError && error.message === MASTER_CV_FULL_NAME) {
+        return { resume: created, error: "full-name" };
       }
       throw error;
     }
@@ -252,6 +263,9 @@ export class ResumeService {
     const profile = await this.loadProfile();
     if (!profile || profile.masterCv.trim() === "") {
       throw new ValidationError(MASTER_CV_REQUIRED);
+    }
+    if (containsFullName(profile.masterCv, profile.fullName)) {
+      throw new ValidationError(MASTER_CV_FULL_NAME);
     }
     const parsed = parseMasterCv(profile.masterCv);
     if (!parsed) throw new ValidationError(MASTER_CV_UNSTRUCTURED);

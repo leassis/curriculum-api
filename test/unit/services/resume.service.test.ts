@@ -14,7 +14,14 @@ import {
   textDocument,
   textForm,
 } from "../../support/resume-document";
-import { FULL_NAME, failingFactory, JD, resumeSetup, TAILOR_PROMPT } from "../../support/resumes";
+import {
+  CV,
+  FULL_NAME,
+  failingFactory,
+  JD,
+  resumeSetup,
+  TAILOR_PROMPT,
+} from "../../support/resumes";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const draft = { title: "Backend at Acme", company: "Acme", jobDescription: JD };
@@ -762,6 +769,35 @@ describe("resume service structured generate", () => {
       for (const secret of ["ada@example.com", "+44 20 7946 0958", "London", FULL_NAME, "Ada"]) {
         expect(call.prompt).not.toContain(secret);
       }
+    }
+
+    // A Master CV that carries the full name would send it if nothing guarded it.
+    const named = await resumeSetup({ cv: `# ${FULL_NAME}\n\n${CV}` });
+    const created = await named.resumes.create(draft);
+    await expect(named.resumes.generate(created.id)).rejects.toMatchObject({ status: 400 });
+    await named.resumes.createAndGenerate(draft);
+    expect(named.calls).toHaveLength(0);
+    for (const call of named.calls) expect(call.prompt).not.toContain(FULL_NAME);
+  });
+
+  it("rejects a master cv that contains the full name before calling the llm", async () => {
+    const message = "Your full name is in the master CV — it is added when printed";
+    for (const cv of [
+      `# ${FULL_NAME}\n\n${CV}`,
+      `${CV}\n\nReferences: ask ${FULL_NAME.toUpperCase()} directly.`,
+      CV.replace("## Skills", `## Skills of ada lovelace`),
+    ]) {
+      const { resumes, repo, calls } = await resumeSetup({ cv });
+      const { id } = await resumes.create(draft);
+      await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
+        status: 400,
+        message,
+      });
+      expect(calls).toHaveLength(0);
+      expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
+      const flow = await resumes.createAndGenerate(draft);
+      expect(flow.error).toBe("full-name");
+      expect(calls).toHaveLength(0);
     }
   });
 
