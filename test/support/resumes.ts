@@ -59,7 +59,12 @@ export async function resumeSetup(
     info: () => {},
     warn: () => {},
   });
-  const resumes = new ResumeService(repo, profile, settings, personalInfo, llm);
+  const logs: { level: "error" | "warn"; message: string; data: unknown }[] = [];
+  const logger = {
+    error: (message: string, data?: unknown) => logs.push({ level: "error", message, data }),
+    warn: (message: string, data?: unknown) => logs.push({ level: "warn", message, data }),
+  };
+  const resumes = new ResumeService(repo, profile, settings, personalInfo, llm, undefined, logger);
   const addField = (key: string, label: string, value: string, sortOrder = 0) =>
     personalInfo.create({ key, label, value, visibility: "print", sortOrder });
   return {
@@ -74,6 +79,7 @@ export async function resumeSetup(
     resumes,
     calls: recording.calls,
     addField,
+    logs,
   };
 }
 

@@ -12,8 +12,20 @@ import type {
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
+import { parseDocument, type ResumeDocument } from "./tailor/document.js";
 
-export type Resume = ResumeRow;
+/** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
+export type Resume = Omit<ResumeRow, "structured"> & {
+  /** The parsed Resume Document; null when not generated yet or when the stored value is invalid. */
+  document: ResumeDocument | null;
+  /** The stored value failed `ResumeDocumentSchema`. */
+  invalid: boolean;
+};
+
+export interface ResumeLogger {
+  error(message: string, data?: unknown): void;
+  warn(message: string, data?: unknown): void;
+}
 
 export const TAILOR_MAX_OUTPUT_TOKENS = 4000;
 export const CUSTOM_INSTRUCTIONS_MAX = 2000;
@@ -107,16 +119,17 @@ export class ResumeService {
     protected readonly personalInfo: PersonalInfoService,
     protected readonly llm: LlmService,
     private readonly now: () => Date = () => new Date(),
+    private readonly logger: ResumeLogger = console,
   ) {}
 
-  list(): Promise<Resume[]> {
-    return this.resumes.list();
+  async list(): Promise<Resume[]> {
+    return (await this.resumes.list()).map((row) => this.toResume(row));
   }
 
   async get(id: string): Promise<Resume> {
     const row = UUID.test(id) ? await this.resumes.find(id) : null;
     if (!row) throw new NotFoundError("Resume not found");
-    return row;
+    return this.toResume(row);
   }
 
   async create(input: ResumeInput): Promise<Resume> {
@@ -129,13 +142,15 @@ export class ResumeService {
       input.headerKeys,
       fields.map((f) => f.key),
     );
-    return this.resumes.insert({
-      title,
-      company,
-      jobDescription,
-      customInstructions,
-      headerFields,
-    });
+    return this.toResume(
+      await this.resumes.insert({
+        title,
+        company,
+        jobDescription,
+        customInstructions,
+        headerFields,
+      }),
+    );
   }
 
   /** Creates the resume, then generates it. A failed generation keeps the resume and reports why. */
@@ -267,7 +282,19 @@ export class ResumeService {
   private async update(id: string, patch: Parameters<ResumeRepo["update"]>[1]): Promise<Resume> {
     const row = await this.resumes.update(id, patch);
     if (!row) throw new NotFoundError("Resume not found");
-    return row;
+    return this.toResume(row);
+  }
+
+  /** Parses the stored document; an invalid one is logged by id and path, never by content. */
+  private toResume(row: ResumeRow): Resume {
+    const { structured, ...rest } = row;
+    if (structured === null || structured === undefined) {
+      return { ...rest, document: null, invalid: false };
+    }
+    const parsed = parseDocument(structured);
+    if (parsed.ok) return { ...rest, document: parsed.doc, invalid: false };
+    this.logger.error("stored resume document invalid", { id: row.id, path: parsed.path });
+    return { ...rest, document: null, invalid: true };
   }
 
   private async loadProfile(): Promise<Profile | null> {

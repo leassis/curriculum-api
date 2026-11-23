@@ -5,6 +5,7 @@ import {
   slugify,
   tailorInput,
 } from "../../../src/services/resume.service";
+import { itemAt, sampleDocument } from "../../support/resume-document";
 import {
   CV,
   FULL_NAME,
@@ -527,5 +528,52 @@ describe("tailor input", () => {
     );
     expect(input).not.toContain("custom_instructions");
     expect(input).not.toContain(PREAMBLE);
+  });
+});
+
+describe("resume service get", () => {
+  it("returns the parsed stored document", async () => {
+    const { resumes, repo, logs } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    await repo.update(id, { structured: sampleDocument() });
+    const resume = await resumes.get(id);
+    expect(resume.document).toEqual(sampleDocument());
+    expect(resume.invalid).toBe(false);
+    expect(resume).not.toHaveProperty("structured");
+    expect((await resumes.list())[0]?.document).toEqual(sampleDocument());
+    expect(logs).toEqual([]);
+  });
+
+  it("returns no document before the first generation", async () => {
+    const { resumes, logs } = await resumeSetup();
+    const created = await resumes.create(draft);
+    expect(created).toMatchObject({ document: null, invalid: false });
+    expect(await resumes.get(created.id)).toMatchObject({ document: null, invalid: false });
+    expect(logs).toEqual([]);
+  });
+
+  it("flags an invalid stored document and logs its id and path without content", async () => {
+    const { resumes, repo, logs } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    const broken = sampleDocument();
+    itemAt(broken, 1, 0).heading = "";
+    await repo.update(id, { structured: broken });
+    const resume = await resumes.get(id);
+    expect(resume).toMatchObject({ document: null, invalid: true });
+    expect(logs).toEqual([
+      {
+        level: "error",
+        message: "stored resume document invalid",
+        data: { id, path: "sections.1.items.0.heading" },
+      },
+    ]);
+    const logged = JSON.stringify(logs);
+    for (const content of ["Cut p99 latency", "Led the platform team", "Backend engineer"]) {
+      expect(logged).not.toContain(content);
+    }
+
+    await repo.update(id, { structured: { version: 2, sections: [] } });
+    expect(await resumes.get(id)).toMatchObject({ document: null, invalid: true });
+    expect(logs[1]?.data).toEqual({ id, path: "version" });
   });
 });

@@ -363,8 +363,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit tests: valid, null, invalid (log fields asserted, no content logged)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: valid, null, invalid (log fields asserted, no content logged)
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
