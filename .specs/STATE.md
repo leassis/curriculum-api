@@ -105,6 +105,7 @@
 - **Before deploy**: migration `0004` drops `tailored_resumes.content` (generated texts lost); running it in production needs the Owner's go-ahead. The Owner's real Master CV is plain text with no `##`/`###` headings and contains the full name, so Generate will answer 400 until it is restructured.
 - **Notes**: Neon Local dev branch has the fixture Master CV and a "Walk - Platform Engineer" resume from the walk (temporary branch). Lessons L-001..L-004 recorded as candidates.
 - **Blockers**: none.
+- **Stale**: the `honest-assessment` spec was written against the markdown Master CV and the section-based Resume Document; `career-library` replaced both (Career Items, Resume Document v2, migration 0006), so that spec must be rewritten before it is approved.
 
 ### AD-005
 - **Decision**: `drizzle-orm/node-postgres` (`pg` Pool, max 5) replaces `neon-http` everywhere (supersedes AD-002; ADR 0003). Production uses Neon's pooled (`-pooler`) string; `migrate` uses `DATABASE_URL_UNPOOLED` when set. Docker Compose runs plain `postgres:17` at `localhost:5432`; the `neon-proxy` service and the `db.localtest.me` host are gone.

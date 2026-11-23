@@ -23,12 +23,24 @@ _Avoid_: Client, hiring manager
 ## CV
 
 **Career Body**:
-The markdown part of a CV with summary, experience, skills and education. The only CV content ever sent to an LLM.
+The markdown rendered from the Career Library (or from a Resume Document): headline, summary and the items. The only CV content ever sent to an LLM.
 _Avoid_: CV text, resume content
 
-**Master CV**:
-The Owner's canonical Career Body, kept on the Profile.
-_Avoid_: Base CV, main resume
+**Career Library**:
+The Owner's canonical set of Career Items, one per Owner, edited as cards on the Profile page. The Career Body is rendered from it. Replaces the markdown Master CV, which no longer exists.
+_Avoid_: Master CV, base CV, main resume
+
+**Career Item**:
+One entry of the Career Library (a job, a degree, a skill group…) with an Item kind, title, dates and body. Fields a kind does not use stay empty.
+_Avoid_: Entry, record, section
+
+**Item kind**:
+The type of a Career Item: experience, project, education, certification, course, skill group, language, publication or honour. It decides which fields the item has and the card it appears under.
+_Avoid_: Type, category
+
+**Tech stack**:
+The list of technologies of an experience or project item, kept as a code-owned fact the tailor model cannot change. Stored in the item's skills list.
+_Avoid_: Skills (for experience and projects), keywords
 
 **Personal Header**:
 The ordered set of Personal Info Fields shown above a Career Body when printed. Never sent to an LLM.
@@ -43,15 +55,15 @@ Which surfaces may show a Personal Info Field: `public` (everywhere), `recruiter
 _Avoid_: Privacy level, scope
 
 **Profile**:
-The Owner's display name, headline, Master CV and the three system prompts.
+The Owner's display name, headline, summary and the three system prompts. The Career Library is stored beside it.
 _Avoid_: Account, settings
 
 **Tailored Resume**:
-The Master CV rewritten by the tailor model for one Job Description, stored as a Resume Document and editable by the Owner.
+The Career Library tailored by the model for one Job Description, stored as a Resume Document and editable by the Owner as cards.
 _Avoid_: Custom CV, variant
 
 **Resume Document**:
-The JSON form of a Tailored Resume: ordered sections (title, kind, text) holding items (heading, text, bullets), whose titles and headings come from the Master CV. Rendered to markdown to become a Career Body for print, download and Recruiter Chats.
+The JSON form of a Tailored Resume: a headline, a summary and ordered Career Items, each remembering the library item it came from. The model rewrites item bodies only; titles, organisations, dates and Tech stack stay as in the library. Rendered to markdown to become a Career Body for print, download and Recruiter Chats.
 _Avoid_: Resume JSON, structured content, resume markdown
 
 **Custom Instructions**:
