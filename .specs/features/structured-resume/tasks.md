@@ -87,9 +87,11 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit test: structured model carries the two settings; default model carries neither
-- [ ] Gate check passes: `pnpm test:unit`
-- [ ] Test count: existing unit tests + 2 pass
+- [x] Unit test: structured model carries the two settings; default model carries neither
+- [x] Gate check passes: `pnpm test:unit`
+- [x] Test count: existing unit tests + 2 pass
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
