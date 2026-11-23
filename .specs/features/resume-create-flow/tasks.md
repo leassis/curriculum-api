@@ -13,6 +13,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Approved**: 2026-11-23 - user: "Approved"
 **Build**: `pnpm build; pnpm typecheck; pnpm lint`
 **Run unit**: `pnpm vitest run --project unit --reporter=verbose`
+**Run int**: `pnpm vitest run --project integration --reporter=verbose`
 
 Test names are contracts: each check's proof line is the `describe > it` its test prints. Unit tests only (fake repo + recording mock model); no database needed. Use `rtk proxy pnpm vitest ...` for raw output (STATE Handoff note).
 
@@ -214,6 +215,9 @@ Proof: run unit | ✓ resume service create flow > stores an empty list when eve
 
 **C18** - The recording mock model receives no Personal Info Field value and no `fullName` on create (RCF-09, edge)
 Proof: run unit | ✓ resume service create flow > sends no personal info value or full name to the model on create
+
+**C20** - `ResumeRepository.insert` stores `headerFields` (a list and `[]`) and reads it back unchanged (RCF-03, added after verification)
+Proof: run int | ✓ resume repository > stores headerFields on insert and reads them back unchanged
 
 ---
 

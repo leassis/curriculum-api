@@ -2,7 +2,7 @@
 
 **Approved**: 2026-11-23 - user: "Approved"
 
-**Depends on**: `tailored-resumes`, `resume-custom-instructions` (merged). Touches: `src/admin/resumes/{routes.ts,view.tsx}`, `src/services/resume.service.ts`, their tests.
+**Depends on**: `tailored-resumes`, `resume-custom-instructions` (merged). Touches: `src/admin/resumes/{routes.ts,view.tsx}`, `src/services/resume.service.ts`, `src/repositories/resume.repository.ts`, their tests.
 
 ## Problem Statement
 

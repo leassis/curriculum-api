@@ -25,6 +25,17 @@ describe("resume repository", () => {
     expect((await repo.list()).map((r) => r.title)).toEqual(["third", "second", "first"]);
   });
 
+  it("stores headerFields on insert and reads them back unchanged", async () => {
+    const some = await repo.insert({ ...input("some"), headerFields: ["EMAIL", "PHONE"] });
+    const none = await repo.insert({ ...input("none"), headerFields: [] });
+    const all = await repo.insert(input("all"));
+    expect(some.headerFields).toEqual(["EMAIL", "PHONE"]);
+    expect(none.headerFields).toEqual([]);
+    expect((await repo.find(some.id))?.headerFields).toEqual(["EMAIL", "PHONE"]);
+    expect((await repo.find(none.id))?.headerFields).toEqual([]);
+    expect((await repo.find(all.id))?.headerFields).toBeNull();
+  });
+
   it("inserts, finds, updates and deletes a resume", async () => {
     const created = await repo.insert({
       title: "T",
