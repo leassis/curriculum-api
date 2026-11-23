@@ -12,10 +12,13 @@ const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
 const optionalText = (value: unknown) => (typeof value === "string" ? value : undefined);
 
-const CREATE_ERRORS: Record<string, string | undefined> = {
+const CREATE_ERRORS: Record<string, string> = {
   generate: "Generation failed, try again",
   "master-cv": "Fill the master CV first",
 };
+
+const createError = (code: string | undefined): string | undefined =>
+  code !== undefined && Object.hasOwn(CREATE_ERRORS, code) ? CREATE_ERRORS[code] : undefined;
 
 const headerKeys = (fields: unknown): string[] =>
   (Array.isArray(fields) ? fields : [fields]).filter((k): k is string => typeof k === "string");
@@ -68,7 +71,7 @@ async function editor(c: { var: Env["Variables"] }, resume: Resume) {
 resumesRouter.get("/resumes/:id", async (c) => {
   const resume = await c.var.services.resumes.get(c.req.param("id"));
   return c.html(
-    EditorPage({ ...(await editor(c, resume)), error: CREATE_ERRORS[c.req.query("error") ?? ""] }),
+    EditorPage({ ...(await editor(c, resume)), error: createError(c.req.query("error")) }),
   );
 });
 

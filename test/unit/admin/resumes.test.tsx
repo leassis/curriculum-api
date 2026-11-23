@@ -406,7 +406,7 @@ describe("admin resumes create flow", () => {
   it("editor shows no error text for an unknown error value", async () => {
     const { get, resumes } = await resumeApp();
     const { id } = await resumes.create(newResume);
-    for (const value of ["nope", "<b>x</b>", ""]) {
+    for (const value of ["nope", "<b>x</b>", "", "constructor", "__proto__"]) {
       const html = await (
         await get(`/admin/resumes/${id}?error=${encodeURIComponent(value)}`)
       ).text();
