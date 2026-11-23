@@ -158,4 +158,21 @@ describe("assemble v2", () => {
     );
     expect(r.ok && r.doc.items[0]).toMatchObject({ text: "", bullets: [], skills: ["Git"] });
   });
+
+  it("reports the items it restored in library order", () => {
+    const r = assemble(
+      library,
+      ids,
+      reply(
+        all().filter(
+          (o) => ![tag(SAMPLE_IDS.initech), tag(SAMPLE_IDS.english)].includes(o.source_id),
+        ),
+      ),
+    );
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.restored.map((i) => i.id)).toEqual([SAMPLE_IDS.initech, SAMPLE_IDS.english]);
+    const full = assemble(library, ids, reply(all()));
+    if (!full.ok) throw new Error(full.reason);
+    expect(full.restored).toEqual([]);
+  });
 });

@@ -5,7 +5,7 @@ import type { TailorOutput } from "./output.js";
 
 export type AssembleFailure = "unknown_id" | "duplicate_id" | "schema";
 export type AssembleResult =
-  | { ok: true; doc: ResumeDocument }
+  | { ok: true; doc: ResumeDocument; restored: CareerItem[] }
   | { ok: false; reason: AssembleFailure };
 
 const RESTORED_KINDS: readonly string[] = [
@@ -47,10 +47,15 @@ export function assemble(
     seen.add(source.id);
     kept.push({ ...source, ...bodyOf(source, returned), id: randomUUID(), sourceId: source.id });
   }
-  const restored = library
-    .filter((item) => RESTORED_KINDS.includes(item.kind) && !seen.has(item.id))
-    .map((item) => ({ ...item, id: randomUUID(), sourceId: item.id }));
-  const items = [...kept, ...restored].sort(
+  const restored = library.filter(
+    (item) => RESTORED_KINDS.includes(item.kind) && !seen.has(item.id),
+  );
+  const restoredItems = restored.map((item) => ({
+    ...item,
+    id: randomUUID(),
+    sourceId: item.id,
+  }));
+  const items = [...kept, ...restoredItems].sort(
     (a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind),
   );
   const result = parseDocument({
@@ -59,5 +64,5 @@ export function assemble(
     summary: cleanText(out.summary),
     items,
   });
-  return result.ok ? { ok: true, doc: result.doc } : { ok: false, reason: "schema" };
+  return result.ok ? { ok: true, doc: result.doc, restored } : { ok: false, reason: "schema" };
 }

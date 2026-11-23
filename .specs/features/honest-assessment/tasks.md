@@ -172,9 +172,9 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit test: model omits one experience and one language → `restored` holds both; model returns all → `restored` empty
-- [ ] Existing assemble tests pass unchanged in their assertions
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test: model omits one experience and one language → `restored` holds both; model returns all → `restored` empty
+- [x] Existing assemble tests pass unchanged in their assertions
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
