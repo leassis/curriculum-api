@@ -1,5 +1,6 @@
-import { generateText, streamText } from "ai";
+import { generateText, Output, streamText } from "ai";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { createRecordingModel } from "../../support/mock-llm";
 
 describe("mock llm", () => {
@@ -31,5 +32,31 @@ describe("mock llm", () => {
     expect(calls[1]?.modelId).toBe("vendor/model-b");
     expect(calls[1]?.prompt).toContain("OTHER SYSTEM");
     expect(calls[1]?.prompt).toContain("second question");
+  });
+
+  it("records the response format and structured flag of a structured call", async () => {
+    const { factory, calls } = createRecordingModel({ text: '{"title":"Engineer"}' });
+    const schema = z.object({ title: z.string().describe("A short job title") });
+
+    const { output } = await generateText({
+      model: factory("vendor/model-c", { structured: true }),
+      output: Output.object({ schema, name: "role" }),
+      prompt: "invent a role",
+    });
+    await generateText({ model: factory("vendor/model-d"), prompt: "plain" });
+
+    expect(output).toEqual({ title: "Engineer" });
+    const format = calls[0]?.responseFormat;
+    expect(format?.type).toBe("json");
+    const json = format?.type === "json" ? format : undefined;
+    expect(json?.name).toBe("role");
+    expect(json?.schema).toMatchObject({
+      type: "object",
+      properties: { title: { type: "string", description: "A short job title" } },
+      required: ["title"],
+    });
+    expect(calls[0]?.structured).toBe(true);
+    expect(calls[1]?.responseFormat?.type ?? "text").toBe("text");
+    expect(calls[1]?.structured).toBe(false);
   });
 });

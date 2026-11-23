@@ -1,6 +1,8 @@
 import { MockLanguageModelV4, simulateReadableStream } from "ai/test";
 import type { ModelFactory } from "../../src/llm/openrouter";
 
+type CallOptions = Parameters<MockLanguageModelV4["doGenerate"]>[0];
+
 export interface RecordedCall {
   modelId: string;
   /** System and message text flattened, so tests can assert `not.toContain(value)`. */
@@ -8,13 +10,17 @@ export interface RecordedCall {
   /** Text of the system messages only, to assert what sits in the system block. */
   system: string;
   maxOutputTokens: number | undefined;
+  /** What the call asked for: `{ type: "json", schema }` for structured output, else text or undefined. */
+  responseFormat: CallOptions["responseFormat"];
+  /** Whether the factory was asked for a structured-output model. */
+  structured: boolean;
 }
 
 export interface RecordingModelOptions {
   chunks?: string[];
   /** The provider errors before it emits any text. */
   failBeforeFirstChunk?: boolean;
-  /** Text returned by generate(). */
+  /** Text returned by generate(); for a structured call, the JSON the model replies with. */
   text?: string;
 }
 
@@ -45,7 +51,7 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
   const calls: RecordedCall[] = [];
   const chunks = opts.chunks ?? ["Hello", " world"];
 
-  const factory: ModelFactory = (modelId) =>
+  const factory: ModelFactory = (modelId, modelOpts) =>
     new MockLanguageModelV4({
       modelId,
       doGenerate: async (options) => {
@@ -54,6 +60,8 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
           prompt: flatten(options.prompt as PromptMessage[]),
           system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
+          responseFormat: options.responseFormat,
+          structured: modelOpts?.structured === true,
         });
         return {
           content: [{ type: "text", text: opts.text ?? chunks.join("") }],
@@ -68,6 +76,8 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
           prompt: flatten(options.prompt as PromptMessage[]),
           system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
+          responseFormat: options.responseFormat,
+          structured: modelOpts?.structured === true,
         });
         if (opts.failBeforeFirstChunk) {
           return {

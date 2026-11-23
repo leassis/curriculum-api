@@ -258,8 +258,10 @@ T18 → T19 → T20 → T21 → T22
 
 **Done when**:
 
-- [ ] Unit test in `test/unit/llm/mock-llm.test.ts` asserts the recorded schema
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit test in `test/unit/llm/mock-llm.test.ts` asserts the recorded schema
+- [x] Gate check passes: `pnpm test:unit`
+
+**Status**: ✅ Complete
 
 **Tests**: unit
 **Gate**: quick
