@@ -800,3 +800,171 @@ describe("resume service outputs", () => {
     }
   });
 });
+
+describe("resume service items", () => {
+  const withDocument = async (opts: Parameters<typeof resumeSetup>[0] = {}) => {
+    const setup = await resumeSetup(opts);
+    const { id } = await setup.resumes.create(draft);
+    await setup.repo.update(id, { structured: sampleDocumentV2() });
+    const doc = () => setup.repo.rows[0]?.structured as ResumeDocument;
+    return { ...setup, id, doc };
+  };
+  const globexId = () => sampleDocumentV2().items[0]?.id as string;
+  const honour = { title: "Best paper", organisation: "ACM", details: "Won.\n- Cited twice" };
+
+  it("adds an item with a null source id", async () => {
+    const { resumes, id, doc } = await withDocument();
+    const saved = await resumes.addItem(id, "honour", honour);
+    const added = saved.document?.items.at(-1);
+    expect(added).toMatchObject({
+      kind: "honour",
+      title: "Best paper",
+      organisation: "ACM",
+      text: "Won.",
+      bullets: ["Cited twice"],
+      sourceId: null,
+    });
+    expect(doc().items).toHaveLength(sampleDocumentV2().items.length + 1);
+    expect(doc().items.at(-1)).toEqual(added);
+  });
+
+  it("edits an item keeping its id, kind and source id", async () => {
+    const { resumes, id, doc } = await withDocument();
+    const saved = await resumes.editItem(id, globexId(), {
+      title: "Principal Engineer",
+      organisation: "Globex",
+      startYear: "2020",
+      details: "Reworded.",
+      stack: "Go, Postgres",
+    });
+    expect(saved.document?.items[0]).toMatchObject({
+      id: globexId(),
+      kind: "experience",
+      sourceId: sampleDocumentV2().items[0]?.sourceId,
+      title: "Principal Engineer",
+      text: "Reworded.",
+      bullets: [],
+      skills: ["Go", "Postgres"],
+    });
+    expect(doc().items).toHaveLength(sampleDocumentV2().items.length);
+  });
+
+  it("moves an item past its neighbour of the same kind and removes an item", async () => {
+    const { resumes, id, doc } = await withDocument();
+    const first = sampleDocumentV2().items[0] as ResumeDocument["items"][number];
+    const second = sampleDocumentV2().items[1] as ResumeDocument["items"][number];
+    await resumes.moveItem(id, first.id, "down");
+    expect(
+      doc()
+        .items.slice(0, 2)
+        .map((i) => i.id),
+    ).toEqual([second.id, first.id]);
+    await resumes.moveItem(id, second.id, "up");
+    expect(
+      doc()
+        .items.slice(0, 2)
+        .map((i) => i.id),
+    ).toEqual([second.id, first.id]);
+    await resumes.removeItem(id, first.id);
+    expect(doc().items.map((i) => i.id)).not.toContain(first.id);
+    expect(doc().items).toHaveLength(sampleDocumentV2().items.length - 1);
+  });
+
+  it("edits the header", async () => {
+    const { resumes, id, doc } = await withDocument();
+    const saved = await resumes.editHeader(id, { headline: "  Platform lead ", summary: " New. " });
+    expect(saved.document).toMatchObject({ headline: "Platform lead", summary: "New." });
+    expect(doc()).toMatchObject({ headline: "Platform lead", summary: "New." });
+    expect(doc().items).toEqual(sampleDocumentV2().items);
+    await expect(
+      resumes.editHeader(id, { headline: "x".repeat(201), summary: "" }),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("Headline") });
+    await expect(
+      resumes.editHeader(id, { headline: "", summary: "x".repeat(4001) }),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("Summary") });
+  });
+
+  it("changes only the resume document and leaves the library unchanged", async () => {
+    const { resumes, id, career, careerRepo } = await withDocument();
+    const before = structuredClone(await career.library());
+    await resumes.addItem(id, "honour", honour);
+    await resumes.editItem(id, globexId(), {
+      title: "Edited",
+      organisation: "G",
+      startYear: "2020",
+    });
+    await resumes.moveItem(id, globexId(), "down");
+    await resumes.removeItem(id, globexId());
+    await resumes.editHeader(id, { headline: "H", summary: "S" });
+    expect(await career.library()).toEqual(before);
+    expect(careerRepo.writes).toBe(0);
+  });
+
+  it("keeps a tailored item whose library item was deleted", async () => {
+    const { resumes, id, career, doc } = await withDocument();
+    const sourceId = sampleDocumentV2().items[0]?.sourceId as string;
+    await career.remove(sourceId);
+    expect((await career.library()).items.some((i) => i.id === sourceId)).toBe(false);
+    const resume = await resumes.get(id);
+    expect(resume.document?.items[0]).toMatchObject({ sourceId, title: "Staff Engineer" });
+    await resumes.editHeader(id, { headline: "H", summary: "S" });
+    expect(doc().items[0]).toMatchObject({ sourceId, title: "Staff Engineer" });
+  });
+
+  it("answers 400 with the field message and stores nothing for an invalid item", async () => {
+    const { resumes, id, doc } = await withDocument();
+    const before = structuredClone(doc());
+    await expect(
+      resumes.addItem(id, "experience", { title: "", organisation: "X" }),
+    ).rejects.toMatchObject({ status: 400, message: "Position is required" });
+    await expect(
+      resumes.editItem(id, globexId(), {
+        title: "T",
+        organisation: "O",
+        startYear: "2020",
+        endYear: "2010",
+      }),
+    ).rejects.toMatchObject({ status: 400, message: "End date is before start date" });
+    expect(doc()).toEqual(before);
+  });
+
+  it("answers 404 for an unknown item and 400 before the first generation", async () => {
+    const { resumes, id } = await withDocument();
+    const missing = "00000000-0000-4000-8000-00000000ffff";
+    await expect(resumes.editItem(id, missing, { title: "T" })).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(resumes.moveItem(id, missing, "up")).rejects.toMatchObject({ status: 404 });
+    await expect(resumes.removeItem(id, missing)).rejects.toMatchObject({ status: 404 });
+    const setup = await resumeSetup();
+    const fresh = await setup.resumes.create(draft);
+    await expect(setup.resumes.addItem(fresh.id, "honour", honour)).rejects.toMatchObject({
+      status: 400,
+    });
+    await expect(
+      setup.resumes.editHeader(fresh.id, { headline: "", summary: "" }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("rejects a personal info value or the full name in an item or the header", async () => {
+    const { resumes, id, doc, addField } = await withDocument();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    const before = structuredClone(doc());
+    await expect(
+      resumes.addItem(id, "honour", { title: "Write to ADA@example.com" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Your Email is in the body — keep contact data in Personal info",
+    });
+    await expect(
+      resumes.editHeader(id, { headline: "H", summary: "Mail ada@example.com" }),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      resumes.addItem(id, "honour", { title: `Award for ${FULL_NAME}` }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Your full name is in the resume — it is added when printed",
+    });
+    expect(doc()).toEqual(before);
+  });
+});

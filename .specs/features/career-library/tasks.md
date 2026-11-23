@@ -418,8 +418,8 @@ T20 → T21 → T22 → T23 → T24 → T25 → T26
 
 **Done when**:
 
-- [ ] Unit tests for Tailored AC 9-10 and a deleted library item leaving the tailored copy unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests for Tailored AC 9-10 and a deleted library item leaving the tailored copy unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

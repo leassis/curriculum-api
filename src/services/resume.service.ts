@@ -1,8 +1,12 @@
+import { randomUUID } from "node:crypto";
 import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
 import { renderCareerBody } from "./career/body.js";
+import { itemFromForm } from "./career/form.js";
+import { type Kind, normalizeItem } from "./career/item.js";
+import { addItem, type Direction, moveItem, removeItem, replaceItem } from "./career/ops.js";
 import { type CareerService, itemStrings } from "./career.service.js";
 import {
   LlmOutputInvalidError,
@@ -20,7 +24,12 @@ import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
 import { type AssembleFailure, assemble } from "./tailor/assemble.js";
-import { parseDocument, type ResumeDocument } from "./tailor/document.js";
+import {
+  parseDocument,
+  type ResumeDocument,
+  ResumeDocumentSchema,
+  type ResumeItem,
+} from "./tailor/document.js";
 import { annotate, TailorOutputSchema } from "./tailor/output.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
@@ -68,6 +77,9 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 }
 
 const EMPTY_LIBRARY = "Add Career Items to your profile before generating";
+const NOT_GENERATED = "Generate the resume before editing it";
+const ITEM_NOT_FOUND = "Resume item not found";
+const RESUME_FULL_NAME = "Your full name is in the resume — it is added when printed";
 const LIBRARY_FULL_NAME = "Your full name is in the career library — it is added when printed";
 
 /** The create flow's error codes; the editor maps each to its message. */
@@ -85,6 +97,13 @@ const markdownOf = (resume: Resume): string =>
 
 /** One model call, then one more when its output is rejected. */
 const TAILOR_ATTEMPTS = 2;
+
+const MAX_HEADLINE = 200;
+const MAX_SUMMARY = 4000;
+
+function itemNotFound(): never {
+  throw new NotFoundError(ITEM_NOT_FOUND);
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -277,6 +296,90 @@ export class ResumeService {
       ),
       ...(instructions === undefined ? {} : { customInstructions: instructions }),
     });
+  }
+
+  async addItem(id: string, kind: Kind, body: Record<string, unknown>): Promise<Resume> {
+    const item = {
+      ...normalizeItem({ ...itemFromForm(kind, body), id: randomUUID() }),
+      sourceId: null,
+    };
+    return this.changeItems(id, (items) => addItem(items, item));
+  }
+
+  async editItem(id: string, itemId: string, body: Record<string, unknown>): Promise<Resume> {
+    return this.changeItems(id, (items) => {
+      const existing = items.find((i) => i.id === itemId);
+      if (!existing) throw new NotFoundError(ITEM_NOT_FOUND);
+      const edited = {
+        ...normalizeItem({ ...itemFromForm(existing.kind, body), id: itemId, kind: existing.kind }),
+        sourceId: existing.sourceId,
+      };
+      return replaceItem(items, itemId, edited) as ResumeItem[];
+    });
+  }
+
+  async moveItem(id: string, itemId: string, direction: Direction): Promise<Resume> {
+    return this.changeItems(id, (items) => moveItem(items, itemId, direction) ?? itemNotFound());
+  }
+
+  async removeItem(id: string, itemId: string): Promise<Resume> {
+    return this.changeItems(id, (items) => removeItem(items, itemId) ?? itemNotFound());
+  }
+
+  async editHeader(id: string, header: { headline: string; summary: string }): Promise<Resume> {
+    const headline = header.headline.trim();
+    const summary = header.summary.trim();
+    if (headline.length > MAX_HEADLINE) {
+      throw new ValidationError(`Headline is too long (max ${MAX_HEADLINE} characters)`);
+    }
+    if (summary.length > MAX_SUMMARY) {
+      throw new ValidationError(`Summary is too long (max ${MAX_SUMMARY} characters)`);
+    }
+    return this.changeDocument(id, (doc) => ({ ...doc, headline, summary }), [headline, summary]);
+  }
+
+  private changeItems(id: string, change: (items: ResumeItem[]) => ResumeItem[]): Promise<Resume> {
+    let touched: ResumeItem[] = [];
+    return this.changeDocument(
+      id,
+      (doc) => {
+        const items = change(doc.items);
+        touched = items.filter((i) => !doc.items.includes(i));
+        return { ...doc, items };
+      },
+      () => touched.flatMap(itemStrings),
+    );
+  }
+
+  private async changeDocument(
+    id: string,
+    change: (doc: ResumeDocument) => ResumeDocument,
+    strings: string[] | (() => string[]),
+  ): Promise<Resume> {
+    const { document } = await this.get(id);
+    if (!document) throw new ValidationError(NOT_GENERATED);
+    const candidate = change(document);
+    const checked = ResumeDocumentSchema.safeParse(candidate);
+    if (!checked.success) {
+      throw new ValidationError(checked.error.issues[0]?.message ?? "Invalid resume item");
+    }
+    await this.guard(typeof strings === "function" ? strings() : strings);
+    return this.update(id, { structured: checked.data });
+  }
+
+  private async guard(strings: string[]): Promise<void> {
+    if (strings.length === 0) return;
+    const text = strings.join("\n");
+    const found = findPii(text, await this.personalInfo.allValues())[0];
+    if (found) {
+      throw new ValidationError(
+        `Your ${found.label} is in the body — keep contact data in Personal info`,
+      );
+    }
+    const loaded = await this.loadProfile();
+    if (loaded && containsFullName([text], loaded.fullName)) {
+      throw new ValidationError(RESUME_FULL_NAME);
+    }
   }
 
   async printData(id: string): Promise<PrintData> {
