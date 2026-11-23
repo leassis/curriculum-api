@@ -249,8 +249,8 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit render tests: score + band + rationale; badges in order; no-gaps state; omission rows with reasons in order; nothing-left-out state; only "Not assessed yet" when null; `<script>` in model text escaped (C30-C35, C37)
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit render tests: score + band + rationale; badges in order; no-gaps state; omission rows with reasons in order; nothing-left-out state; only "Not assessed yet" when null; `<script>` in model text escaped (C30-C35, C37)
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

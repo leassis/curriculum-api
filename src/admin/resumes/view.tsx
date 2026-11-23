@@ -17,6 +17,15 @@ export interface ResumeView {
   invalid: boolean;
 }
 
+/** The last generation's assessment, with the band label already resolved by the route. */
+export interface AssessmentView {
+  score: number;
+  band: string;
+  rationale: string;
+  missingSkills: string[];
+  omissions: { what: string; reason: string }[];
+}
+
 export const NOT_GENERATED = "Not generated yet";
 export const INVALID_DOCUMENT = "This resume's stored data is invalid; generate it again";
 
@@ -248,12 +257,74 @@ export const ResumeCards = ({
   );
 };
 
+export const AssessmentPanels = ({ assessment }: { assessment: AssessmentView | null }) => {
+  if (!assessment) {
+    return (
+      <article class="card-pad" id="assessment">
+        <h2 class="section-title">Not assessed yet</h2>
+        <p class="muted">Generate to see the assessment.</p>
+      </article>
+    );
+  }
+  return (
+    <div class="flex flex-col gap-6" id="assessment">
+      <article class="card-pad">
+        <h2 class="section-title">Why this score</h2>
+        <p>
+          <strong>
+            {assessment.score} · {assessment.band}
+          </strong>
+        </p>
+        <p>{assessment.rationale}</p>
+      </article>
+      <article class="card-pad">
+        <h2 class="section-title">Missing skills</h2>
+        {assessment.missingSkills.length === 0 ? (
+          <>
+            <p>
+              <strong>No significant gaps</strong>
+            </p>
+            <p class="muted">Your career library covers the role's stated requirements.</p>
+          </>
+        ) : (
+          <p class="flex flex-wrap gap-2">
+            {assessment.missingSkills.map((skill) => (
+              <span class="badge badge-warning">{skill}</span>
+            ))}
+          </p>
+        )}
+      </article>
+      <article class="card-pad">
+        <h2 class="section-title">What was left out</h2>
+        {assessment.omissions.length === 0 ? (
+          <>
+            <p>
+              <strong>Nothing was left out</strong>
+            </p>
+            <p class="muted">Your whole career library made it into this resume.</p>
+          </>
+        ) : (
+          <ul class="flex flex-col gap-3">
+            {assessment.omissions.map((omission) => (
+              <li>
+                <strong>{omission.what}</strong>
+                <span class="muted"> {omission.reason}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </article>
+    </div>
+  );
+};
+
 export const Editor = ({
   basePath,
   resume,
   options,
   fullName,
   cards,
+  assessment,
   error,
 }: {
   basePath: string;
@@ -261,6 +332,7 @@ export const Editor = ({
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
+  assessment?: AssessmentView | null;
   error?: string;
 }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
@@ -338,6 +410,7 @@ export const Editor = ({
           </p>
         </form>
         <ResumeCards basePath={basePath} resume={resume} fullName={fullName} cards={cards} />
+        <AssessmentPanels assessment={assessment ?? null} />
       </div>
     </div>
   );
@@ -349,6 +422,7 @@ export const EditorPage = (p: {
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
+  assessment?: AssessmentView | null;
   error?: string;
 }) => (
   <Layout title={p.resume.title} basePath={p.basePath} section="resumes">
