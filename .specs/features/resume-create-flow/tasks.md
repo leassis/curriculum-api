@@ -216,6 +216,9 @@ Proof: run unit | ✓ resume service create flow > stores an empty list when eve
 **C18** - The recording mock model receives no Personal Info Field value and no `fullName` on create (RCF-09, edge)
 Proof: run unit | ✓ resume service create flow > sends no personal info value or full name to the model on create
 
+**C19** - The route maps the posted marker and boxes to `headerFields`: checked keys, `null` for all, `[]` for none (RCF-03, Create AC 4-5, edge)
+Proof: run unit | ✓ admin resumes create flow > stores the checked header keys, null for all, [] for none
+
 **C20** - `ResumeRepository.insert` stores `headerFields` (a list and `[]`) and reads it back unchanged (RCF-03, added after verification)
 Proof: run int | ✓ resume repository > stores headerFields on insert and reads them back unchanged
 
