@@ -789,6 +789,38 @@ describe("admin resumes structured", () => {
     expect(repo.rows[0]?.structured).toEqual(sampleDocument());
   });
 
+  it("form ops act on the clicked item after an earlier text-only section is emptied", async () => {
+    const { get, post, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await repo.update(id, { structured: sampleDocument() });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const posted = { ...editorForm(html), "sections.0.text": "" };
+    const headings = (fragment: string) =>
+      [...fragment.matchAll(/name="sections\.\d+\.items\.\d+\.heading"[^>]*value="([^"]*)"/g)].map(
+        (m) => m[1],
+      );
+
+    const removed = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Remove", "s1.i0"),
+    });
+    expect(removed.status).toBe(200);
+    expect(headings(await removed.text())).toEqual([
+      "Engineer — Initech (2016-2020)",
+      "BSc Computer Science — State University",
+    ]);
+    const moved = await post(`/admin/resumes/${id}/form`, {
+      ...posted,
+      ...opVals(html, "Move down", "s1.i0"),
+    });
+    expect(headings(await moved.text())).toEqual([
+      "Engineer — Initech (2016-2020)",
+      "Staff Engineer — Globex (2020-2024)",
+      "BSc Computer Science — State University",
+    ]);
+    expect(repo.rows[0]?.structured).toEqual(sampleDocument());
+  });
+
   it("form answers 400 for an unknown op or an invalid form", async () => {
     const { get, post, resumes, repo } = await resumeApp();
     const { id } = await resumes.create(newResume);

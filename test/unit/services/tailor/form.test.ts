@@ -104,6 +104,38 @@ describe("form codec", () => {
     expect(applyOp(base, "up", "s2.i0")).toEqual(base);
   });
 
+  it("applies the op to the clicked item after an earlier section is emptied", () => {
+    // Skills (text only) is emptied above Experience [A, B] and Education [C].
+    const doc = sampleDocument();
+    const skills = { title: "Skills", kind: "other" as const, text: "TypeScript", items: [] };
+    const body = formOf({ ...doc, sections: [skills, ...doc.sections.slice(1)] });
+    body["sections.0.text"] = "  ";
+    const [a, b] = sectionAt(doc, 1).items.map((i) => i.heading);
+    const c = itemAt(doc, 2, 0).heading;
+    const headings = (r: unknown) => {
+      const p = parseDocument(r);
+      if (!p.ok) throw new Error(p.path);
+      return p.doc.sections.map((s) => s.items.map((i) => i.heading));
+    };
+
+    expect(headings(documentFromForm(body, { op: "remove", target: "s1.i0" }))).toEqual([[b], [c]]);
+    expect(headings(documentFromForm(body, { op: "remove", target: "s2.i0" }))).toEqual([[a, b]]);
+    expect(headings(documentFromForm(body, { op: "down", target: "s1.i0" }))).toEqual([
+      [b, a],
+      [c],
+    ]);
+    expect(headings(documentFromForm(body, { op: "up", target: "s1.i1" }))).toEqual([[b, a], [c]]);
+    expect(headings(documentFromForm(body, { op: "down", target: "s1.i1" }))).toEqual([
+      [a, b],
+      [c],
+    ]);
+    // The emptied section itself has no items to act on.
+    expect(headings(documentFromForm(body, { op: "remove", target: "s0.i0" }))).toEqual([
+      [a, b],
+      [c],
+    ]);
+  });
+
   it("ignores targets that do not exist", () => {
     const base = sampleDocument();
     for (const t of ["", "s9.i0", "s1.i9", "x", "s1.i-1"]) {

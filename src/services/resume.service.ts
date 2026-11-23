@@ -19,7 +19,7 @@ import type { SettingsService } from "./settings.service.js";
 import type { PageSize } from "./settings-keys.js";
 import { type AssembleFailure, assemble } from "./tailor/assemble.js";
 import { parseDocument, type ResumeDocument, stripPrefix } from "./tailor/document.js";
-import { applyOp, documentFromForm, type ItemOp } from "./tailor/form.js";
+import { documentFromForm, type FormOp, type ItemOp } from "./tailor/form.js";
 import { TailorOutputSchema } from "./tailor/output.js";
 import { type ParsedCv, parseMasterCv } from "./tailor/parse-cv.js";
 import { renderResumeMarkdown } from "./tailor/render.js";
@@ -347,7 +347,7 @@ export class ResumeService {
     if (!isItemOp(op)) {
       throw new ValidationError("Unknown item operation", { op: "is not remove, up or down" });
     }
-    return applyOp(this.documentFrom(body), op, target);
+    return this.documentFrom(body, { op, target });
   }
 
   /** The posted editor form as a Resume Document, unsaved (for the preview). */
@@ -357,8 +357,8 @@ export class ResumeService {
   }
 
   /** The schema-valid document of an editor form; 400 naming the first failing path otherwise. */
-  private documentFrom(body: Record<string, unknown>): ResumeDocument {
-    const parsed = parseDocument(documentFromForm(body));
+  private documentFrom(body: Record<string, unknown>, op?: FormOp): ResumeDocument {
+    const parsed = parseDocument(documentFromForm(body, op));
     if (!parsed.ok) throw invalidDocument(parsed.path);
     return parsed.doc;
   }

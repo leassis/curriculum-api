@@ -12,6 +12,10 @@ function flatten(value: unknown, prefix: string, out: Map<string, Leaf>): void {
   if (typeof leaf === "string") out.set(prefix, leaf);
 }
 
+export type ItemOp = "remove" | "up" | "down";
+
+const TARGET = /^s(\d+)\.i(\d+)$/;
+
 const SECTION_KEY = /^sections\.(\d+)\.(title|kind|text)$/;
 const ITEM_KEY = /^sections\.(\d+)\.items\.(\d+)\.(heading|text|bullets)$/;
 
@@ -27,15 +31,43 @@ interface RawSection {
   items: Map<number, RawItem>;
 }
 
-const byIndex = <T>(m: Map<number, T>): T[] =>
-  [...m.entries()].sort(([a], [b]) => a - b).map(([, v]) => v);
+const byIndex = <T>(m: Map<number, T>): [number, T][] => [...m.entries()].sort(([a], [b]) => a - b);
+
+/** An item operation on the form, its target named by the form's own indices (`s<i>.i<j>`). */
+export interface FormOp {
+  op: ItemOp;
+  target: string;
+}
+
+/**
+ * Applies an op to the sections as posted, before empty sections are dropped, so the target
+ * names the clicked item; edges and unknown targets are no-ops.
+ */
+function applyFormOp(sections: [number, [number, RawItem][]][], { op, target }: FormOp): void {
+  const m = TARGET.exec(target);
+  if (!m) return;
+  const items = sections.find(([key]) => key === Number(m[1]))?.[1];
+  const at = items?.findIndex(([key]) => key === Number(m[2])) ?? -1;
+  if (!items || at === -1) return;
+  if (op === "remove") {
+    items.splice(at, 1);
+    return;
+  }
+  const other = op === "up" ? at - 1 : at + 1;
+  const a = items[at];
+  const b = items[other];
+  if (!a || !b) return;
+  items[at] = b;
+  items[other] = a;
+}
 
 /**
  * Builds a candidate Resume Document from the editor form. Sections are read in numeric key
  * order, bullets split on newlines with blank lines dropped, and a section with no items and
- * no text is dropped. The result is unvalidated: pass it to `parseDocument`.
+ * no text is dropped. An `op` acts on the form as posted, before that drop. The result is
+ * unvalidated: pass it to `parseDocument`.
  */
-export function documentFromForm(body: Record<string, unknown>): unknown {
+export function documentFromForm(body: Record<string, unknown>, op?: FormOp): unknown {
   const flat = new Map<string, Leaf>();
   flatten(body, "", flat);
 
@@ -65,8 +97,12 @@ export function documentFromForm(body: Record<string, unknown>): unknown {
     }
   }
 
-  const built = byIndex(sections).flatMap((s) => {
-    const items = byIndex(s.items).map((i) => ({
+  const ordered = byIndex(sections);
+  const itemsOf = ordered.map(([key, s]): [number, [number, RawItem][]] => [key, byIndex(s.items)]);
+  if (op) applyFormOp(itemsOf, op);
+
+  const built = ordered.flatMap(([, s], n) => {
+    const items = (itemsOf[n]?.[1] ?? []).map(([, i]) => ({
       heading: (i.heading ?? "").trim(),
       text: (i.text ?? "").trim(),
       bullets: (i.bullets ?? "")
@@ -80,10 +116,6 @@ export function documentFromForm(body: Record<string, unknown>): unknown {
   });
   return { version: 1, sections: built };
 }
-
-export type ItemOp = "remove" | "up" | "down";
-
-const TARGET = /^s(\d+)\.i(\d+)$/;
 
 /** Removes an item or swaps it with its neighbour in the same section; edges and bad targets are no-ops. */
 export function applyOp(doc: ResumeDocument, op: ItemOp, target: string): ResumeDocument {
