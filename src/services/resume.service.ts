@@ -2,7 +2,7 @@ import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
-import { NotFoundError, ValidationError } from "./errors.js";
+import { LlmUnavailableError, NotFoundError, ValidationError } from "./errors.js";
 import type { LlmService } from "./llm.service.js";
 import type {
   ContactItem,
@@ -30,6 +30,8 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
       : `${CUSTOM_INSTRUCTIONS_PREAMBLE}\n${sanitizeMarkers(instructions)}\n\n`;
   return `Today's date: ${date}\n\n${steering}${dataBlock("JOB_DESCRIPTION", jobDescription)}`;
 }
+
+const MASTER_CV_REQUIRED = "Fill the master CV first";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -121,6 +123,22 @@ export class ResumeService {
     });
   }
 
+  /** Creates the resume, then generates it. A failed generation keeps the resume and reports why. */
+  async createAndGenerate(
+    input: ResumeInput,
+  ): Promise<{ resume: Resume; error?: "generate" | "master-cv" }> {
+    const created = await this.create(input);
+    try {
+      return { resume: await this.generate(created.id) };
+    } catch (error) {
+      if (error instanceof LlmUnavailableError) return { resume: created, error: "generate" };
+      if (error instanceof ValidationError && error.message === MASTER_CV_REQUIRED) {
+        return { resume: created, error: "master-cv" };
+      }
+      throw error;
+    }
+  }
+
   async delete(id: string): Promise<void> {
     await this.get(id);
     await this.resumes.delete(id);
@@ -140,7 +158,7 @@ export class ResumeService {
         : this.checkInstructions(customInstructions, await this.personalInfo.allValues());
     const profile = await this.loadProfile();
     if (!profile || profile.masterCv.trim() === "") {
-      throw new ValidationError("Fill the master CV first");
+      throw new ValidationError(MASTER_CV_REQUIRED);
     }
     if (instructions !== undefined) {
       resume = await this.update(id, { customInstructions: instructions });

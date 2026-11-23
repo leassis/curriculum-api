@@ -87,13 +87,13 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Unit tests C2, C8 (service), C9, C10, C18 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C2, C8 (service), C9, C10, C18 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(resumes): create and generate in one service call`
-**Status**: ⬜ Pending
+**Status**: ✅ Complete
 
 ---
 

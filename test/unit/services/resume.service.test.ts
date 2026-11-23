@@ -408,4 +408,87 @@ describe("resume service create flow", () => {
     await resumes.create({ ...draft, headerKeys: [] });
     expect(repo.rows[0]?.headerFields).toEqual([]);
   });
+
+  it("creates then generates with the generate input", async () => {
+    const { resumes, repo, calls } = await resumeSetup();
+    const { resume, error } = await resumes.createAndGenerate({
+      ...draft,
+      customInstructions: " One page ",
+    });
+    expect(error).toBeUndefined();
+    expect(resume).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
+    expect(repo.rows).toHaveLength(1);
+    expect(repo.rows[0]).toMatchObject({
+      content: "# Tailored body",
+      customInstructions: "One page",
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.maxOutputTokens).toBe(4000);
+    const prompt = calls[0]?.prompt ?? "";
+    expect(prompt).toContain(TAILOR_PROMPT);
+    expect(prompt).toContain(CV);
+    expect(prompt).toContain(JD);
+    expect(prompt).toContain(CUSTOM_INSTRUCTIONS_PREAMBLE);
+    expect(prompt).toContain("One page");
+  });
+
+  it("rejects invalid input, stores nothing and does not call the llm", async () => {
+    const { resumes, repo, calls, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com");
+    for (const bad of [
+      { ...draft, title: " " },
+      { ...draft, jobDescription: "" },
+      { ...draft, customInstructions: "x".repeat(2001) },
+      { ...draft, customInstructions: "write to ada@example.com" },
+    ]) {
+      await expect(resumes.createAndGenerate(bad)).rejects.toMatchObject({ status: 400 });
+    }
+    expect(repo.rows).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("keeps the resume with error generate when the llm is unavailable", async () => {
+    const { resumes, repo, addField } = await resumeSetup({ factory: failingFactory });
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    const { resume, error } = await resumes.createAndGenerate({
+      ...draft,
+      customInstructions: "Short",
+      headerKeys: ["EMAIL"],
+    });
+    expect(error).toBe("generate");
+    expect(repo.rows).toHaveLength(1);
+    expect(resume.id).toBe(repo.rows[0]?.id);
+    expect(repo.rows[0]).toMatchObject({
+      title: "Backend at Acme",
+      jobDescription: JD,
+      customInstructions: "Short",
+      headerFields: ["EMAIL"],
+      content: "",
+      model: null,
+    });
+  });
+
+  it("keeps the resume with error master-cv when the master cv is empty", async () => {
+    for (const opts of [{ cv: "  " }, { seed: false }]) {
+      const { resumes, repo, calls } = await resumeSetup(opts);
+      const { error } = await resumes.createAndGenerate(draft);
+      expect(error).toBe("master-cv");
+      expect(repo.rows).toHaveLength(1);
+      expect(repo.rows[0]).toMatchObject({ content: "", model: null });
+      expect(calls).toHaveLength(0);
+    }
+  });
+
+  it("sends no personal info value or full name to the model on create", async () => {
+    const { resumes, calls, addField } = await resumeSetup();
+    await addField("EMAIL", "Email", "ada@example.com", 1);
+    await addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    await resumes.createAndGenerate({ ...draft, customInstructions: "Tone: direct" });
+    expect(calls).toHaveLength(1);
+    const prompt = calls[0]?.prompt ?? "";
+    for (const secret of ["ada@example.com", "+44 20 7946 0958", FULL_NAME]) {
+      expect(prompt).not.toContain(secret);
+    }
+  });
 });
