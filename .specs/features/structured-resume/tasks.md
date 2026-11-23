@@ -670,7 +670,7 @@ Proof: run unit | ✓ form codec > drops empty sections and stores blank bullets
 ## Handoff
 
 **Settled mid-build:** Batch models - user: "use sonnet for phase 1, opus for phase 2"; Phase 3 model - user: "Opus".
-**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 sent to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at 9ada9ac
+**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 to the same worker, returned at 9ada9ac; Phase 2 batch worker (opus) T9-T18 at a78d9bc, returned at 2dbeff0; Phase 3 batch worker (opus) T19-T22 at 97435bf, returned at e2c757b; check_proofs 43 pass at e2c757b; Verifier round 1 at dba4750
 **Walked:** none
 
 ---
