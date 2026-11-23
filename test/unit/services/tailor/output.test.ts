@@ -52,6 +52,10 @@ describe("tailor output schema", () => {
       headline: "h",
       summary: "s",
       items: [{ source_id: "c1", text: "", bullets: ["b"] }],
+      score: 50,
+      score_rationale: "r",
+      missing_skills: [],
+      omissions: [],
     };
     expect(TailorOutputSchema.safeParse(ok).success).toBe(true);
     expect(
@@ -66,6 +70,35 @@ describe("tailor output schema", () => {
     const props = (items.items as Node).properties as Record<string, Node>;
     expect(Object.keys(props)).toEqual(["source_id", "text", "bullets"]);
     expect(props.source_id?.description).toContain("in brackets");
+  });
+});
+
+describe("tailor assessment schema", () => {
+  const json = z.toJSONSchema(TailorOutputSchema) as Node;
+  const props = json.properties as Record<string, Node>;
+
+  it("requires and describes every assessment field", () => {
+    for (const name of ["score", "score_rationale", "missing_skills", "omissions"]) {
+      expect(json.required, name).toContain(name);
+      expect(typeof props[name]?.description, name).toBe("string");
+      expect(String(props[name]?.description).trim(), name).not.toBe("");
+    }
+    expect(props.score?.type).toBe("integer");
+    const skill = (props.missing_skills as Node).items as Node;
+    expect(skill.type).toBe("string");
+    expect(typeof skill.description).toBe("string");
+    const omission = (props.omissions as Node).items as Node;
+    const fields = omission.properties as Record<string, Node>;
+    expect(Object.keys(fields)).toEqual(["what", "reason"]);
+    expect(omission.required).toEqual(["what", "reason"]);
+    expect(typeof fields.what?.description).toBe("string");
+    expect(typeof fields.reason?.description).toBe("string");
+  });
+
+  it("score rates the original career library", () => {
+    const description = props.score?.description as string;
+    expect(description).toContain("original career library");
+    expect(description).toContain("not the rewritten resume");
   });
 });
 

@@ -141,6 +141,10 @@ export function sampleReplyV2(library: CareerItem[] = sampleLibrary().items): Ta
     headline: "Backend engineer",
     summary: "Ten years building payment systems.",
     items: library.map((i, n) => ({ source_id: `c${n + 1}`, text: i.text, bullets: i.bullets })),
+    score: 70,
+    score_rationale: "Covers the core requirements.",
+    missing_skills: [],
+    omissions: [],
   };
 }
 

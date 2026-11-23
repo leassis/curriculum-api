@@ -112,9 +112,9 @@ T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: `z.toJSONSchema` has a description on each new field and on `what`/`reason`; `score` description says it rates the original career library, not the rewritten resume (C1, C2)
-- [ ] Existing output and assemble tests updated only to supply the new required fields
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests: `z.toJSONSchema` has a description on each new field and on `what`/`reason`; `score` description says it rates the original career library, not the rewritten resume (C1, C2)
+- [x] Existing output and assemble tests updated only to supply the new required fields
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

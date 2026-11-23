@@ -34,6 +34,40 @@ export const TailorOutputSchema = z.object({
     .describe(
       "One entry per item, in the order they should appear within its kind, most relevant to this job first. Return every experience, education, certification, course, skill group and language item; only projects, publications and honours may be left out when they do not help this job. Never invent items or ids",
     ),
+  score: z
+    .number()
+    .int()
+    .describe(
+      "An integer from 0 to 100 rating how well the original career library fits the job, not the rewritten resume, using the rubric",
+    ),
+  score_rationale: z
+    .string()
+    .describe(
+      "One short paragraph saying why the library earns that score: what matches the job and what does not",
+    ),
+  missing_skills: z
+    .array(
+      z
+        .string()
+        .describe(
+          "One skill, tool or requirement of the job that the career library does not show",
+        ),
+    )
+    .describe(
+      "The requirements of the job description that the career library does not meet, most important first; empty when none",
+    ),
+  omissions: z
+    .array(
+      z.object({
+        what: z
+          .string()
+          .describe("What was cut: a bullet, a detail, or a whole project, publication or honour"),
+        reason: z.string().describe("Why it was cut, in one short sentence"),
+      }),
+    )
+    .describe(
+      "Every cut you made inside a kept item, and every project, publication or honour you left out, each with its reason; empty when nothing was cut",
+    ),
 });
 
 export type TailorOutput = z.infer<typeof TailorOutputSchema>;

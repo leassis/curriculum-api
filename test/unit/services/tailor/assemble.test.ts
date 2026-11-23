@@ -8,7 +8,16 @@ const ids = annotate(library);
 const tag = (id: string) => ids.get(id) as string;
 
 function reply(items: TailorOutput["items"], overrides: Partial<TailorOutput> = {}): TailorOutput {
-  return { headline: "Backend engineer", summary: "Summary.", items, ...overrides };
+  return {
+    headline: "Backend engineer",
+    summary: "Summary.",
+    items,
+    score: 70,
+    score_rationale: "Covers the core requirements.",
+    missing_skills: [],
+    omissions: [],
+    ...overrides,
+  };
 }
 
 const all = (): TailorOutput["items"] =>

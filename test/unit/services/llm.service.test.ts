@@ -178,6 +178,10 @@ describe("llm service generate object", () => {
     headline: "Engineer",
     summary: "Lead",
     items: [{ source_id: "c1", text: "Did things", bullets: ["One"] }],
+    score: 70,
+    score_rationale: "Covers the core requirements.",
+    missing_skills: ["Kubernetes"],
+    omissions: [{ what: "A bullet", reason: "Off topic" }],
   };
 
   it("returns the parsed object and the model through a structured model", async () => {
@@ -210,6 +214,12 @@ describe("llm service generate object", () => {
       "items[].source_id",
       "items[].text",
       "items[].bullets",
+      "score",
+      "score_rationale",
+      "missing_skills",
+      "omissions",
+      "omissions[].what",
+      "omissions[].reason",
     ]);
     for (const { path, node } of props) {
       expect(typeof node.description, path).toBe("string");
