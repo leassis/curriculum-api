@@ -277,7 +277,7 @@ describe("admin resumes left out routes", () => {
     const stored = async () => {
       const [row] = await db.select().from(tailoredResumes);
       const doc = row?.structured as unknown as {
-        items: { title: string; sourceId: string | null }[];
+        items: { id: string; title: string; sourceId: string | null }[];
       };
       return doc.items;
     };
@@ -326,16 +326,28 @@ describe("admin resumes left out routes", () => {
     const { page, click, stored, services } = await generatedResume();
     const libraryBefore = await services.career.library();
     const globex = libraryBefore.items.find((i) => i.title === "Staff Engineer");
+    const { id: libraryId, ...libraryFields } = globex as NonNullable<typeof globex>;
+    const experienceCount = async () =>
+      sections(await page())
+        .find((c) => /^Experience/.test(c.title))
+        ?.title.replace(/^Experience/, "");
+    expect(await experienceCount()).toBe("2");
     await click(await page(), "Delete Staff Engineer");
+    expect(await experienceCount()).toBe("1");
     const html = await page();
     const left = tags(html, "details").find((d) => d.text.includes("Left out"));
     const added = await click(left?.html ?? "", /^Add back/);
     expect(added.status).toBe(200);
     expect(await added.text()).not.toContain("Left out");
+    expect(await experienceCount()).toBe("2");
     const items = await stored();
-    expect(items.at(-1)).toMatchObject({ title: "Staff Engineer", sourceId: globex?.id });
+    const copy = items.at(-1);
+    expect(copy).toMatchObject({ ...libraryFields, sourceId: libraryId });
+    expect(copy?.id).not.toBe(libraryId);
+    expect(copy?.id).toEqual(expect.any(String));
     expect(await services.career.library()).toEqual(libraryBefore);
   });
+
   it("keeps both items when two different items are added back at the same time", async () => {
     const { id, page, click, stored, send, services } = await generatedResume();
     await click(await page(), "Delete Staff Engineer");

@@ -74,7 +74,11 @@ describe("left out", () => {
   });
 
   it("ignores items without a source id", () => {
-    expect(titles(leftOut([a, b], [{ sourceId: null }]))).toEqual(["A", "B"]);
+    const handAdded = [
+      { id: a.id, sourceId: null },
+      { id: b.id, sourceId: null },
+    ];
+    expect(titles(leftOut([a, b], handAdded))).toEqual(["A", "B"]);
   });
 
   it("returns an item to left out once its document item is removed", () => {
