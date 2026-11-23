@@ -100,10 +100,10 @@
 
 ## Handoff
 
-- **Feature**: `structured-resume` done on branch `feat/structured-resume` (local, not pushed): T1-T22, Verifier round 1 F1-F4 fixed, `validate_verification.py` exits 0, proofs 47/47 at f976b30, walk logged in tasks.md.
-- **Next**: user review/merge of `feat/structured-resume`; then `honest-assessment` (spec written, not approved) builds on it.
-- **Before deploy**: migration `0004` drops `tailored_resumes.content` (generated texts lost); running it in production needs the Owner's go-ahead. The Owner's real Master CV is plain text with no `##`/`###` headings and contains the full name, so Generate will answer 400 until it is restructured.
-- **Notes**: Neon Local dev branch has the fixture Master CV and a "Walk - Platform Engineer" resume from the walk (temporary branch). Lessons L-001..L-004 recorded as candidates.
+- **Feature**: `career-library` implemented on branch `feat/career-library` (local, not pushed; cut from `main` after `feat/structured-resume` was fast-forward merged): T1-T26 done and marked in tasks.md, Verifier F1-F5 fixed and closed, screens round 2 all 4 match (3 confirmed differences), `validate_verification.py career-library` exits 0, proofs 76/76. `structured-resume` is merged into `main` (local).
+- **Next**: user review and merge of `feat/career-library` into `main`; `proofs.md` is left uncommitted on purpose (the validator needs it to name HEAD; rerun `check_proofs.py career-library` before validating after any new commit). Then rewrite and approve `honest-assessment`.
+- **Before deploy**: migration `0005` (career_library table, profile summary) and `0006_drop_master_cv` (drops `master_cv`, nulls tailored `structured`/`model`); running them in production needs the Owner's go-ahead. The Owner must load the Career Library first (markdown editor or import); a converted copy of the Owner's CV is in the side-session notes folder.
+- **Notes**: Lessons from the run: the plan's Phase 3 gate could not be green because the v2 schema broke v1 admin tests until T23 (partial gate approved for T14-T22); picture checks need exact capture size (headless Chrome at deviceScaleFactor 2, not the browser pane). Tailored editor shows only kinds that have items (AC 8). Neon Local sample data is throwaway.
 - **Blockers**: none.
 - **Stale**: the `honest-assessment` spec was written against the markdown Master CV and the section-based Resume Document; `career-library` replaced both (Career Items, Resume Document v2, migration 0006), so that spec must be rewritten before it is approved.
 
