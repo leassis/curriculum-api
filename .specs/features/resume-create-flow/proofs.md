@@ -1,9 +1,9 @@
 # resume-create-flow proofs
 
-**HEAD**: b6f330a
+**HEAD**: 632ae81
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 21 pass, 0 fail
+**Result**: 23 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -25,6 +25,8 @@
 | C16 | `run unit / ✓ resume service create flow > ignores unknown header keys` | pass |
 | C17 | `run unit / ✓ resume service create flow > stores an empty list when every header box is unchecked` | pass |
 | C18 | `run unit / ✓ resume service create flow > sends no personal info value or full name to the model on create` | pass |
+| C19 | `run unit / ✓ admin resumes create flow > stores the checked header keys, null for all, [] for none` | pass |
+| C20 | `run int / ✓ resume repository > stores headerFields on insert and reads them back unchanged` | pass |
 | Build | `pnpm build` | pass |
 | Build | `pnpm typecheck` | pass |
 | Build | `pnpm lint` | pass |
@@ -49,4 +51,24 @@ PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
   code: 'internal_error',
   status: 500
 }
+```
+
+`Run int` - exit 0
+
+```
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2296) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
 ```
