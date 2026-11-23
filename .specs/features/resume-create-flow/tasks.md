@@ -128,13 +128,13 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Unit tests C11, C12, C13, C14 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C11, C12, C13, C14 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(admin): show create-time generation errors in the editor`
-**Status**: ⬜ Pending
+**Status**: ✅ Complete
 
 ---
 

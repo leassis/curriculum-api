@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { profileInput } from "../../support/fakes/profile.fake";
 import { failingFactory, resumeApp } from "../../support/resumes";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
@@ -383,5 +384,50 @@ describe("admin resumes create flow", () => {
     await post("/admin/resumes", { ...posted, headerFields: ["EMAIL", "PHONE"] });
     await post("/admin/resumes", posted);
     expect(repo.rows.map((r) => r.headerFields)).toEqual([["PHONE"], null, []]);
+  });
+
+  const status = (html: string) =>
+    html.match(/<p[^>]*id="editor-status"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? null;
+
+  it("editor shows the generation failed text for error generate", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}?error=generate`)).text();
+    expect(status(html)).toBe("Generation failed, try again");
+  });
+
+  it("editor shows the master cv text for error master-cv", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}?error=master-cv`)).text();
+    expect(status(html)).toBe("Fill the master CV first");
+  });
+
+  it("editor shows no error text for an unknown error value", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    for (const value of ["nope", "<b>x</b>", ""]) {
+      const html = await (
+        await get(`/admin/resumes/${id}?error=${encodeURIComponent(value)}`)
+      ).text();
+      expect(status(html)).toBe("");
+      expect(html).not.toContain("Generation failed");
+      expect(html).not.toContain("Fill the master CV first");
+    }
+    const plain = await (await get(`/admin/resumes/${id}`)).text();
+    expect(status(plain)).toBe("");
+  });
+
+  it("generate works on the editor opened after a failed create", async () => {
+    const { post, get, repo, profileRepo } = await resumeApp({ cv: "" });
+    const created = await post("/admin/resumes", newResume);
+    const location = created.headers.get("location") ?? "";
+    expect(location).toContain("?error=master-cv");
+    await profileRepo.upsert({ ...profileInput, masterCv: "Ten years of backends." });
+    expect(await (await get(location)).text()).toContain("Fill the master CV first");
+    const res = await post(`/admin/resumes/${repo.rows[0]?.id}/generate`);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("# Tailored body</textarea>");
+    expect(repo.rows[0]).toMatchObject({ content: "# Tailored body", model: "vendor/tailor" });
   });
 });

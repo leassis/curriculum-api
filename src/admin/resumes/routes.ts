@@ -12,6 +12,11 @@ const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
 const optionalText = (value: unknown) => (typeof value === "string" ? value : undefined);
 
+const CREATE_ERRORS: Record<string, string | undefined> = {
+  generate: "Generation failed, try again",
+  "master-cv": "Fill the master CV first",
+};
+
 const headerKeys = (fields: unknown): string[] =>
   (Array.isArray(fields) ? fields : [fields]).filter((k): k is string => typeof k === "string");
 
@@ -58,7 +63,9 @@ async function editor(c: { var: Env["Variables"] }, resume: Resume) {
 
 resumesRouter.get("/resumes/:id", async (c) => {
   const resume = await c.var.services.resumes.get(c.req.param("id"));
-  return c.html(EditorPage(await editor(c, resume)));
+  return c.html(
+    EditorPage({ ...(await editor(c, resume)), error: CREATE_ERRORS[c.req.query("error") ?? ""] }),
+  );
 });
 
 resumesRouter.post("/resumes/:id/generate", async (c) => {

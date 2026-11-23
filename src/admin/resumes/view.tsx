@@ -120,10 +120,12 @@ export const Editor = ({
   basePath,
   resume,
   options,
+  error,
 }: {
   basePath: string;
   resume: ResumeView;
   options: HeaderOption[];
+  error?: string;
 }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
   const selected = resume.headerFields;
@@ -214,7 +216,9 @@ export const Editor = ({
                 Download .md
               </a>
             </div>
-            <p id="editor-status" class="status" role="status" />
+            <p id="editor-status" class="status" role="status">
+              {error}
+            </p>
           </form>
           <section class="flex flex-col gap-3" aria-labelledby="preview-title">
             <h2 id="preview-title" class="section-title">
@@ -234,6 +238,7 @@ export const EditorPage = (p: {
   basePath: string;
   resume: ResumeView;
   options: HeaderOption[];
+  error?: string;
 }) => (
   <Layout title={p.resume.title} basePath={p.basePath} section="resumes">
     <a class="back-link" href={`${p.basePath}/admin/resumes`}>
