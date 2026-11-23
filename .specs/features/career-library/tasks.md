@@ -890,6 +890,9 @@ Proof: run unit | ✓ left out > ignores items without a source id
 **C82** - Changes to one Tailored Resume made at the same time never lose an update: two add backs of different items store both, and two add backs of one item store one copy and answer the second 400 "That item is not left out" (CLIB-13, Tailored AC 17 and the concurrency edge case)
 Proof: run int | ✓ admin resumes left out routes > stores one copy and answers 400 to the second of two simultaneous add backs of one item
 
+**C83** - The Generate call tells the model to return every experience, education, certification, course, skill group and language ordered by relevance, and to leave out only projects, publications and honours (CLIB-07, Tailored AC 5)
+Proof: run unit | ✓ resume service > tells the model to return every kept kind ordered by relevance and leave out only projects, publications and honours
+
 ---
 
 ## Handoff

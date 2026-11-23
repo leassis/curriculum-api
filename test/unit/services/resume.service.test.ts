@@ -1,6 +1,7 @@
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
 import { renderMarkdown } from "../../../src/lib/markdown";
+import { DEFAULT_TAILOR_SYSTEM_PROMPT } from "../../../src/llm/default-prompts";
 import { renderCareerBody } from "../../../src/services/career/body";
 import { LlmUnavailableError } from "../../../src/services/errors";
 import {
@@ -60,6 +61,26 @@ describe("resume service", () => {
     expect(prompt).toContain("### Staff Engineer [c1]");
     expect(prompt).toContain("- Cut p99 latency by 40%");
     expect(prompt).toContain(JD);
+  });
+
+  it("tells the model to return every kept kind ordered by relevance and leave out only projects, publications and honours", async () => {
+    const { resumes, calls, profile } = await resumeSetup();
+    await profile.update({
+      ...(await profile.get()),
+      tailorSystemPrompt: DEFAULT_TAILOR_SYSTEM_PROMPT,
+    });
+    const { id } = await resumes.create(draft);
+    await resumes.generate(id);
+    const instruction =
+      /every education, certification, course, skill group and language of the CV, ordered by relevance to the job/;
+    expect(calls[0]?.system).toMatch(instruction);
+    expect(calls[0]?.system).toContain("Only projects, publications and honours may be left out");
+    const format = calls[0]?.responseFormat;
+    const schema = JSON.stringify(format && "schema" in format ? format.schema : undefined);
+    expect(schema).toContain(
+      "Return every experience, education, certification, course, skill group and language item; only projects, publications and honours may be left out",
+    );
+    expect(schema).toContain("most relevant to this job first");
   });
 
   it("saves the generated document and the model id", async () => {
