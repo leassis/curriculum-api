@@ -324,6 +324,39 @@ describe("admin resumes left out", () => {
     expect(await res.text()).not.toContain("Left out");
   });
 
+  it("shows each left out row only on its own kind's card", async () => {
+    const { page, click } = await generated();
+    for (const label of [
+      "Delete Staff Engineer",
+      "Delete Engineer",
+      "Delete BSc Computer Science",
+    ]) {
+      await click(await page(), label);
+    }
+    const html = await page();
+    const rows = (title: RegExp) => tags(card(html, title), "details");
+    const experience = rows(/^Experience/);
+    expect(experience).toHaveLength(1);
+    expect(tags(experience[0]?.html ?? "", "summary")[0]?.text).toBe("Left out (2)");
+    const experienceText = decode(experience[0]?.html ?? "");
+    expect(experienceText).toContain("Staff Engineer");
+    expect(experienceText).toContain("Initech");
+    expect(experienceText).not.toContain("BSc Computer Science");
+    expect(
+      tags(experience[0]?.html ?? "", "button").filter((b) => /^Add back/.test(b.text)),
+    ).toHaveLength(2);
+    const education = rows(/^Education/);
+    expect(education).toHaveLength(1);
+    expect(tags(education[0]?.html ?? "", "summary")[0]?.text).toBe("Left out (1)");
+    const educationText = decode(education[0]?.html ?? "");
+    expect(educationText).toContain("BSc Computer Science");
+    expect(educationText).not.toContain("Staff Engineer");
+    expect(educationText).not.toContain("Initech");
+    for (const other of sections(html).filter((c) => !/^(Experience|Education)/.test(c.title))) {
+      expect(tags(other.html, "details"), other.title).toHaveLength(0);
+    }
+  });
+
   it("hides the left out row when nothing is left out", async () => {
     const { page } = await generated();
     expect(await page()).not.toContain("Left out");

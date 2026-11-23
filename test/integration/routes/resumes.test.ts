@@ -7,7 +7,7 @@ import { ResumeService } from "../../../src/services/resume.service";
 import { sampleReplyV2 } from "../../support/career";
 import { resolvedConfig } from "../../support/config";
 import { resetDb, testDb } from "../../support/db";
-import { button, formFields, gesture, tags } from "../../support/html";
+import { button, formFields, gesture, sections, tags } from "../../support/html";
 import { createRecordingModel } from "../../support/mock-llm";
 import { createTestApp } from "../../support/test-app";
 
@@ -293,6 +293,33 @@ describe("admin resumes left out routes", () => {
     const html = await page();
     expect(html).toContain("Left out (1)");
     expect(tags(html, "details").some((d) => d.text.includes("Staff Engineer"))).toBe(true);
+  });
+
+  it("lists each left out item on its own kind's card", async () => {
+    const { page, click } = await generatedResume();
+    for (const label of [
+      "Delete Staff Engineer",
+      "Delete Engineer",
+      "Delete BSc Computer Science",
+    ]) {
+      await click(await page(), label);
+    }
+    const html = await page();
+    const cardOf = (title: RegExp) => sections(html).find((c) => title.test(c.title))?.html ?? "";
+    const experience = tags(cardOf(/^Experience/), "details");
+    expect(experience).toHaveLength(1);
+    expect(tags(experience[0]?.html ?? "", "summary")[0]?.text).toBe("Left out (2)");
+    expect(experience[0]?.html).toContain("Staff Engineer");
+    expect(experience[0]?.html).toContain("Initech");
+    expect(experience[0]?.html).not.toContain("BSc Computer Science");
+    const education = tags(cardOf(/^Education/), "details");
+    expect(education).toHaveLength(1);
+    expect(tags(education[0]?.html ?? "", "summary")[0]?.text).toBe("Left out (1)");
+    expect(education[0]?.html).toContain("BSc Computer Science");
+    expect(education[0]?.html).not.toContain("Staff Engineer");
+    for (const other of sections(html).filter((c) => !/^(Experience|Education)/.test(c.title))) {
+      expect(tags(other.html, "details"), other.title).toHaveLength(0);
+    }
   });
 
   it("adds back a left out item and leaves the library unchanged", async () => {
