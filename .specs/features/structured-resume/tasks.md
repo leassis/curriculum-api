@@ -110,11 +110,11 @@ T18 → T19 → T20 → T21 → T22
 **Done when**:
 
 - [x] Script exits 2 with "OPENROUTER_API_KEY is required" when the key is missing
-- [ ] User approved the paid run; output saved to `.specs/features/structured-resume/smoke-run.md`
-- [ ] Parsed object printed (or T1 switched to `strict: false` and re-run until it is)
+- [x] User approved the paid run; output saved to `.specs/features/structured-resume/smoke-run.md`
+- [x] Parsed object printed (or T1 switched to `strict: false` and re-run until it is)
 - [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
-**Status**: ⏳ awaiting paid run
+**Status**: ✅ Complete
 
 **Tests**: none
 **Gate**: build
@@ -630,7 +630,7 @@ Proof: run unit | ✓ form codec > drops empty sections and stores blank bullets
 ## Handoff
 
 **Settled mid-build:** Batch models - user: "use sonnet for phase 1, opus for phase 2"; Phase 3 model not stated yet.
-**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run)
+**Dispatched:** Phase 1 batch worker (sonnet) at afe02fb, part 1 = T1 + T2 script (no paid run), returned; paid smoke run by orchestrator with user go-ahead ("Yes, run it"), passed; part 2 = T3-T8 sent to the same worker
 **Walked:** none
 
 ---

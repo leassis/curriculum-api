@@ -1,5 +1,5 @@
 // Manual, PAID smoke: one structured call against MODEL_TAILOR via OpenRouter.
-// Run: pnpm tsx --env-file=.env scripts/smoke-structured.ts
+// Run: pnpm tsx --env-file=.env --env-file=.env.local scripts/smoke-structured.ts
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { createProvider } from "../src/llm/openrouter.js";
