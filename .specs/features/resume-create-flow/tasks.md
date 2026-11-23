@@ -66,14 +66,14 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Unit tests C5, C6, C16, C17 pass
-- [ ] Every existing `resume service` test passes unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C5, C6, C16, C17 pass
+- [x] Every existing `resume service` test passes unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(resumes): store the personal header chosen on create`
-**Status**: ⬜ Pending
+**Status**: ✅ Complete
 
 ---
 

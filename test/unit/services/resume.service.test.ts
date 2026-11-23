@@ -375,3 +375,37 @@ describe("resume service custom instructions", () => {
     expect(repo.rows[0]?.customInstructions).toBe("Stored steering");
   });
 });
+
+describe("resume service create flow", () => {
+  const withFields = async (opts: Parameters<typeof resumeSetup>[0] = {}) => {
+    const setup = await resumeSetup(opts);
+    await setup.addField("EMAIL", "Email", "ada@example.com", 1);
+    await setup.addField("PHONE", "Phone", "+44 20 7946 0958", 2);
+    return setup;
+  };
+
+  it("stores exactly the checked header keys", async () => {
+    const { resumes, repo } = await withFields();
+    const created = await resumes.create({ ...draft, headerKeys: ["PHONE"] });
+    expect(created.headerFields).toEqual(["PHONE"]);
+    expect(repo.rows[0]?.headerFields).toEqual(["PHONE"]);
+  });
+
+  it("stores null when every header box is checked", async () => {
+    const { resumes, repo } = await withFields();
+    await resumes.create({ ...draft, headerKeys: ["EMAIL", "PHONE"] });
+    expect(repo.rows[0]?.headerFields).toBeNull();
+  });
+
+  it("ignores unknown header keys", async () => {
+    const { resumes, repo } = await withFields();
+    await resumes.create({ ...draft, headerKeys: ["EMAIL", "GONE"] });
+    expect(repo.rows[0]?.headerFields).toEqual(["EMAIL"]);
+  });
+
+  it("stores an empty list when every header box is unchecked", async () => {
+    const { resumes, repo } = await withFields();
+    await resumes.create({ ...draft, headerKeys: [] });
+    expect(repo.rows[0]?.headerFields).toEqual([]);
+  });
+});

@@ -38,6 +38,8 @@ export interface ResumeInput {
   company?: string;
   jobDescription: string;
   customInstructions?: string;
+  /** Posted header keys; `undefined` when the form offered none (stored as all fields). */
+  headerKeys?: string[];
 }
 
 /** Everything a Print View needs, already resolved and sanitized. */
@@ -73,6 +75,13 @@ const required = (field: string, label: string, value: unknown): string => {
   return value.trim();
 };
 
+/** `null` (all fields) when every existing key is kept or no keys were posted, else the kept keys. */
+function headerFieldsFor(keys: string[] | undefined, existing: string[]): string[] | null {
+  if (keys === undefined) return null;
+  const kept = [...new Set(keys)].filter((k) => existing.includes(k));
+  return existing.every((k) => kept.includes(k)) ? null : kept;
+}
+
 export class ResumeService {
   constructor(
     protected readonly resumes: ResumeRepo,
@@ -97,11 +106,19 @@ export class ResumeService {
     const title = required("title", "Title", input.title);
     const jobDescription = required("jobDescription", "Job Description", input.jobDescription);
     const company = input.company?.trim() || null;
-    const customInstructions = this.checkInstructions(
-      input.customInstructions ?? "",
-      await this.personalInfo.allValues(),
+    const fields = await this.personalInfo.allValues();
+    const customInstructions = this.checkInstructions(input.customInstructions ?? "", fields);
+    const headerFields = headerFieldsFor(
+      input.headerKeys,
+      fields.map((f) => f.key),
     );
-    return this.resumes.insert({ title, company, jobDescription, customInstructions });
+    return this.resumes.insert({
+      title,
+      company,
+      jobDescription,
+      customInstructions,
+      headerFields,
+    });
   }
 
   async delete(id: string): Promise<void> {
@@ -161,12 +178,12 @@ export class ResumeService {
         `Your ${found.label} is in the body — keep contact data in Personal info`,
       );
     }
-    const existing = fields.map((f) => f.key);
-    const kept = [...new Set(headerKeys)].filter((k) => existing.includes(k));
-    const all = existing.every((k) => kept.includes(k));
     return this.update(id, {
       content,
-      headerFields: all ? null : kept,
+      headerFields: headerFieldsFor(
+        headerKeys,
+        fields.map((f) => f.key),
+      ),
       ...(instructions === undefined ? {} : { customInstructions: instructions }),
     });
   }
