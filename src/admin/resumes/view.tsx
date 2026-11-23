@@ -293,74 +293,79 @@ export const Editor = ({
           <pre>{resume.jobDescription}</pre>
         </details>
         <div class="editor-grid">
-          <form id="resume-form" class="card-pad">
-            {resume.document ? (
-              <DocumentForm doc={resume.document} url={url} />
-            ) : (
-              <p class="empty-state">{resume.invalid ? INVALID_DOCUMENT : NOT_GENERATED}</p>
-            )}
-            <div class="field">
-              <label class="field-label" for="custom-instructions">
-                Custom instructions
-              </label>
-              <textarea class="input" id="custom-instructions" name="customInstructions" rows={4}>
-                {resume.customInstructions}
-              </textarea>
-            </div>
-            <fieldset class="checks">
-              <legend>Personal header</legend>
-              {options.map((o) => (
-                <label class="check">
-                  <input
-                    type="checkbox"
-                    name="headerFields"
-                    value={o.key}
-                    checked={selected === null || selected.includes(o.key)}
-                  />{" "}
-                  {o.label}{" "}
+          <section class="flex flex-col gap-3" aria-labelledby="editor-title">
+            <h2 id="editor-title" class="section-title">
+              Editor
+            </h2>
+            <form id="resume-form" class="card-pad">
+              {resume.document ? (
+                <DocumentForm doc={resume.document} url={url} />
+              ) : (
+                <p class="empty-state">{resume.invalid ? INVALID_DOCUMENT : NOT_GENERATED}</p>
+              )}
+              <div class="field">
+                <label class="field-label" for="custom-instructions">
+                  Custom instructions
                 </label>
-              ))}
-            </fieldset>
-            <div class="actions">
-              <button
-                type="button"
-                class="btn"
-                hx-post={`${url}/generate`}
-                hx-target="#editor"
-                hx-swap="outerHTML"
-                hx-indicator="#generate-indicator"
-                hx-disabled-elt="this"
-                hx-include="#custom-instructions"
-                hx-confirm={resume.document ? "Replace the current content?" : undefined}
-              >
-                Generate
-              </button>{" "}
-              <span id="generate-indicator" class="htmx-indicator muted">
-                Generating…
-              </span>{" "}
-              {resume.document && (
+                <textarea class="input" id="custom-instructions" name="customInstructions" rows={4}>
+                  {resume.customInstructions}
+                </textarea>
+              </div>
+              <fieldset class="checks">
+                <legend>Personal header</legend>
+                {options.map((o) => (
+                  <label class="check">
+                    <input
+                      type="checkbox"
+                      name="headerFields"
+                      value={o.key}
+                      checked={selected === null || selected.includes(o.key)}
+                    />{" "}
+                    {o.label}{" "}
+                  </label>
+                ))}
+              </fieldset>
+              <div class="actions">
                 <button
                   type="button"
-                  class="btn-ghost"
-                  hx-put={url}
-                  hx-include="#resume-form"
-                  hx-target="#editor-status"
-                  hx-swap="innerHTML"
+                  class="btn"
+                  hx-post={`${url}/generate`}
+                  hx-target="#editor"
+                  hx-swap="outerHTML"
+                  hx-indicator="#generate-indicator"
+                  hx-disabled-elt="this"
+                  hx-include="#custom-instructions"
+                  hx-confirm={resume.document ? "Replace the current content?" : undefined}
                 >
-                  Save
-                </button>
-              )}{" "}
-              <a class="btn-ghost" href={`${url}/print`} target="_blank" rel="noopener">
-                Print
-              </a>{" "}
-              <a class="btn-ghost" href={`${url}/download.md`}>
-                Download .md
-              </a>
-            </div>
-            <p id="editor-status" class="status" role="status">
-              {error && <span class="text-danger">{error}</span>}
-            </p>
-          </form>
+                  Generate
+                </button>{" "}
+                <span id="generate-indicator" class="htmx-indicator muted">
+                  Generating…
+                </span>{" "}
+                {resume.document && (
+                  <button
+                    type="button"
+                    class="btn-ghost"
+                    hx-put={url}
+                    hx-include="#resume-form"
+                    hx-target="#editor-status"
+                    hx-swap="innerHTML"
+                  >
+                    Save
+                  </button>
+                )}{" "}
+                <a class="btn-ghost" href={`${url}/print`} target="_blank" rel="noopener">
+                  Print
+                </a>{" "}
+                <a class="btn-ghost" href={`${url}/download.md`}>
+                  Download .md
+                </a>
+              </div>
+              <p id="editor-status" class="status" role="status">
+                {error && <span class="text-danger">{error}</span>}
+              </p>
+            </form>
+          </section>
           <section class="flex flex-col gap-3" aria-labelledby="preview-title">
             <h2 id="preview-title" class="section-title">
               Preview
