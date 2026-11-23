@@ -192,6 +192,7 @@ The Master CV is one free markdown text, so a role's title, employer, place and 
 - IF a month is set without its year THEN the system SHALL answer 400 with "<Field> needs a year".
 - IF `current` is set and an end date is given THEN the system SHALL store the item with no end date.
 - IF the Career Library already holds 200 Career Items THEN the system SHALL answer 400 with "The library is limited to 200 items".
+- IF a Tailored Resume already holds 200 items and the Owner adds an item or uses "Add back" THEN the system SHALL answer 400 with "The resume is limited to 200 items" and leave the document unchanged.
 - IF a title exceeds 200 characters, an organisation, location or level 200, a text 4000, a bullet 600, a skill 100, or an item has more than 30 bullets or 50 skills THEN the system SHALL answer 400 naming the field.
 - WHEN the Owner moves the only item of a kind THEN the system SHALL keep it in place.
 - IF two move requests for the same card arrive together THEN the system SHALL apply them in sequence inside one transaction each and keep positions unique per kind.
