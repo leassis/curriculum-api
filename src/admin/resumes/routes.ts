@@ -18,6 +18,7 @@ const CREATE_ERRORS: Record<string, string> = {
   "master-cv": "Fill the master CV first",
   structure: "Structure the master CV with ## sections and ### items",
   "full-name": "Your full name is in the master CV — it is added when printed",
+  heading: "A ### heading in the master CV is empty or longer than 200 characters",
 };
 
 const createError = (code: string | undefined): string | undefined =>

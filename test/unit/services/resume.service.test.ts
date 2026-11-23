@@ -752,6 +752,31 @@ describe("resume service structured generate", () => {
     }
   });
 
+  it("rejects an empty or too long heading before calling the llm", async () => {
+    const message = "A ### heading in the master CV is empty or longer than 200 characters";
+    for (const heading of ["", "   ", "x".repeat(201)]) {
+      const cv = CV.replace("### Engineer — Initech (2016-2020)", `### ${heading}`);
+      const { resumes, repo, calls } = await resumeSetup({ cv });
+      const { id } = await resumes.create(draft);
+      await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
+        status: 400,
+        message,
+      });
+      expect(calls).toHaveLength(0);
+      expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
+      const flow = await resumes.createAndGenerate(draft);
+      expect(flow.error).toBe("heading");
+      expect(calls).toHaveLength(0);
+    }
+    // 200 characters is within the bound.
+    const atBound = await resumeSetup({
+      cv: CV.replace("### Engineer — Initech (2016-2020)", `### ${"x".repeat(200)}`),
+    });
+    const { id } = await atBound.resumes.create(draft);
+    await atBound.resumes.generate(id);
+    expect(atBound.calls).toHaveLength(1);
+  });
+
   it("sends no personal info and no full name to the model", async () => {
     const { resumes, calls, addField } = await resumeSetup({
       mock: { replies: ["not json", JSON.stringify(sampleReply())] },

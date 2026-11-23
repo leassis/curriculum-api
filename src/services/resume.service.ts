@@ -70,12 +70,14 @@ export function tailorInput(date: string, instructions: string, jobDescription: 
 
 const MASTER_CV_REQUIRED = "Fill the master CV first";
 const MASTER_CV_UNSTRUCTURED = "Structure the master CV with ## sections and ### items";
+const MASTER_CV_HEADING = "A ### heading in the master CV is empty or longer than 200 characters";
+const MAX_HEADING = 200;
 const MASTER_CV_FULL_NAME = "Your full name is in the master CV — it is added when printed";
 const ITEM_OPS: readonly string[] = ["remove", "up", "down"] satisfies ItemOp[];
 const isItemOp = (op: string): op is ItemOp => ITEM_OPS.includes(op);
 
 /** The create flow's error codes; the editor maps each to its message. */
-export type CreateError = "generate" | "master-cv" | "structure" | "full-name";
+export type CreateError = "generate" | "master-cv" | "structure" | "full-name" | "heading";
 
 /** The Owner's full name appears in the Master CV, ignoring case (it must never reach the model). */
 function containsFullName(masterCv: string, fullName: string): boolean {
@@ -238,6 +240,9 @@ export class ResumeService {
       if (error instanceof ValidationError && error.message === MASTER_CV_FULL_NAME) {
         return { resume: created, error: "full-name" };
       }
+      if (error instanceof ValidationError && error.message === MASTER_CV_HEADING) {
+        return { resume: created, error: "heading" };
+      }
       throw error;
     }
   }
@@ -272,6 +277,10 @@ export class ResumeService {
     }
     const parsed = parseMasterCv(profile.masterCv);
     if (!parsed) throw new ValidationError(MASTER_CV_UNSTRUCTURED);
+    const headings = parsed.sections.flatMap((sec) => sec.items.map((i) => i.heading));
+    if (headings.some((h) => h === "" || h.length > MAX_HEADING)) {
+      throw new ValidationError(MASTER_CV_HEADING);
+    }
     if (instructions !== undefined) {
       resume = await this.update(id, { customInstructions: instructions });
     }
