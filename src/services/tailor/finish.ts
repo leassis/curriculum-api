@@ -29,7 +29,16 @@ export function finish(
   if (!assembled.ok) return assembled;
   if (!checkAssessment(out)) return { ok: false, reason: "assessment" };
   const { doc, notes: collapseNotes } = collapseOldRoles(assembled.doc, today.getUTCFullYear());
-  const restoreNotes = assembled.restored.map(restoreNote);
+  const restoreNotes = assembled.restored.filter((i) => i.kind === "experience").map(restoreNote);
+  const otherTitles = library
+    .filter((i) => i.kind !== "experience")
+    .map((i) => i.title.trim().toLowerCase())
+    .filter((t) => t !== "");
+  // What was left out lists experience only: drop model omissions that name a non-experience item.
+  const modelCuts = out.omissions.filter((o) => {
+    const what = o.what.toLowerCase();
+    return !otherTitles.some((t) => what.includes(t));
+  });
   return {
     ok: true,
     doc,
@@ -38,7 +47,7 @@ export function finish(
       rationale: cleanLine(out.score_rationale),
       missingSkills: filterMissingSkills(out.missing_skills, library),
       omissions: [
-        ...out.omissions.map((o) => ({ what: cleanLine(o.what), reason: cleanLine(o.reason) })),
+        ...modelCuts.map((o) => ({ what: cleanLine(o.what), reason: cleanLine(o.reason) })),
         ...restoreNotes,
         ...collapseNotes,
       ],

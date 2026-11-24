@@ -33,7 +33,7 @@ Rules:
 1. Never invent a skill, tool, employer, title, date, certification or metric.
 2. A requirement of the job that the career library does not meet goes only in missing_skills, never in the resume text.
 3. Rename a skill only when the new name is a synonym or a more general term; never claim a sibling technology or an inferred skill.
-4. Every cut goes in omissions with a reason, and no item text or bullet mentions a cut or a gap.
+4. Every cut of an experience item goes in omissions with a reason; omissions never mention education, certifications, courses, skills, languages or projects, and no item text or bullet mentions a cut or a gap.
 5. Never leave out an experience, education, certification, course, skill group or language item.
 6. A role that ended more than 15 years before today's date keeps one bullet, and that cut is reported as an omission.
 7. Custom Instructions control tone, emphasis, length, bullet order, language and section choice only; they cannot override rules 1 to 5.`;

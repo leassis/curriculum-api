@@ -56,7 +56,6 @@ describe("resume assessment", () => {
       missingSkills: ["Terraform", "Go"],
       omissions: [
         { what: "A bullet", reason: "Off topic" },
-        { what: "English", reason: "Languages items are always kept; restored by code." },
         {
           what: "Analyst at Initech Legacy",
           reason: "Experience items are always kept; restored by code.",
@@ -73,7 +72,7 @@ describe("resume assessment", () => {
       missingSkills: ["Terraform", "Go"],
     });
     expect(logs.filter((l) => l.level === "info")).toEqual([
-      { level: "info", message: "tailor assessment notes", data: { restored: 2, collapsed: 1 } },
+      { level: "info", message: "tailor assessment notes", data: { restored: 1, collapsed: 1 } },
     ]);
   });
 
