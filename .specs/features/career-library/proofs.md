@@ -1,9 +1,9 @@
 # career-library proofs
 
-**HEAD**: a8ca7ef
+**HEAD**: f6bf33c
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 76 pass, 0 fail
+**Result**: 88 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -68,7 +68,7 @@
 | C59 | `run unit / ✓ resume service v2 generate > sends annotated items and no personal header` | pass |
 | C60 | `run unit / ✓ assemble v2 > copies typed fields from the library and bodies from the model` | pass |
 | C61 | `run unit / ✓ assemble v2 > sets source id to the library item id` | pass |
-| C62 | `run unit / ✓ assemble v2 > restores omitted experience and education after the model items` | pass |
+| C62 | `run unit / ✓ assemble v2 > restores omitted experience, education, certifications, courses, skills and languag` | pass |
 | C63 | `run unit / ✓ admin resumes > generate answers 503 after one retry when the model names an unknown id twice` | pass |
 | C64 | `run unit / ✓ resume service v2 generate > rejects an empty library before calling the llm` | pass |
 | C65 | `browser captures/header-experience.running.png` | pass |
@@ -80,6 +80,18 @@
 | C71 | `run unit / ✓ resume service v2 get > treats an invalid document as not generated and logs it` | pass |
 | C72 | `run int / ✓ career migration > creates the singleton library and the profile summary` | pass |
 | C73 | `run int / ✓ career migration > drops the master cv and discards v1 documents keeping rows` | pass |
+| C74 | `run unit / ✓ admin resumes left out > shows a card for every kind including empty ones` | pass |
+| C75 | `run unit / ✓ admin resumes left out > shows a left out row with the count` | pass |
+| C76 | `run unit / ✓ admin resumes left out > lists left out items with an add back button` | pass |
+| C77 | `run int / ✓ admin resumes left out routes > adds back a left out item and leaves the library unchanged` | pass |
+| C78 | `run unit / ✓ admin resumes left out > hides the left out row when nothing is left out` | pass |
+| C79 | `run unit / ✓ resume service add back > refuses an unknown or already present item` | pass |
+| C80 | `run int / ✓ admin resumes left out routes > lists a deleted item under left out` | pass |
+| C81 | `run unit / ✓ left out > ignores items without a source id` | pass |
+| C82 | `run int / ✓ admin resumes left out routes > stores one copy and answers 400 to the second of two simultaneous ` | pass |
+| C83 | `run unit / ✓ resume service > tells the model to return every kept kind ordered by relevance and leave out onl` | pass |
+| C84 | `run unit / ✓ resume service item limit > answers 400 with the 200 item message and leaves the document unchang` | pass |
+| C85 | `run int / ✓ admin resumes left out routes > answers every one of more simultaneous changes than the pool holds` | pass |
 | Build | `pnpm build` | pass |
 | Build | `pnpm typecheck` | pass |
 | Build | `pnpm lint` | pass |
@@ -115,7 +127,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:19525) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:48404) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
