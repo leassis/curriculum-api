@@ -216,3 +216,156 @@ describe("admin profile", () => {
     expect(repo.upserts).toHaveLength(1);
   });
 });
+
+describe("admin profile owner notes", () => {
+  const seeded = (additionalInformation: string, lookingForwardNext: string) => {
+    const s = setup(true);
+    if (s.repo.row) s.repo.row = { ...s.repo.row, additionalInformation, lookingForwardNext };
+    return s;
+  };
+  const withEmail = async (personalInfo: PersonalInfoService) =>
+    personalInfo.create({
+      key: "EMAIL",
+      label: "Email",
+      value: "ada@example.com",
+      visibility: "public",
+    });
+
+  it("shows additional information on the career tab", async () => {
+    const { get } = seeded("Plays chess on weekends", "");
+    const html = await (await get("?tab=career")).text();
+    expect(html).toContain('<label class="field-label" for="additionalInformation">');
+    expect(html).toContain("Additional information</label>");
+    expect(html).toMatch(
+      /<textarea[^>]*name="additionalInformation"[^>]*>Plays chess on weekends<\/textarea>/,
+    );
+    expect(await (await get("?tab=ai")).text()).not.toContain('name="additionalInformation"');
+  });
+
+  it("shows looking forward next on the career tab", async () => {
+    const { get } = seeded("", "Staff platform roles");
+    const html = await (await get("?tab=career")).text();
+    expect(html).toContain('<label class="field-label" for="lookingForwardNext">');
+    expect(html).toContain("Looking forward next</label>");
+    expect(html).toMatch(
+      /<textarea[^>]*name="lookingForwardNext"[^>]*>Staff platform roles<\/textarea>/,
+    );
+    expect(html.indexOf('name="summary"')).toBeLessThan(
+      html.indexOf('name="additionalInformation"'),
+    );
+    expect(html.indexOf('name="additionalInformation"')).toBeLessThan(
+      html.indexOf('name="lookingForwardNext"'),
+    );
+  });
+
+  it("stores trimmed additional information", async () => {
+    const { post, repo } = setup(true);
+    const res = await post({ ...full, tab: "career", additionalInformation: "  Plays chess \n" });
+    expect(res.status).toBe(303);
+    expect(repo.row?.additionalInformation).toBe("Plays chess");
+    expect(repo.upserts[0]?.additionalInformation).toBe("Plays chess");
+    await post({ ...full, tab: "career", additionalInformation: " \n\t " });
+    expect(repo.row?.additionalInformation).toBe("");
+  });
+
+  it("stores trimmed looking forward next", async () => {
+    const { post, repo } = setup(true);
+    const res = await post({ ...full, tab: "career", lookingForwardNext: "\n Staff roles  " });
+    expect(res.status).toBe(303);
+    expect(repo.row?.lookingForwardNext).toBe("Staff roles");
+    await post({ ...full, tab: "career", lookingForwardNext: "   " });
+    expect(repo.row?.lookingForwardNext).toBe("");
+  });
+
+  it("keeps both texts when the ai tab is saved", async () => {
+    const { post, repo } = seeded("Plays chess", "Staff roles");
+    const res = await post({
+      tab: "ai",
+      publicSystemPrompt: "p2",
+      recruiterSystemPrompt: "r2",
+      tailorSystemPrompt: "t2",
+    });
+    expect(res.status).toBe(303);
+    expect(repo.upserts).toHaveLength(1);
+    expect(repo.row).toMatchObject({
+      additionalInformation: "Plays chess",
+      lookingForwardNext: "Staff roles",
+      publicSystemPrompt: "p2",
+    });
+  });
+
+  it("rejects additional information containing a personal info value", async () => {
+    const { post, repo, personalInfo } = setup(true);
+    await withEmail(personalInfo);
+    const res = await post({
+      ...full,
+      tab: "career",
+      additionalInformation: "Write to Ada@Example.com",
+    });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain(
+      "Your Email is in the body — keep contact data in Personal info",
+    );
+    expect(repo.upserts).toHaveLength(0);
+  });
+
+  it("rejects additional information containing the full name", async () => {
+    const { post, repo } = setup(true);
+    const res = await post({
+      ...full,
+      tab: "career",
+      additionalInformation: "ADA lovelace plays chess",
+    });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain(
+      "Your full name is in the additional information — the Candidate is never named in prompts",
+    );
+    expect(repo.upserts).toHaveLength(0);
+  });
+
+  it("limits additional information to 5000 characters", async () => {
+    const { post, repo } = setup(true);
+    const res = await post({ ...full, tab: "career", additionalInformation: "a".repeat(5001) });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain("Additional information is limited to 5000 characters");
+    expect(repo.upserts).toHaveLength(0);
+    const ok = await post({
+      ...full,
+      tab: "career",
+      additionalInformation: ` ${"a".repeat(5000)} `,
+    });
+    expect(ok.status).toBe(303);
+    expect(repo.row?.additionalInformation).toBe("a".repeat(5000));
+  });
+
+  it("rejects looking forward next containing personal info or the full name", async () => {
+    const { post, repo, personalInfo } = setup(true);
+    await withEmail(personalInfo);
+    const pii = await post({ ...full, tab: "career", lookingForwardNext: "Mail ada@example.com" });
+    expect(pii.status).toBe(400);
+    expect(await pii.text()).toContain(
+      "Your Email is in the body — keep contact data in Personal info",
+    );
+    const named = await post({
+      ...full,
+      tab: "career",
+      lookingForwardNext: "ada Lovelace wants more",
+    });
+    expect(named.status).toBe(400);
+    expect(await named.text()).toContain(
+      "Your full name is in looking forward next — the Candidate is never named in prompts",
+    );
+    expect(repo.upserts).toHaveLength(0);
+  });
+
+  it("limits looking forward next to 5000 characters", async () => {
+    const { post, repo } = setup(true);
+    const res = await post({ ...full, tab: "career", lookingForwardNext: "b".repeat(5001) });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain("Looking forward next is limited to 5000 characters");
+    expect(repo.upserts).toHaveLength(0);
+    const ok = await post({ ...full, tab: "career", lookingForwardNext: "b".repeat(5000) });
+    expect(ok.status).toBe(303);
+    expect(repo.row?.lookingForwardNext).toBe("b".repeat(5000));
+  });
+});

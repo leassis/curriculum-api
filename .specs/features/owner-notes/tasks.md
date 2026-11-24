@@ -220,9 +220,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C14-C19, C26-C29 pass
-- [ ] Every existing `admin profile` test passes unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C14-C19, C26-C29 pass
+- [x] Every existing `admin profile` test passes unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
