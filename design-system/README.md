@@ -1,4 +1,4 @@
-# Career Chat — admin design system
+# Curriculum — admin design system
 
 The generic admin look: light, neutral, one indigo accent. Built for **Tailwind CSS v4** and server-rendered **TSX + htmx**.
 

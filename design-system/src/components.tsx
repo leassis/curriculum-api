@@ -1,5 +1,5 @@
 /**
- * Career Chat admin — server-rendered TSX components (Hono JSX / @kitajs/html style).
+ * Curriculum admin — server-rendered TSX components (Hono JSX / @kitajs/html style).
  * They use `class` (not `className`) and return HTML strings, so htmx can swap them in.
  * Using React instead? Rename `class` → `className` and `for` → `htmlFor`.
  */
@@ -22,7 +22,7 @@ export function AdminLayout({ title, current, children }: Children & { title: st
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title} · Career Chat admin</title>
+        <title>{title} · Curriculum admin</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="stylesheet"
@@ -37,7 +37,7 @@ export function AdminLayout({ title, current, children }: Children & { title: st
             <div class="flex items-center gap-3 px-1.5">
               <div class="logo-tile">CV</div>
               <div class="flex flex-col gap-0.5">
-                <span class="font-display text-base font-semibold">Career Chat</span>
+                <span class="font-display text-base font-semibold">Curriculum</span>
                 <span class="text-xs text-muted">Admin</span>
               </div>
             </div>
