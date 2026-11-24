@@ -10,6 +10,9 @@ const resume = (overrides: Partial<ResumeView> = {}): ResumeView => ({
   updatedAt: new Date("2026-01-01T00:00:00Z"),
   jobDescription: "Build things",
   customInstructions: "",
+  jobLink: "",
+  recruiterName: "",
+  notes: "",
   headerFields: null,
   document: null,
   invalid: false,
@@ -46,5 +49,17 @@ describe("resumes list", () => {
   it("has no regenerate action in the rows", () => {
     const [row] = rows(render([resume()]));
     expect(row?.html).not.toMatch(/generate/i);
+  });
+
+  it("shows a Recruiter column after Company", () => {
+    const html = render([
+      resume({ title: "Backend at Acme", recruiterName: "Grace Hopper" }),
+      resume({ id: "00000000-0000-4000-8000-000000000002", title: "Data at Globex" }),
+    ]);
+    const headers = tags(tags(html, "thead")[0]?.html ?? "", "th").map((th) => th.text);
+    expect(headers.slice(0, 4)).toEqual(["Title", "Company", "Recruiter", "Updated"]);
+    const cells = rows(html).map((r) => tags(r.html, "td").map((td) => td.text));
+    expect(cells[0]?.slice(0, 3)).toEqual(["Backend at Acme", "Acme", "Grace Hopper"]);
+    expect(cells[1]?.slice(0, 3)).toEqual(["Data at Globex", "Acme", ""]);
   });
 });
