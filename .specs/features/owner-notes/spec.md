@@ -45,6 +45,7 @@ The Owner tracks applications outside the app: where a job ad was found, who the
 | Storage | `tailored_resumes.job_link`, `recruiter_name`, `notes` and `profile.additional_information`, `profile.looking_forward_next`, each `text not null default ''`; one migration | Same shape as `custom_instructions`; existing rows read as empty | n |
 | Maximum lengths (after trim) | Job Link 2000, Recruiter Name 200, Notes 10000, Additional Information 5000 characters | Bounds storage and, for Additional Information, prompt tokens | y - User: "lenghts are ok" |
 | Over-length or invalid value | 400 with the field's message; nothing of that request is saved | Same as other admin validation | n |
+| Additional Information in the stored Resume Document (Verifier F1, 2026-11-24) | No code path copies Additional Information into print, download or a stored Resume Document; wording the model takes from its input is allowed | The tailor receives it on purpose (OWN-19); a verbatim guard would reject legitimate output and miss paraphrases | y - User (2026-11-24): "Allow model wording (Recommended)" |
 | Where Additional Information goes in the prompt | Appended to the Career Body as a final `## Additional information` section followed by the trimmed text; omitted when empty | Keeps "the Career Body is the only CV content sent to an LLM" true | n |
 | Recruiter Chat linked to a Tailored Resume | Its body is the resume markdown plus the same `## Additional information` section | User wants it available to the recruiter prompt in every case | y - User: "yes" |
 | Empty Career Library | Chats keep today's "Master CV is empty" body with no Additional Information; tailor keeps today's empty-library error | Additional Information alone is not career information | y - User: "agree.. if no carrer makes no chat :D" |
@@ -102,7 +103,7 @@ The Owner tracks applications outside the app: where a job ad was found, who the
 19. WHERE Additional Information is non-empty and the Career Library has items, the tailor request body SHALL end with the same section.  <!-- OWN-19 -->
 20. WHILE Additional Information is empty the public, recruiter and tailor request bodies SHALL equal today's bodies (no section).  <!-- OWN-20 -->
 21. IF Additional Information contains the profile's full name when Generate runs THEN the app SHALL refuse with today's full-name error and SHALL not call the LLM.  <!-- OWN-21 -->
-22. The app SHALL never put Additional Information into the print view, the markdown download or a stored Resume Document.  <!-- OWN-22 -->
+22. No code path SHALL copy Additional Information into the print view, the markdown download or a stored Resume Document; wording the tailor model takes from its input is allowed (decided 2026-11-24 - user: "Allow model wording (Recommended)").  <!-- OWN-22 -->
 
 **Independent Test**: Save Additional Information on the Profile, ask the public chat, a recruiter chat and Generate, and find the section at the end of each recorded body; save one containing an email from Personal Info and get 400.
 
