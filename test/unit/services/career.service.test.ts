@@ -307,7 +307,7 @@ describe("career service import", () => {
     const { career, calls } = careerSetup({ mock: { text: markdown } });
     const result = await career.importText("Won an award in 2020.");
     expect(result).toBe(markdown);
-    expect(calls[0]).toMatchObject({ modelId: "vendor/import", maxOutputTokens: 8000 });
+    expect(calls[0]).toMatchObject({ modelId: "vendor/import", maxOutputTokens: 16_000 });
     expect(calls[0]?.system).toContain(IMPORT_PROMPT);
     expect(calls[0]?.prompt).toContain(
       "<<<CV_TEXT_START>>>\nWon an award in 2020.\n<<<CV_TEXT_END>>>",

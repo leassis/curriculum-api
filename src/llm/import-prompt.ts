@@ -51,6 +51,7 @@ export const IMPORT_PROMPT = `You convert CV text into markdown in a fixed conve
 
 Rules:
 - Use only facts stated in the text. Never invent an employer, title, date, skill or metric, and leave out what the text does not say.
+- Convert every section of the text, to the very end: experience, education, certifications, courses, skills and languages included. Never stop early or summarise.
 - Output markdown only, with no preamble, closing remarks or code fence.
 - Sections, in this order and only when they have items: ${SECTIONS}. Each is a "## " heading.
 - Each item is a "### " heading with its title, then an italic line "*organisation · location · dates*" with empty parts left out, then free text, then "- " bullets, then "Stack: a, b" for the tech stack of an experience or project.

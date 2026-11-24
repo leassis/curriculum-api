@@ -19,7 +19,7 @@ import type { PersonalInfoService } from "./personal-info.service.js";
 import type { ProfileService } from "./profile.service.js";
 
 const IMPORT_MAX_CHARS = 50_000;
-const IMPORT_MAX_OUTPUT_TOKENS = 8000;
+const IMPORT_MAX_OUTPUT_TOKENS = 16_000;
 const FENCE = /^```[\w-]*\r?\n([\s\S]*?)\r?\n```$/;
 const NOT_FOUND = "Career item not found";
 const FULL_NAME_MESSAGE = "Your full name is in the library — it is added when printed";
@@ -97,13 +97,18 @@ export class CareerService {
     const fields: PiiField[] = [...(await this.personalInfo.allValues())];
     const fullName = await this.fullName();
     if (fullName) fields.push({ key: "FULL_NAME", label: "Full name", value: fullName });
-    const { text: reply } = await this.llm.generate({
+    const { text: reply, truncated } = await this.llm.generate({
       area: "import",
       system: IMPORT_PROMPT,
       body: "",
       input: dataBlock("CV_TEXT", redactPii(text, fields)),
       maxOutputTokens: IMPORT_MAX_OUTPUT_TOKENS,
     });
+    if (truncated) {
+      throw new ValidationError(
+        "The import was cut short, so later sections would be lost. Try a shorter text",
+      );
+    }
     const trimmed = reply.trim();
     return FENCE.exec(trimmed)?.[1] ?? trimmed;
   }
