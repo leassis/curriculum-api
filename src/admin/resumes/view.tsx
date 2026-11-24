@@ -10,6 +10,9 @@ export interface ResumeView {
   updatedAt: Date;
   jobDescription: string;
   customInstructions: string;
+  jobLink: string;
+  recruiterName: string;
+  notes: string;
   headerFields: string[] | null;
   /** The header of the Resume Document; null when not generated yet or when the stored value is invalid. */
   document: { headline: string; summary: string } | null;
@@ -71,6 +74,7 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
         </a>
       </td>
       <td>{resume.company ?? ""}</td>
+      <td>{resume.recruiterName}</td>
       <td class="muted">{day(resume.updatedAt)}</td>
       <td>
         <ScoreBar score={resume.score} />
@@ -116,6 +120,7 @@ export const ResumesPage = ({
             <tr>
               <th>Title</th>
               <th>Company</th>
+              <th>Recruiter</th>
               <th>Updated</th>
               <th>Score</th>
               <th>
@@ -156,6 +161,24 @@ export const ResumesPage = ({
           </label>
           <input class="input" id="company" type="text" name="company" />
         </div>
+        <div class="field">
+          <label class="field-label" for="jobLink">
+            Job link
+          </label>
+          <input class="input" id="jobLink" type="url" name="jobLink" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="recruiterName">
+            Recruiter name
+          </label>
+          <input class="input" id="recruiterName" type="text" name="recruiterName" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="notes">
+          Notes
+        </label>
+        <textarea class="input" id="notes" name="notes" rows={4} />
       </div>
       <div class="field">
         <label class="field-label" for="jobDescription">
@@ -379,6 +402,39 @@ export const Editor = ({
           <pre>{resume.jobDescription}</pre>
         </details>
         <form id="resume-form" class="card-pad">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label" for="job-link">
+                Job link
+              </label>
+              <input class="input" id="job-link" type="url" name="jobLink" value={resume.jobLink} />
+              {resume.jobLink ? (
+                <a href={resume.jobLink} target="_blank" rel="noopener noreferrer">
+                  Open job link
+                </a>
+              ) : null}
+            </div>
+            <div class="field">
+              <label class="field-label" for="recruiter-name">
+                Recruiter name
+              </label>
+              <input
+                class="input"
+                id="recruiter-name"
+                type="text"
+                name="recruiterName"
+                value={resume.recruiterName}
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="notes">
+              Notes
+            </label>
+            <textarea class="input" id="notes" name="notes" rows={4}>
+              {resume.notes}
+            </textarea>
+          </div>
           <div class="field">
             <label class="field-label" for="custom-instructions">
               Custom instructions

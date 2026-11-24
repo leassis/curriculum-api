@@ -10,6 +10,7 @@ import {
   gesture,
   sections,
   tags,
+  voidTags,
 } from "../../support/html";
 import { failingFactory, resumeApp } from "../../support/resumes";
 
@@ -903,5 +904,73 @@ describe("admin resumes tracking fields", () => {
     expect(saved.status).toBe(400);
     expect(await saved.text()).toContain(message);
     expect(repo.rows[0]).toMatchObject(tracking);
+  });
+
+  const stored = {
+    jobLink: "https://jobs.example.com/acme/42?ref=a&b=c",
+    recruiterName: "Grace Hopper",
+    notes: "Found on the Acme careers page\nFollow up Friday",
+  };
+  const label = (html: string, id: string) =>
+    tags(html, "label").find((l) => l.attrs.for === id)?.text;
+  const resumeForm = (html: string) => {
+    const form = tags(html, "form").find((f) => f.attrs.id === "resume-form");
+    if (!form) throw new Error("no resume form");
+    return form;
+  };
+
+  it("shows job link, recruiter name and notes on the new resume form", async () => {
+    const { get } = await resumeApp();
+    const html = await (await get("/admin/resumes")).text();
+    const form = tags(html, "form").find((f) => f.attrs.action === "/admin/resumes");
+    if (!form) throw new Error("no new resume form");
+    const input = (name: string) => voidTags(form.html, "input").find((i) => i.attrs.name === name);
+    const jobLink = input("jobLink");
+    const recruiterName = input("recruiterName");
+    const notes = tags(form.html, "textarea").find((t) => t.attrs.name === "notes");
+    expect(jobLink?.attrs.type).toBe("url");
+    expect(recruiterName).toBeDefined();
+    expect(notes).toBeDefined();
+    expect(label(form.html, jobLink?.attrs.id ?? "")).toBe("Job link");
+    expect(label(form.html, recruiterName?.attrs.id ?? "")).toBe("Recruiter name");
+    expect(label(form.html, notes?.attrs.id ?? "")).toBe("Notes");
+    for (const field of [jobLink, recruiterName, notes]) {
+      expect(field?.attrs).not.toHaveProperty("required");
+    }
+    expect(formFields(form.html)).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+  });
+
+  it("shows the stored tracking fields in the editor form", async () => {
+    const { get, put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create({ ...newResume, ...stored });
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const form = resumeForm(html);
+    expect(formFields(form.html)).toMatchObject(stored);
+    expect(label(form.html, "job-link")).toBe("Job link");
+    expect(label(form.html, "recruiter-name")).toBe("Recruiter name");
+    expect(label(form.html, "notes")).toBe("Notes");
+
+    const save = gesture(button(html, "Save options"));
+    expect(button(html, "Save options").attrs["hx-include"]).toBe("#resume-form");
+    const res = await put(save.path, { ...formFields(form.html), notes: "Second interview" });
+    expect(res.status).toBe(200);
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: stored.jobLink,
+      recruiterName: stored.recruiterName,
+      notes: "Second interview",
+    });
+  });
+
+  it("links the job link in a new tab with noopener noreferrer", async () => {
+    const { get, resumes } = await resumeApp();
+    const linked = await resumes.create({ ...newResume, ...stored });
+    const html = await (await get(`/admin/resumes/${linked.id}`)).text();
+    const anchor = tags(html, "a").find((a) => a.attrs.href === stored.jobLink);
+    expect(anchor?.attrs.target).toBe("_blank");
+    expect(anchor?.attrs.rel).toBe("noopener noreferrer");
+
+    const plain = await resumes.create(newResume);
+    const without = await (await get(`/admin/resumes/${plain.id}`)).text();
+    expect(tags(without, "a").filter((a) => a.attrs.rel === "noopener noreferrer")).toEqual([]);
   });
 });
