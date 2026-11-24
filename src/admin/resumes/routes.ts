@@ -54,6 +54,9 @@ resumesRouter.post("/resumes", async (c) => {
     company: first(body.company),
     jobDescription: first(body.jobDescription),
     customInstructions: first(body.customInstructions),
+    jobLink: first(body.jobLink),
+    recruiterName: first(body.recruiterName),
+    notes: first(body.notes),
     headerKeys: body.headerFieldsPosted === undefined ? undefined : headerKeys(body.headerFields),
   });
   const query = error ? `?error=${error}` : "";
@@ -142,6 +145,11 @@ resumesRouter.put("/resumes/:id", async (c) => {
     c.req.param("id"),
     headerKeys(body.headerFields),
     optionalText(body.customInstructions),
+    {
+      jobLink: optionalText(body.jobLink),
+      recruiterName: optionalText(body.recruiterName),
+      notes: optionalText(body.notes),
+    },
   );
   return c.html("Saved");
 });
