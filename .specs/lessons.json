@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 5,
+  "next_id": 10,
   "lessons": [
     {
       "id": "L-001",
@@ -76,6 +76,96 @@
       ],
       "created": "2026-11-23T15:59:38Z",
       "last_seen": "2026-11-23T15:59:38Z"
+    },
+    {
+      "id": "L-005",
+      "key": "spec_precision_gap::when a text is sent to a model whose output is stored the criterion must say whether the model may reuse its wording",
+      "text": "When a text is sent to a model whose output is stored, the criterion must say whether the model may reuse its wording",
+      "signal": "spec_precision_gap",
+      "scope": "llm",
+      "status": "candidate",
+      "features": [
+        "owner-notes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md OWN-22 (F1) (llm)"
+      ],
+      "created": "2026-11-24T21:16:24Z",
+      "last_seen": "2026-11-24T21:16:24Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::count text length limits in code points and test them with astral characters at and over the limit",
+      "text": "Count text length limits in code points and test them with astral characters at and over the limit",
+      "signal": "ac_gap",
+      "scope": "validation",
+      "status": "candidate",
+      "features": [
+        "owner-notes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/services/resume.service.ts:525 (F2) (validation)"
+      ],
+      "created": "2026-11-24T21:16:24Z",
+      "last_seen": "2026-11-24T21:16:24Z"
+    },
+    {
+      "id": "L-007",
+      "key": "weak_test::prove a data exclusion rule against the real repository query not a fake that already omits the data",
+      "text": "Prove a data-exclusion rule against the real repository query, not a fake that already omits the data",
+      "signal": "weak_test",
+      "scope": "repo-layer",
+      "status": "candidate",
+      "features": [
+        "owner-notes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "test/support/recruiter-chat.fake.ts:107 (F3) (repo-layer)"
+      ],
+      "created": "2026-11-24T21:16:24Z",
+      "last_seen": "2026-11-24T21:16:24Z"
+    },
+    {
+      "id": "L-008",
+      "key": "weak_test::a check claiming several bodies or paths needs a proof that runs a test for each of them",
+      "text": "A check claiming several bodies or paths needs a proof that runs a test for each of them",
+      "signal": "weak_test",
+      "scope": "",
+      "status": "candidate",
+      "features": [
+        "owner-notes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tasks.md C23, C30 (F4)"
+      ],
+      "created": "2026-11-24T21:16:24Z",
+      "last_seen": "2026-11-24T21:16:24Z"
+    },
+    {
+      "id": "L-009",
+      "key": "ac_gap::validate url schemes by the literal prefix the error message promises not only by new url parsing",
+      "text": "Validate URL schemes by the literal prefix the error message promises, not only by new URL parsing",
+      "signal": "ac_gap",
+      "scope": "validation",
+      "status": "candidate",
+      "features": [
+        "owner-notes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/services/resume.service.ts:155 (F5) (validation)"
+      ],
+      "created": "2026-11-24T21:16:24Z",
+      "last_seen": "2026-11-24T21:16:24Z"
     }
   ]
 }

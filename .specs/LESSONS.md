@@ -38,6 +38,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: F4 src/services/tailor/parse-cv.ts:107 (llm)
 - last seen: 2026-11-23T15:59:38Z
 
+### L-005 - When a text is sent to a model whose output is stored, the criterion must say whether the model may reuse its wording
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `llm` · harmful: 0
+- features: owner-notes
+- evidence: spec.md OWN-22 (F1) (llm)
+- last seen: 2026-11-24T21:16:24Z
+
+### L-006 - Count text length limits in code points and test them with astral characters at and over the limit
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
+- features: owner-notes
+- evidence: src/services/resume.service.ts:525 (F2) (validation)
+- last seen: 2026-11-24T21:16:24Z
+
+### L-007 - Prove a data-exclusion rule against the real repository query, not a fake that already omits the data
+- signal: `weak_test` · recurrence: 1 feature(s) · scope: `repo-layer` · harmful: 0
+- features: owner-notes
+- evidence: test/support/recruiter-chat.fake.ts:107 (F3) (repo-layer)
+- last seen: 2026-11-24T21:16:24Z
+
+### L-008 - A check claiming several bodies or paths needs a proof that runs a test for each of them
+- signal: `weak_test` · recurrence: 1 feature(s) · harmful: 0
+- features: owner-notes
+- evidence: tasks.md C23, C30 (F4)
+- last seen: 2026-11-24T21:16:24Z
+
+### L-009 - Validate URL schemes by the literal prefix the error message promises, not only by new URL parsing
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
+- features: owner-notes
+- evidence: src/services/resume.service.ts:155 (F5) (validation)
+- last seen: 2026-11-24T21:16:24Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
