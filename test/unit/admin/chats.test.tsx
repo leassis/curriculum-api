@@ -46,7 +46,11 @@ describe("admin chats", () => {
     expect(html).toContain(`hx-patch="/admin/chats/${chat.id}/revoke"`);
     expect(html).toContain(`hx-patch="/admin/chats/${chat.id}/reset"`);
     expect(html).toContain(`hx-delete="/admin/chats/${chat.id}"`);
-    for (const label of ["Copy link", "Revoke", "Reset", "Delete"]) expect(html).toContain(label);
+    for (const label of ["Messages", "Copy link", "Revoke", "Reset", "Delete"])
+      expect(html).toContain(`title="${label}"`);
+    for (const label of ["Copy link for", "Revoke chat for", "Reset chat for", "Delete chat for"])
+      expect(html).toContain(`aria-label="${label} Jane Roe"`);
+    expect(html).toContain('class="icon-btn icon-btn-danger"');
     expect(html).not.toContain("No recruiter chats yet");
   });
 
@@ -158,10 +162,17 @@ describe("admin chats", () => {
     }
   });
 
-  it("splits the page and shows the test panel on the right", async () => {
+  it("shows the chat list full width above the form and test panel", async () => {
     const s = await adminChats();
     const html = await (await s.get("/admin/chats")).text();
-    expect(html).toContain('class="chats-split"');
+    const list = html.indexOf('class="chats-list"');
+    const split = html.indexOf('class="chats-split"');
+    expect(list).toBeGreaterThan(-1);
+    expect(split).toBeGreaterThan(list);
+    const listHtml = html.slice(list, split);
+    expect(listHtml).toContain('id="chat-rows"');
+    expect(listHtml).not.toContain("Test the assistant");
+    expect(html.slice(split)).not.toContain('id="chat-rows"');
     expect(html).toContain('data-url="/admin/chats/test"');
     expect(html).toContain("Test the assistant");
     expect(html).toContain('placeholder="Ask like a recruiter..."');

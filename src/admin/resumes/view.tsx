@@ -1,4 +1,5 @@
-import { type CardView, CareerCards, type FormView, Icon } from "../career/view.js";
+import { type CardView, CareerCards, type FormView } from "../career/view.js";
+import { Icon } from "../icons.js";
 import { Layout, PageHeader } from "../layout.js";
 
 /** The slice of a tailored resume the pages show. */
@@ -84,6 +85,7 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
           type="button"
           class="career-icon career-danger"
           aria-label={`Delete ${resume.title}`}
+          title="Delete"
           hx-delete={url}
           hx-confirm={`Delete ${resume.title}?`}
           hx-target="closest tr"

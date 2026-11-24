@@ -208,6 +208,15 @@
   .actions {
     @apply flex flex-wrap items-center gap-2;
   }
+  .icon-btn {
+    @apply inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-control border border-line bg-surface text-ink no-underline hover:bg-subtle hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .icon-btn-danger {
+    @apply text-danger hover:bg-danger-soft hover:text-danger;
+  }
+  .icon-btn.is-copied {
+    @apply border-primary bg-primary-soft text-primary;
+  }
 
   /* ---------- Forms ---------- */
   .form {
@@ -482,7 +491,10 @@
     @apply font-semibold;
   }
 
-  /* Chats page: list and form on the left, the test panel on the right */
+  /* Chats page: list full width on top; form on the left, the test panel on the right below */
+  .chats-list {
+    @apply mb-6 flex min-w-0 flex-col gap-6;
+  }
   .chats-split {
     @apply grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px];
   }

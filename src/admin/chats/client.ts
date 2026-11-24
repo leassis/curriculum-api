@@ -8,7 +8,13 @@ document.addEventListener("click", (e) => {
   const button = (e.target as Element).closest<HTMLElement>("[data-copy]");
   if (button && navigator.clipboard) {
     navigator.clipboard.writeText(button.dataset.copy as string).then(() => {
-      button.textContent = "Copied";
+      if (button.classList.contains("icon-btn")) {
+        button.classList.add("is-copied");
+        button.title = "Copied";
+        button.setAttribute("aria-label", "Copied");
+      } else {
+        button.textContent = "Copied";
+      }
     });
   }
 });
