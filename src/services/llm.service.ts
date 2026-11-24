@@ -71,7 +71,9 @@ export class LlmService {
     return { stream, model };
   }
 
-  async generate(req: GenerateRequest): Promise<{ text: string; model: string }> {
+  async generate(
+    req: GenerateRequest,
+  ): Promise<{ text: string; model: string; truncated: boolean }> {
     const { fields, instructions, model, sampling } = await this.prepare(req);
     const started = Date.now();
     try {
@@ -83,7 +85,7 @@ export class LlmService {
         ...sampling,
       });
       this.logCall(model, result.totalUsage, started);
-      return { text: result.text, model };
+      return { text: result.text, model, truncated: result.finishReason === "length" };
     } catch {
       throw new LlmUnavailableError();
     }
