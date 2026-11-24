@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "verify:tailor": "tsx --env-file=.env scripts/verify-tailor.ts",
+    "verify:tailor": "tsx --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-tailor.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/admin/tsconfig.client.json",
     "lint": "biome check . && tsx scripts/check-architecture.ts && tsx scripts/build-js.ts --check",
     "test": "vitest run",

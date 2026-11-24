@@ -1,5 +1,3 @@
-// Manual, PAID check: one tailor generation through the real model on a fixture library.
-// Run: pnpm verify:tailor   (needs OPENROUTER_API_KEY and MODEL_TAILOR in .env)
 import { randomBytes } from "node:crypto";
 import { resolveConfig } from "../src/config.js";
 import { DEFAULT_TAILOR_SYSTEM_PROMPT } from "../src/llm/default-prompts.js";
