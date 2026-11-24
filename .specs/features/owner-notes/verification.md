@@ -1,6 +1,6 @@
 # Owner Notes verification
 
-**Verdict**: FAIL
+**Verdict**: PASS (round 2 at 61a87a7; round 1 at c1ef0f6 was FAIL with F1-F5, all now closed)
 **Proofs**: `proofs.md` at c1ef0f6
 **Verifier**: independent sub-agent (author != verifier)
 
