@@ -94,6 +94,26 @@ _Avoid_: Prompt, custom prompt
 Text pasted by the Owner describing a role; input to tailoring and optional context of a Recruiter Chat.
 _Avoid_: JD (in UI), vacancy
 
+**Job Link**:
+The http(s) address of the job ad behind one Tailored Resume, set by the Owner for their own tracking. Shown only in the admin; never sent to an LLM, printed, downloaded or given to a Recruiter Chat.
+_Avoid_: Job URL, posting link, source
+
+**Recruiter Name** (of a Tailored Resume):
+The name of the person handling the position of one Tailored Resume, kept for the Owner's own tracking and shown in the resumes list. Not the Recruiter Chat's recruiter name, and never linked to it; never sent to an LLM, printed or downloaded.
+_Avoid_: Contact, hiring manager, recruiter (alone, when the Recruiter Chat's could be meant)
+
+**Resume Notes**:
+The Owner's free notes on the position of one Tailored Resume. Shown only in the admin editor; never sent to an LLM, printed, downloaded or given to a Recruiter Chat.
+_Avoid_: Comments, remarks, Custom Instructions
+
+**Additional Information**:
+Facts about the Candidate that are not Career Items (hobbies, preferences, anecdotes), kept on the Profile. Appended as an "Additional information" section to the Career Body sent to the public chat, Recruiter Chats and the tailor when the Career Library has items; rejected at save when it holds a Personal Info Field value or the full name. Never printed, downloaded or stored in a Resume Document.
+_Avoid_: Extra information, bio, about me
+
+**Looking Forward Next**:
+What the Candidate is looking for next (roles, domains, ways of working), kept on the Profile. Appended as a "Looking forward next" section to the Career Body of the public chat and Recruiter Chats only, after Additional Information; never sent to the tailor, printed, downloaded or stored in a Resume Document. Same PII rules as Additional Information.
+_Avoid_: Career goals, next steps, objective
+
 **Print View**:
 The server-rendered A4 page that joins a Personal Header with a Career Body for "Save as PDF".
 _Avoid_: PDF export

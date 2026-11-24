@@ -316,8 +316,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Five entries with definition and _Avoid_ line
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Five entries with definition and _Avoid_ line
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: none
 **Gate**: build
