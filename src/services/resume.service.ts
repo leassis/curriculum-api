@@ -4,7 +4,7 @@ import { renderMarkdown } from "../lib/markdown.js";
 import { dataBlock, sanitizeMarkers } from "../llm/data-block.js";
 import { findPii, type PiiField } from "../llm/pii-guard.js";
 import type { ResumeRepo, ResumeRow } from "../repositories/resume.repository.js";
-import { renderCareerBody } from "./career/body.js";
+import { appendSections, PROFILE_SECTIONS, renderCareerBody } from "./career/body.js";
 import { itemFromForm } from "./career/form.js";
 import { type Kind, normalizeItem } from "./career/item.js";
 import {
@@ -288,7 +288,12 @@ export class ResumeService {
     const { items } = await this.career.library();
     if (items.length === 0) throw new ValidationError(EMPTY_LIBRARY);
     const profile = await this.profile.get();
-    const strings = [profile.headline, profile.summary, ...items.flatMap(itemStrings)];
+    const strings = [
+      profile.headline,
+      profile.summary,
+      profile.additionalInformation,
+      ...items.flatMap(itemStrings),
+    ];
     if (containsFullName(strings, profile.fullName)) {
       throw new ValidationError(LIBRARY_FULL_NAME);
     }
@@ -299,7 +304,9 @@ export class ResumeService {
     const request = {
       area: "tailor" as const,
       system: `${profile.tailorSystemPrompt}\n\n${TAILOR_ASSESSMENT_RULES}`,
-      body: renderCareerBody(profile, items, { ids }),
+      body: appendSections(renderCareerBody(profile, items, { ids }), [
+        { heading: PROFILE_SECTIONS.additionalInformation, text: profile.additionalInformation },
+      ]),
       input: tailorInput(
         this.now().toISOString().slice(0, 10),
         resume.customInstructions,
