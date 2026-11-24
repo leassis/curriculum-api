@@ -152,6 +152,7 @@ const TRACKING_LIMITS: [keyof Tracking, string, number][] = [
 const JOB_LINK_INVALID = "Job link must start with http:// or https://";
 
 function isHttpUrl(value: string): boolean {
+  if (!/^https?:\/\//i.test(value)) return false;
   try {
     const { protocol } = new URL(value);
     return protocol === "http:" || protocol === "https:";
@@ -521,7 +522,7 @@ export class ResumeService {
       const value = input[key];
       if (value === undefined) continue;
       const trimmed = value.trim();
-      if (trimmed.length > max) {
+      if ([...trimmed].length > max) {
         throw new ValidationError(`${label} is limited to ${max} characters`, {
           [key]: "is too long",
         });

@@ -1186,6 +1186,8 @@ describe("resume service tracking fields", () => {
       "mailto:hr@example.com",
       "/relative/path",
       "https//missing-colon.example.com",
+      "http:jobs.example.com",
+      "https:/jobs.example.com",
     ]) {
       await expect(resumes.create({ ...draft, jobLink })).rejects.toMatchObject({
         status: 400,
@@ -1230,6 +1232,18 @@ describe("resume service tracking fields", () => {
         field: "notes",
         max: "n".repeat(10000),
         over: "n".repeat(10001),
+        message: "Notes is limited to 10000 characters",
+      },
+      {
+        field: "recruiterName",
+        max: "𝒜".repeat(200),
+        over: "𝒜".repeat(201),
+        message: "Recruiter name is limited to 200 characters",
+      },
+      {
+        field: "notes",
+        max: "😀".repeat(10000),
+        over: "😀".repeat(10001),
         message: "Notes is limited to 10000 characters",
       },
     ];
