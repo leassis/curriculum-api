@@ -153,4 +153,53 @@ describe("admin print", () => {
     expect(res.headers.get("content-disposition")).toBe('attachment; filename="backend-acme.md"');
     expect(await res.text()).toBe(`# ${FULL_NAME}\nEmail: ada@example.com\n\nEngineer\n\nBody`);
   });
+
+  it("keeps profile texts out of print and download", async () => {
+    const setup = await withResume();
+    const { get, resumes, repo, profile, id } = setup;
+    const additional = "Plays competitive chess on weekends.";
+    const next = "Staff platform roles in fintech.";
+    await profile.update({
+      ...(await profile.get()),
+      additionalInformation: additional,
+      lookingForwardNext: next,
+    });
+    await resumes.generate(id);
+    expect(repo.rows[0]?.structured).not.toBeNull();
+    const stored = JSON.stringify(repo.rows[0]?.structured);
+    const outputs = [
+      stored,
+      await (await get(`/admin/resumes/${id}/print`)).text(),
+      await (await get(`/admin/resumes/${id}/download.md`)).text(),
+      await (await get("/admin/profile/print")).text(),
+    ];
+    expect(outputs[1]).toContain("<h2>Experience</h2>");
+    for (const out of outputs) {
+      for (const secret of [additional, next, "Additional information", "Looking forward next"]) {
+        expect(out).not.toContain(secret);
+      }
+    }
+  });
+
+  it("keeps tracking fields out of print and download", async () => {
+    const { get, resumes, repo } = await withResume();
+    const tracking = {
+      jobLink: "https://jobs.example.com/acme/77",
+      recruiterName: "Morgan Hiring",
+      notes: "Second interview on Friday",
+    };
+    const { id } = await resumes.create({ title: "Tracked", jobDescription: "jd", ...tracking });
+    await resumes.generate(id);
+    expect(repo.rows.find((r) => r.id === id)).toMatchObject(tracking);
+    const outputs = [
+      await (await get(`/admin/resumes/${id}/print`)).text(),
+      await (await get(`/admin/resumes/${id}/download.md`)).text(),
+      await (await get("/admin/profile/print")).text(),
+    ];
+    expect(outputs[0]).toContain("<h2>Experience</h2>");
+    for (const out of outputs) {
+      for (const secret of Object.values(tracking)) expect(out).not.toContain(secret);
+      expect(out).not.toContain("jobs.example.com");
+    }
+  });
 });
