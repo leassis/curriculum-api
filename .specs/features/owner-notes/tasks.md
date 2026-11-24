@@ -466,7 +466,7 @@ Proof: run int | ✓ recruiter chat with database > keeps a linked resume's trac
 The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none. Paused after approval: user "Approve, don't build". Next: `validate_tasks.py owner-notes --execute` on `feat/owner-notes`, then the sub-agent offer (2 batches).
-**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24, returned (2f560ca..14e74f0); Batch B (Phases 3-5, T6-T12) worker at HEAD 14e74f0 - sent 2026-11-24, returned (9dc808d..c1ef0f6); Verifier at HEAD c1ef0f6 (diff 83750d5..c1ef0f6) - sent 2026-11-24
+**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24, returned (2f560ca..14e74f0); Batch B (Phases 3-5, T6-T12) worker at HEAD 14e74f0 - sent 2026-11-24, returned (9dc808d..c1ef0f6); Verifier at HEAD c1ef0f6 (diff 83750d5..c1ef0f6) - sent 2026-11-24, returned FAIL with F1-F5; fixes 685b625, b8444f6, bdcbf85; same Verifier re-judged C42-C44 at 61a87a7, returned
 **Walked:** none
 
 ---
