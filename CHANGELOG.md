@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.0](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.2.0...curriculum-api-v0.3.0) (2026-11-24)
+
+
+### Features
+
+* **admin:** accept resume tracking fields on create and save ([4c97ed3](https://github.com/leassis/curriculum-api/commit/4c97ed393d6fb3ced009b33a4f7dcec97090255c))
+* **admin:** add additional information and looking forward next to the profile ([36a307c](https://github.com/leassis/curriculum-api/commit/36a307c3f94109e99fccd8bdfa7115bfa2c71f99))
+* **admin:** full-width chat list with bordered icon actions ([67adeb5](https://github.com/leassis/curriculum-api/commit/67adeb5cb49c57d026a6707b3cccd7b8fdcc6ae0))
+* **admin:** show job link, recruiter name and notes on resumes ([6ead629](https://github.com/leassis/curriculum-api/commit/6ead6297fe2439f4a8ffc775b0120563090b6317))
+* **career:** append profile sections to a career body ([2ceec0f](https://github.com/leassis/curriculum-api/commit/2ceec0fe5f7b073221cc89f4691802f6e08220ad))
+* **chat:** send additional information and looking forward next to the public chat ([c73fcc2](https://github.com/leassis/curriculum-api/commit/c73fcc2dfdc249b32f4b384ffda20ebd1f334006))
+* **chat:** send profile sections to recruiter chats ([3d8c571](https://github.com/leassis/curriculum-api/commit/3d8c57167022cad8045eab78fd52f4c347d87ea8))
+* **db:** add owner notes columns to tailored_resumes and profile ([0fdcb55](https://github.com/leassis/curriculum-api/commit/0fdcb555b9e762a383ea9910d8073cd80f833916))
+* **resumes:** persist tracking fields in the repository ([6c7364e](https://github.com/leassis/curriculum-api/commit/6c7364e897eb9c72f6721cd54be79ed68cdf7c8b))
+* **resumes:** send additional information to the tailor ([1f7978e](https://github.com/leassis/curriculum-api/commit/1f7978e95e6565195645e575dc97a3afa33d0e8a))
+* **resumes:** validate and save job link, recruiter name and notes ([991557e](https://github.com/leassis/curriculum-api/commit/991557e7cd43a048713b9b5e1e6727852701b5ba))
+
+
+### Bug Fixes
+
+* **career:** reject truncated CV imports ([9964396](https://github.com/leassis/curriculum-api/commit/99643966a176e06d37081219c672b065edf7a117))
+* **design-system:** pin htmx with SRI ([0be53b2](https://github.com/leassis/curriculum-api/commit/0be53b2babca4f571e31be8a10e23c99e2bdf9cf))
+* **resumes:** count tracking limits in characters and require http(s):// ([a4ce480](https://github.com/leassis/curriculum-api/commit/a4ce480106d2cc319f5f24b6119ebf00d12c80c1))
+* **tailor:** report only experience items in left-out assessment ([5917483](https://github.com/leassis/curriculum-api/commit/5917483b26f1d2fb314716ace8df2b7f9f0b99f9))
+
 ## [0.2.0](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.1.0...curriculum-api-v0.2.0) (2026-11-24)
 
 
