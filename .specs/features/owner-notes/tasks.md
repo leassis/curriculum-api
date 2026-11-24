@@ -240,8 +240,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C20, C30 (public), C37 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C20, C30 (public), C37 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
