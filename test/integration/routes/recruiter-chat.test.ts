@@ -173,4 +173,34 @@ describe("recruiter chat with database", () => {
       for (const secret of [EMAIL, RECRUITER, COMPANY]) expect(call.prompt).not.toContain(secret);
     }
   });
+
+  it("keeps a linked resume's tracking fields out of the model and every /api response", async () => {
+    const s = await setup();
+    const resumes = new ResumeRepository(db);
+    const tracking = {
+      jobLink: "https://jobs.example.com/private-42",
+      recruiterName: "Sam Hiringmanager",
+      notes: "Salary talk on Friday",
+    };
+    const resume = await resumes.insert({
+      title: "R",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+      ...tracking,
+    });
+    await resumes.update(resume.id, { structured: textDocumentV2("Resume-only text.") });
+    const chat = await s.create({ tailoredResumeId: resume.id });
+    const cookie = await s.cookieFor(chat.id);
+    const link = await s.app.request(`/api/r/${chat.token}`);
+    const answer = await s.ask(chat.token, cookie);
+    expect([link.status, answer.status]).toEqual([200, 200]);
+    const bodies = [await link.text(), await answer.text()];
+    expect(s.calls).toHaveLength(1);
+    expect(s.calls[0]?.prompt).toContain("Resume-only text.");
+    for (const value of Object.values(tracking)) {
+      expect(s.calls[0]?.prompt).not.toContain(value);
+      for (const body of bodies) expect(body).not.toContain(value);
+    }
+  });
 });

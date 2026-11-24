@@ -165,4 +165,22 @@ describe("recruiter chat repository", () => {
     expect(await repo.resumeDocument(null)).toBeNull();
     expect(await repo.resumeDocument("00000000-0000-4000-8000-00000000ffff")).toBeNull();
   });
+
+  it("reads only the structured document of a resume with tracking fields", async () => {
+    const linked = await resumes.insert({
+      title: "Linked",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+      jobLink: "https://jobs.example.com/private-42",
+      recruiterName: "Sam Hiringmanager",
+      notes: "Salary talk on Friday",
+    });
+    await resumes.update(linked.id, { structured: sampleDocument() });
+    const document = await repo.resumeDocument(linked.id);
+    expect(document).toEqual(sampleDocument());
+    for (const value of ["jobs.example.com/private-42", "Sam Hiringmanager", "Salary talk"]) {
+      expect(JSON.stringify(document)).not.toContain(value);
+    }
+  });
 });

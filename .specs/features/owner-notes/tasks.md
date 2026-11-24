@@ -393,7 +393,7 @@ Proof: run unit | ✓ recruiter chat service owner notes > ends the body with ad
 **C22** - The tailor body ends with the Additional information section (OWN-19, AC 19)
 Proof: run unit | ✓ resume service owner notes > ends the tailor body with the additional information section
 
-**C23** - With both texts empty, public, recruiter and tailor bodies equal today's (OWN-20, AC 20)
+**C23** - With both texts empty, the tailor body equals today's (OWN-20, AC 20); the public body is C30, the recruiter bodies C42
 Proof: run unit | ✓ resume service owner notes > sends today's tailor body when additional information is empty
 
 **C24** - Generate refuses with the full-name error and no LLM call when Additional Information holds the full name (OWN-21, AC 21)
@@ -450,6 +450,15 @@ Proof: run unit | ✓ resume service owner notes > never sends looking forward n
 **C41** - Print view and markdown download contain none of the three tracking fields (OWN-10, AC 10)
 Proof: run unit | ✓ admin print > keeps tracking fields out of print and download
 
+**C42** - With both texts empty, the recruiter bodies (`ask` unlinked and linked, and `test`) equal today's (OWN-20, OWN-30, AC 20, 30)
+Proof: run unit | ✓ recruiter chat service owner notes > sends today's bodies when both texts are empty
+
+**C43** - The recruiter chat repository reads only the structured document of a linked resume, none of its tracking fields (OWN-10, AC 10)
+Proof: run int | ✓ recruiter chat repository > reads only the structured document of a resume with tracking fields
+
+**C44** - With the real repositories, a recruiter chat linked to a resume with tracking fields puts none of them in the model prompt, `GET /api/r/:token` or the chat stream (OWN-10, AC 10)
+Proof: run int | ✓ recruiter chat with database > keeps a linked resume's tracking fields out of the model and every /api response
+
 ---
 
 ## Handoff
@@ -457,7 +466,7 @@ Proof: run unit | ✓ admin print > keeps tracking fields out of print and downl
 The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none. Paused after approval: user "Approve, don't build". Next: `validate_tasks.py owner-notes --execute` on `feat/owner-notes`, then the sub-agent offer (2 batches).
-**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24, returned (2f560ca..14e74f0); Batch B (Phases 3-5, T6-T12) worker at HEAD 14e74f0 - sent 2026-11-24
+**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24, returned (2f560ca..14e74f0); Batch B (Phases 3-5, T6-T12) worker at HEAD 14e74f0 - sent 2026-11-24, returned (9dc808d..c1ef0f6); Verifier at HEAD c1ef0f6 (diff 83750d5..c1ef0f6) - sent 2026-11-24
 **Walked:** none
 
 ---
