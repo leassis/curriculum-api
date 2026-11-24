@@ -163,8 +163,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C11, C12, C13 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C11, C12, C13 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

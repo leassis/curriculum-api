@@ -834,3 +834,74 @@ describe("admin resumes career routes", () => {
     expect(list.startsWith('<div id="career-library"')).toBe(true);
   });
 });
+
+describe("admin resumes tracking fields", () => {
+  const tracking = {
+    jobLink: "https://jobs.example.com/acme/42",
+    recruiterName: "Grace Hopper",
+    notes: "Found on the Acme careers page",
+  };
+
+  it("creates a resume with the posted tracking fields", async () => {
+    const { post, repo } = await resumeApp();
+    const res = await post("/admin/resumes", {
+      ...newResume,
+      jobLink: ` ${tracking.jobLink} `,
+      recruiterName: ` ${tracking.recruiterName} `,
+      notes: ` ${tracking.notes} `,
+    });
+    expect(res.status).toBe(303);
+    expect(repo.rows[0]).toMatchObject(tracking);
+    await post("/admin/resumes", newResume);
+    expect(repo.rows[1]).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+  });
+
+  it("saves posted tracking fields and keeps omitted ones", async () => {
+    const { put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create({ ...newResume, customInstructions: "Be brief" });
+    const res = await put(`/admin/resumes/${id}`, {
+      jobLink: ` ${tracking.jobLink} `,
+      recruiterName: ` ${tracking.recruiterName} `,
+      notes: ` ${tracking.notes} `,
+    });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Saved");
+    expect(repo.rows[0]).toMatchObject({ ...tracking, customInstructions: "Be brief" });
+
+    await put(`/admin/resumes/${id}`, { notes: "Second interview" });
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: tracking.jobLink,
+      recruiterName: tracking.recruiterName,
+      notes: "Second interview",
+    });
+    await put(`/admin/resumes/${id}`, { headerFields: "EMAIL" });
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: tracking.jobLink,
+      recruiterName: tracking.recruiterName,
+      notes: "Second interview",
+    });
+  });
+
+  it("answers 400 for an invalid job link on create and save", async () => {
+    const { post, put, resumes, repo } = await resumeApp();
+    const message = "Job link must start with http:// or https://";
+    const created = await post("/admin/resumes", {
+      ...newResume,
+      ...tracking,
+      jobLink: "ftp://jobs.example.com/42",
+    });
+    expect(created.status).toBe(400);
+    expect(await created.text()).toContain(message);
+    expect(repo.rows).toHaveLength(0);
+
+    const { id } = await resumes.create({ ...newResume, ...tracking });
+    const saved = await put(`/admin/resumes/${id}`, {
+      jobLink: "jobs.example.com/42",
+      recruiterName: "Changed",
+      notes: "Changed",
+    });
+    expect(saved.status).toBe(400);
+    expect(await saved.text()).toContain(message);
+    expect(repo.rows[0]).toMatchObject(tracking);
+  });
+});
