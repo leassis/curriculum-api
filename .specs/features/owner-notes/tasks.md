@@ -123,9 +123,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Integration test C34 passes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
-- [ ] Test count: T1 count + 1 pass
+- [x] Integration test C34 passes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Test count: T1 count + 1 pass
 
 **Tests**: integration
 **Gate**: full
