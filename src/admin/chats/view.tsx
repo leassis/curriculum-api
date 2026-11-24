@@ -1,3 +1,4 @@
+import { Icon } from "../icons.js";
 import { Layout, PageHeader } from "../layout.js";
 
 /** The slice of a Recruiter Chat the pages show. */
@@ -45,39 +46,56 @@ export const ChatRow = ({
       <td class="mono muted">{stamp(chat.lastUsedAt)}</td>
       <td>
         <div class="actions justify-end">
-          <a class="btn-ghost btn-sm" href={`${url}/messages`}>
-            Messages
-          </a>{" "}
-          <button type="button" class="btn-ghost btn-sm" data-copy={linkFor(origin, chat)}>
-            Copy link
-          </button>{" "}
+          <a
+            class="icon-btn"
+            href={`${url}/messages`}
+            aria-label={`Messages for ${chat.recruiterName}`}
+            title="Messages"
+          >
+            <Icon name="messages" />
+          </a>
           <button
             type="button"
-            class="btn-ghost btn-sm"
+            class="icon-btn"
+            data-copy={linkFor(origin, chat)}
+            aria-label={`Copy link for ${chat.recruiterName}`}
+            title="Copy link"
+          >
+            <Icon name="link" />
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label={`Revoke chat for ${chat.recruiterName}`}
+            title="Revoke"
             hx-patch={`${url}/revoke`}
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
-            Revoke
-          </button>{" "}
+            <Icon name="revoke" />
+          </button>
           <button
             type="button"
-            class="btn-ghost btn-sm"
+            class="icon-btn"
+            aria-label={`Reset chat for ${chat.recruiterName}`}
+            title="Reset"
             hx-patch={`${url}/reset`}
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
-            Reset
-          </button>{" "}
+            <Icon name="reset" />
+          </button>
           <button
             type="button"
-            class="btn-ghost btn-sm btn-danger"
+            class="icon-btn icon-btn-danger"
+            aria-label={`Delete chat for ${chat.recruiterName}`}
+            title="Delete"
             hx-delete={url}
             hx-confirm={`Delete chat for ${chat.recruiterName}?`}
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
-            Delete
+            <Icon name="remove" />
           </button>
         </div>
       </td>
@@ -174,32 +192,34 @@ export const ChatsPage = ({
       sub="Each link opens a chat with one resume as context. Revoke or reset it any time."
     />
     <script src={`${basePath}/admin/chats/chats.js`} defer />
+    <div class="chats-list">
+      <p id="chat-status" class="status" role="status" />
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Recruiter</th>
+              <th>Company</th>
+              <th>Used</th>
+              <th>Status</th>
+              <th>Expires</th>
+              <th>Last used</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody
+            id="chat-rows"
+            hx-get={`${basePath}/admin/chats/rows`}
+            hx-trigger="chats-changed from:body"
+            hx-swap="innerHTML"
+          >
+            <Rows basePath={basePath} origin={origin} chats={chats} />
+          </tbody>
+        </table>
+      </div>
+    </div>
     <div class="chats-split">
       <div class="chats-main">
-        <p id="chat-status" class="status" role="status" />
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Recruiter</th>
-                <th>Company</th>
-                <th>Used</th>
-                <th>Status</th>
-                <th>Expires</th>
-                <th>Last used</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody
-              id="chat-rows"
-              hx-get={`${basePath}/admin/chats/rows`}
-              hx-trigger="chats-changed from:body"
-              hx-swap="innerHTML"
-            >
-              <Rows basePath={basePath} origin={origin} chats={chats} />
-            </tbody>
-          </table>
-        </div>
         <form
           class="card-pad"
           hx-post={`${basePath}/admin/chats`}

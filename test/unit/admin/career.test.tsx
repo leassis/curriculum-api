@@ -81,6 +81,14 @@ describe("career cards", () => {
     }
   });
 
+  it("gives each row icon a browser tooltip", () => {
+    const experience = sections(render())[0]?.html ?? "";
+    expect(button(experience, "Move Engineer up").attrs).toHaveProperty("title", "Move up");
+    expect(button(experience, "Move Engineer down").attrs).toHaveProperty("title", "Move down");
+    expect(button(experience, "Edit Engineer").attrs).toHaveProperty("title", "Edit");
+    expect(button(experience, "Delete Engineer").attrs).toHaveProperty("title", "Delete");
+  });
+
   it("disables move up on the first row and move down on the last", () => {
     const html = render();
     const experience = sections(html)[0]?.html ?? "";

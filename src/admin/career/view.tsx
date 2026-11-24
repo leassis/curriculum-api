@@ -1,4 +1,5 @@
 import type { Child } from "hono/jsx";
+import { Icon } from "../icons.js";
 
 export interface RowView {
   id: string;
@@ -33,29 +34,6 @@ export interface FormView {
 
 const HALF = new Set(["startYear", "startMonth", "endYear", "endMonth"]);
 const MONTH_FIELDS = new Set(["startMonth", "endMonth"]);
-
-const ICONS = {
-  up: "m6 15 6-6 6 6",
-  down: "m6 9 6 6 6-6",
-  edit: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z",
-  remove: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6",
-} as const;
-
-export const Icon = ({ name }: { name: keyof typeof ICONS }) => (
-  <svg
-    viewBox="0 0 24 24"
-    width="20"
-    height="20"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
-    <path d={ICONS[name]} />
-  </svg>
-);
 
 const FieldControl = ({ field, form }: { field: FieldView; form: FormView }) => {
   const id = `f-${field.name}`;
@@ -157,6 +135,7 @@ const Row = ({
           type="button"
           class="career-icon"
           aria-label={`Move ${row.title} up`}
+          title="Move up"
           hx-post={`${base}/move`}
           hx-vals={JSON.stringify({ direction: "up" })}
           disabled={first}
@@ -167,6 +146,7 @@ const Row = ({
           type="button"
           class="career-icon"
           aria-label={`Move ${row.title} down`}
+          title="Move down"
           hx-post={`${base}/move`}
           hx-vals={JSON.stringify({ direction: "down" })}
           disabled={last}
@@ -177,6 +157,7 @@ const Row = ({
           type="button"
           class="career-icon"
           aria-label={`Edit ${row.title}`}
+          title="Edit"
           hx-get={`${base}/edit`}
         >
           <Icon name="edit" />
@@ -185,6 +166,7 @@ const Row = ({
           type="button"
           class="career-icon career-danger"
           aria-label={`Delete ${row.title}`}
+          title="Delete"
           hx-delete={base}
           hx-confirm="Delete this item?"
         >
