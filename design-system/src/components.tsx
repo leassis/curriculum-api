@@ -29,7 +29,12 @@ export function AdminLayout({ title, current, children }: Children & { title: st
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         />
         <link rel="stylesheet" href="/admin/app.css" />
-        <script src="https://unpkg.com/htmx.org@2" defer></script>
+        <script
+          src="https://unpkg.com/htmx.org@2.0.11"
+          integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg"
+          crossorigin="anonymous"
+          defer
+        ></script>
       </head>
       <body class="m-0">
         <div class="app-shell">
