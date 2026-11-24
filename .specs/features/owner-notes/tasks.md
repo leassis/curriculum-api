@@ -278,8 +278,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C22, C23, C24 (tailor), C40 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C22, C23, C24 (tailor), C40 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

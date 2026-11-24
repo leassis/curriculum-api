@@ -1283,3 +1283,80 @@ describe("resume service tracking fields", () => {
     }
   });
 });
+
+describe("resume service owner notes", () => {
+  const LIBRARY_FULL_NAME = "Your full name is in the career library — it is added when printed";
+  const bodyOf = (system: string | undefined) =>
+    (system ?? "").slice(
+      (system ?? "").indexOf("<cv>\n") + 5,
+      (system ?? "").lastIndexOf("\n</cv>"),
+    );
+  const todayBody = () => {
+    const items = sampleLibrary().items;
+    const ids = new Map(items.map((it, n) => [it.id, `c${n + 1}`]));
+    return renderCareerBody(
+      { headline: "Backend engineer", summary: "Ten years building payment systems." },
+      items,
+      { ids },
+    );
+  };
+  async function generateWith(texts: {
+    additionalInformation: string;
+    lookingForwardNext: string;
+  }) {
+    const setup = await resumeSetup();
+    await setup.profile.update({ ...(await setup.profile.get()), ...texts });
+    const { id } = await setup.resumes.create(draft);
+    return { ...setup, id };
+  }
+
+  it("ends the tailor body with the additional information section", async () => {
+    const { resumes, calls, id } = await generateWith({
+      additionalInformation: "  Plays chess on weekends.  ",
+      lookingForwardNext: "",
+    });
+    await resumes.generate(id);
+    expect(calls).toHaveLength(1);
+    expect(bodyOf(calls[0]?.system)).toBe(
+      `${todayBody()}\n\n## Additional information\n\nPlays chess on weekends.`,
+    );
+  });
+
+  it("sends today's tailor body when additional information is empty", async () => {
+    const { resumes, calls, id } = await generateWith({
+      additionalInformation: " \n ",
+      lookingForwardNext: "",
+    });
+    await resumes.generate(id);
+    expect(bodyOf(calls[0]?.system)).toBe(todayBody());
+    expect(calls[0]?.system).not.toContain("## Additional information");
+  });
+
+  it("refuses to generate when additional information contains the full name", async () => {
+    const { resumes, repo, calls, id } = await generateWith({
+      additionalInformation: `Friends call me ${FULL_NAME.toUpperCase()}.`,
+      lookingForwardNext: "",
+    });
+    await expect(resumes.generate(id, "Be brief")).rejects.toMatchObject({
+      status: 400,
+      message: LIBRARY_FULL_NAME,
+    });
+    expect(calls).toHaveLength(0);
+    expect(repo.rows[0]).toMatchObject({ structured: null, model: null });
+  });
+
+  it("never sends looking forward next to the tailor", async () => {
+    const { resumes, calls, id } = await generateWith({
+      additionalInformation: "Plays chess.",
+      lookingForwardNext: "Staff platform roles in fintech.",
+    });
+    await resumes.generate(id);
+    expect(calls).toHaveLength(1);
+    const sent = `${calls[0]?.system ?? ""}\n${calls[0]?.prompt ?? ""}`;
+    expect(sent).not.toContain("## Looking forward next");
+    expect(sent).not.toContain("Staff platform roles in fintech.");
+    expect(bodyOf(calls[0]?.system)).toBe(
+      `${todayBody()}\n\n## Additional information\n\nPlays chess.`,
+    );
+  });
+});
