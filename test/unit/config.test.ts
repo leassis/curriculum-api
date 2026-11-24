@@ -68,4 +68,24 @@ describe("config", () => {
     expect(custom.limits.maxQuestionChars).toBe(50);
     expect(custom.limits.sessionTtlMinutes).toBe(120);
   });
+
+  it("defaults and validates temperatures", () => {
+    expect(resolveConfig(validConfig()).temperatures).toEqual({
+      public: 0.4,
+      recruiter: 0.3,
+      tailor: 0.1,
+      import: 0.1,
+    });
+    const custom = resolveConfig(validConfig({ temperatures: { public: 0, tailor: 2 } }));
+    expect(custom.temperatures).toEqual({ public: 0, recruiter: 0.3, tailor: 2, import: 0.1 });
+    expect(failure(validConfig({ temperatures: { public: 2.1 } })).fields).toEqual([
+      "temperatures.public",
+    ]);
+    expect(failure(validConfig({ temperatures: { import: -0.1 } })).fields).toEqual([
+      "temperatures.import",
+    ]);
+    expect(failure(validConfig({ temperatures: { recruiter: Number.NaN } })).fields).toEqual([
+      "temperatures.recruiter",
+    ]);
+  });
 });

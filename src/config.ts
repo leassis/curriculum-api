@@ -20,6 +20,15 @@ export interface CurriculumApiConfig {
   /** OpenRouter model IDs; the settings table overrides them. */
   models?: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits?: Partial<Limits>;
+  /** Sampling temperature per area, 0..2; the settings table overrides them. */
+  temperatures?: Partial<Temperatures>;
+}
+
+export interface Temperatures {
+  public: number;
+  tailor: number;
+  recruiter: number;
+  import: number;
 }
 
 export interface Limits {
@@ -46,6 +55,7 @@ export interface ResolvedConfig {
   secureCookies: boolean;
   models: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits: Limits;
+  temperatures: Temperatures;
 }
 
 export const DEFAULT_LIMITS: Limits = {
@@ -58,9 +68,17 @@ export const DEFAULT_LIMITS: Limits = {
   sessionTtlMinutes: 120,
 };
 
+export const DEFAULT_TEMPERATURES: Temperatures = {
+  public: 0.4,
+  recruiter: 0.3,
+  tailor: 0.1,
+  import: 0.1,
+};
+
 const required = (name: string) =>
   z.string({ error: `${name} is required` }).min(1, `${name} is required`);
 const limit = z.number().int().positive().optional();
+const temperature = z.number().min(0).max(2).optional();
 
 const schema = z.object({
   databaseUrl: required("databaseUrl"),
@@ -102,6 +120,14 @@ const schema = z.object({
       sessionTtlMinutes: limit,
     })
     .optional(),
+  temperatures: z
+    .object({
+      public: temperature,
+      tailor: temperature,
+      recruiter: temperature,
+      import: temperature,
+    })
+    .optional(),
 });
 
 /** Validates the config and applies defaults; throws a ConfigError naming every invalid field. */
@@ -116,6 +142,10 @@ export function resolveConfig(input: CurriculumApiConfig): ResolvedConfig {
   for (const [name, value] of Object.entries(c.limits ?? {})) {
     if (value !== undefined) limits[name as LimitName] = value;
   }
+  const temperatures = { ...DEFAULT_TEMPERATURES };
+  for (const [area, value] of Object.entries(c.temperatures ?? {})) {
+    if (value !== undefined) temperatures[area as keyof Temperatures] = value;
+  }
   return {
     databaseUrl: c.databaseUrl,
     openrouterApiKey: c.openrouterApiKey,
@@ -128,5 +158,6 @@ export function resolveConfig(input: CurriculumApiConfig): ResolvedConfig {
     secureCookies: c.secureCookies ?? true,
     models: { ...c.models },
     limits,
+    temperatures,
   };
 }

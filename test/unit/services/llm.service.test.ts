@@ -18,7 +18,7 @@ const API_KEY = "sk-or-super-secret";
 const EMAIL = "ada@example.com";
 const PHONE = "+55 11 91234-5678";
 
-async function setup(mock: RecordingModelOptions = {}) {
+async function setup(mock: RecordingModelOptions = {}, overrides: Record<string, string> = {}) {
   const config = resolvedConfig({
     openrouterApiKey: API_KEY,
     models: {
@@ -27,7 +27,7 @@ async function setup(mock: RecordingModelOptions = {}) {
       tailor: "vendor/tailor-model",
     },
   });
-  const settings = new SettingsService(new FakeSettingsRepo(), config);
+  const settings = new SettingsService(new FakeSettingsRepo(overrides), config);
   const personalInfo = new PersonalInfoService(new FakePersonalInfoRepo(), TEST_PII_KEY);
   await personalInfo.create({ key: "EMAIL", label: "Email", value: EMAIL, visibility: "public" });
   await personalInfo.create({ key: "PHONE", label: "Phone", value: PHONE, visibility: "print" });
@@ -270,5 +270,32 @@ describe("llm service generate object", () => {
     await llm.generateObject({ ...objectReq, input: `call ${PHONE}` });
     expect(calls[0]?.prompt).toContain("call [redacted]");
     expect(calls[0]?.prompt).not.toContain("91234");
+  });
+});
+
+describe("LlmService temperature", () => {
+  const input = { system: "Sys.", body: "Body.", input: "Go.", maxOutputTokens: 50 };
+  const json = JSON.stringify({ ok: true });
+  const schema = TailorOutputSchema;
+
+  it("sends the area's configured temperature on stream, generate and generateObject", async () => {
+    const { llm, calls } = await setup({ text: json });
+    await read((await llm.stream(baseReq)).stream);
+    await llm.generate({ ...input, area: "tailor" });
+    await llm
+      .generateObject({ ...input, area: "recruiter", schema, schemaName: "x" })
+      .catch(() => {});
+    expect(calls.map((c) => c.temperature)).toEqual([0.4, 0.1, 0.3]);
+  });
+
+  it("uses an override and omits temperature for 'default'", async () => {
+    const { llm, calls } = await setup(
+      { text: json },
+      { "temperature.public": "0.9", "temperature.tailor": "default" },
+    );
+    await read((await llm.stream(baseReq)).stream);
+    await llm.generate({ ...input, area: "tailor" });
+    await llm.generateObject({ ...input, area: "tailor", schema, schemaName: "x" }).catch(() => {});
+    expect(calls.map((c) => c.temperature)).toEqual([0.9, undefined, undefined]);
   });
 });

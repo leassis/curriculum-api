@@ -10,6 +10,7 @@ export interface RecordedCall {
   /** Text of the system messages only, to assert what sits in the system block. */
   system: string;
   maxOutputTokens: number | undefined;
+  temperature: number | undefined;
   /** What the call asked for: `{ type: "json", schema }` for structured output, else text or undefined. */
   responseFormat: CallOptions["responseFormat"];
   /** Whether the factory was asked for a structured-output model. */
@@ -63,6 +64,7 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
           prompt: flatten(options.prompt as PromptMessage[]),
           system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
+          temperature: options.temperature,
           responseFormat: options.responseFormat,
           structured: modelOpts?.structured === true,
         });
@@ -80,6 +82,7 @@ export function createRecordingModel(opts: RecordingModelOptions = {}) {
           prompt: flatten(options.prompt as PromptMessage[]),
           system: systemText(options.prompt as PromptMessage[]),
           maxOutputTokens: options.maxOutputTokens,
+          temperature: options.temperature,
           responseFormat: options.responseFormat,
           structured: modelOpts?.structured === true,
         });

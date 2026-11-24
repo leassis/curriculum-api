@@ -20,10 +20,15 @@ export const PAGE_SIZE_KEY = "print.pageSize";
 
 export const modelKey = (area: ModelArea) => `model.${area}`;
 export const limitKey = (name: LimitName) => `limits.${name}`;
+export const temperatureKey = (area: ModelArea) => `temperature.${area}`;
+
+/** Temperature override value meaning "send no temperature" (reasoning models that reject it). */
+export const TEMPERATURE_DEFAULT = "default";
 
 /** Every key a Settings Override may use. */
 export const SETTINGS_KEYS: readonly string[] = [
   ...MODEL_AREAS.map(modelKey),
   ...LIMIT_NAMES.map(limitKey),
+  ...MODEL_AREAS.map(temperatureKey),
   PAGE_SIZE_KEY,
 ];

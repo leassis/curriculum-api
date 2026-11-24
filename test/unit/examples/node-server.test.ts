@@ -8,6 +8,8 @@ describe("node example", () => {
       OPENROUTER_API_KEY: "key",
       MODEL_PUBLIC: "vendor/model",
       MODEL_IMPORT: "vendor/import",
+      TEMPERATURE_PUBLIC: "0.7",
+      TEMPERATURE_TAILOR: "",
     });
     expect(options.port).toBe(3001);
     expect(options.secureCookies).toBe(false);
@@ -18,6 +20,12 @@ describe("node example", () => {
       tailor: undefined,
       recruiter: undefined,
       import: "vendor/import",
+    });
+    expect(options.temperatures).toEqual({
+      public: 0.7,
+      tailor: undefined,
+      recruiter: undefined,
+      import: undefined,
     });
   });
 });

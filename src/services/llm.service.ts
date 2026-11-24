@@ -52,13 +52,14 @@ export class LlmService {
   ) {}
 
   async stream(req: StreamRequest): Promise<{ stream: ReadableStream<string>; model: string }> {
-    const { fields, instructions, model } = await this.prepare(req);
+    const { fields, instructions, model, sampling } = await this.prepare(req);
     const started = Date.now();
     const result = streamText({
       model: this.modelFactory(model),
       instructions,
       messages: req.messages.map((m) => ({ ...m, content: redactPii(m.content, fields) })),
       maxOutputTokens: req.maxOutputTokens,
+      ...sampling,
       onError: () => {},
     });
     const stream = await firstChunk(result.fullStream, () => {
@@ -71,7 +72,7 @@ export class LlmService {
   }
 
   async generate(req: GenerateRequest): Promise<{ text: string; model: string }> {
-    const { fields, instructions, model } = await this.prepare(req);
+    const { fields, instructions, model, sampling } = await this.prepare(req);
     const started = Date.now();
     try {
       const result = await generateText({
@@ -79,6 +80,7 @@ export class LlmService {
         instructions,
         prompt: redactPii(req.input, fields),
         maxOutputTokens: req.maxOutputTokens,
+        ...sampling,
       });
       this.logCall(model, result.totalUsage, started);
       return { text: result.text, model };
@@ -92,7 +94,7 @@ export class LlmService {
    * A reply that does not parse throws `LlmOutputInvalidError`; anything else `LlmUnavailableError`.
    */
   async generateObject<T>(req: GenerateObjectRequest<T>): Promise<{ object: T; model: string }> {
-    const { fields, instructions, model } = await this.prepare(req);
+    const { fields, instructions, model, sampling } = await this.prepare(req);
     const started = Date.now();
     try {
       const result = await generateText({
@@ -100,6 +102,7 @@ export class LlmService {
         instructions,
         prompt: redactPii(req.input, fields),
         maxOutputTokens: req.maxOutputTokens,
+        ...sampling,
         output: Output.object({ schema: req.schema, name: req.schemaName }),
       });
       const object = result.output as T;
@@ -111,7 +114,7 @@ export class LlmService {
     }
   }
 
-  /** Guard the system prompt and Career Body, resolve the model and build the system prompt. */
+  /** Guard the system prompt and Career Body, resolve model and temperature, build the system prompt. */
   private async prepare(req: { area: ModelArea; system: string; body: string }) {
     const fields: PiiField[] = await this.personalInfo.allValues();
     const leaks = findPii(`${req.system}\n${req.body}`, fields);
@@ -121,9 +124,14 @@ export class LlmService {
       throw new PiiLeakError(key);
     }
     const model = await this.settings.model(req.area);
+    // Omitted when undefined (override "default"): reasoning models reject a temperature. Structured
+    // calls use `require_parameters: true`, so a provider that ignores temperature is skipped; the
+    // "default" override is the escape hatch for that.
+    const temperature = await this.settings.temperature(req.area);
+    const sampling = temperature === undefined ? {} : { temperature };
     // The CV block stays last and stable, ready for prompt caching.
     const instructions = `${req.system}\n\n<cv>\n${req.body}\n</cv>`;
-    return { fields, instructions, model };
+    return { fields, instructions, model, sampling };
   }
 
   private logCall(

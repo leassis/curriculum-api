@@ -21,6 +21,7 @@ Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is 
 | `IP_HASH_SALT`                                                       | any random string                                                                                                                |
 | `PII_ENCRYPTION_KEY`                                                 | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                                |
 | `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` / `MODEL_IMPORT` | OpenRouter model IDs; `MODEL_IMPORT` converts pasted CV text on the Profile page (Settings in admin override them)               |
+| `TEMPERATURE_PUBLIC` / `_TAILOR` / `_RECRUITER` / `_IMPORT`          | Optional sampling temperature 0..2 (defaults 0.4 / 0.1 / 0.3 / 0.1); Settings in admin override, `default` sends none            |
 | `NEON_API_KEY` / `NEON_PROJECT_ID`                                   | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`) and by the integration tests (`.env` or `.env.local`) |
 | `PARENT_BRANCH_ID`                                                   | Neon branch Neon Local forks its ephemeral dev branch from; also the default parent of the test branch                           |
 | `TEST_PARENT_BRANCH_ID`                                              | Optional: parent of the integration test branch instead of `PARENT_BRANCH_ID`                                                    |

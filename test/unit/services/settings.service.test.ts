@@ -82,4 +82,34 @@ describe("SettingsService", () => {
       "A4",
     );
   });
+
+  it("temperature prefers a valid override, 'default' sends none, invalid falls back", async () => {
+    const repo = new FakeSettingsRepo({
+      "temperature.public": "0.9",
+      "temperature.recruiter": "default",
+      "temperature.tailor": "3",
+      "temperature.import": "abc",
+    });
+    const service = new SettingsService(repo, resolvedConfig({ temperatures: { tailor: 0.2 } }));
+    expect(await service.temperature("public")).toBe(0.9);
+    expect(await service.temperature("recruiter")).toBeUndefined();
+    expect(await service.temperature("tailor")).toBe(0.2);
+    expect(await service.temperature("import")).toBe(0.1);
+    const plain = new SettingsService(new FakeSettingsRepo(), resolvedConfig());
+    expect(await plain.temperature("public")).toBe(0.4);
+    expect(await plain.temperature("recruiter")).toBe(0.3);
+  });
+
+  it("set validates temperature values", async () => {
+    const repo = new FakeSettingsRepo();
+    const service = new SettingsService(repo, resolvedConfig());
+    for (const ok of ["0", "2", "0.7", "1.25", "default"]) {
+      await service.set("temperature.public", ok);
+      expect(repo.rows["temperature.public"]).toBe(ok);
+    }
+    for (const bad of ["2.1", "-0.5", "abc", "1e0", ".5", "Default"]) {
+      await expect(service.set("temperature.tailor", bad)).rejects.toBeInstanceOf(ValidationError);
+    }
+    expect(repo.rows["temperature.tailor"]).toBeUndefined();
+  });
 });

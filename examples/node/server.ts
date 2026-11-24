@@ -14,6 +14,13 @@ export function serverOptions(
     recruiter: env.MODEL_RECRUITER || undefined,
     import: env.MODEL_IMPORT || undefined,
   };
+  const temperature = (value: string | undefined) => (value ? Number(value) : undefined);
+  const temperatures = {
+    public: temperature(env.TEMPERATURE_PUBLIC),
+    tailor: temperature(env.TEMPERATURE_TAILOR),
+    recruiter: temperature(env.TEMPERATURE_RECRUITER),
+    import: temperature(env.TEMPERATURE_IMPORT),
+  };
   return {
     port: PORT,
     databaseUrl: env.DATABASE_URL ?? "",
@@ -25,6 +32,7 @@ export function serverOptions(
     piiEncryptionKey: env.PII_ENCRYPTION_KEY ?? "",
     secureCookies: false,
     models,
+    temperatures,
   };
 }
 
