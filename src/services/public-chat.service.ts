@@ -1,6 +1,6 @@
 import { wrapUserMessages } from "../llm/data-block.js";
 import type { PublicUsageRepo } from "../repositories/public-usage.repository.js";
-import { renderCareerBody } from "./career/body.js";
+import { appendSections, chatSections, renderCareerBody } from "./career/body.js";
 import type { CareerService } from "./career.service.js";
 import { LimitReachedError, LlmUnavailableError, PiiLeakError } from "./errors.js";
 import type { ChatMessage, LlmService } from "./llm.service.js";
@@ -35,7 +35,10 @@ export class PublicChatService {
       const { stream } = await this.llm.stream({
         area: "public",
         system: profile.publicSystemPrompt,
-        body: items.length === 0 ? EMPTY_CV : renderCareerBody(profile, items),
+        body:
+          items.length === 0
+            ? EMPTY_CV
+            : appendSections(renderCareerBody(profile, items), chatSections(profile)),
         messages: wrapUserMessages(messages, "VISITOR_MESSAGE"),
         maxOutputTokens: await this.settings.limit("publicMaxOutputTokens"),
       });

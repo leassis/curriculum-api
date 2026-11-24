@@ -100,3 +100,60 @@ describe("public chat service", () => {
     expect([...usage.rows.keys()]).toEqual(["deadbeef|2026-01-01"]);
   });
 });
+
+describe("public chat service owner notes", () => {
+  const today = renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY);
+  const bodyOf = (system: string) =>
+    system.slice(system.indexOf("<cv>\n") + 5, system.lastIndexOf("\n</cv>"));
+  async function askWith(
+    texts: { additionalInformation: string; lookingForwardNext: string },
+    items?: unknown[],
+  ) {
+    const setup = await publicChatSetup(items ? { items } : {});
+    await setup.profile.update({ ...(await setup.profile.get()), ...texts });
+    await readAll((await setup.publicChat.ask("h1", ask)).stream);
+    return setup.calls;
+  }
+
+  it("ends the body with the additional information section", async () => {
+    const calls = await askWith({
+      additionalInformation: "  Plays chess.  ",
+      lookingForwardNext: "",
+    });
+    expect(bodyOf(calls[0]?.system ?? "")).toBe(
+      `${today}\n\n## Additional information\n\nPlays chess.`,
+    );
+  });
+
+  it("sends today's body when both texts are empty", async () => {
+    const calls = await askWith({ additionalInformation: "", lookingForwardNext: " " });
+    const body = bodyOf(calls[0]?.system ?? "");
+    expect(body).toBe(today);
+    expect(body).not.toContain("## Looking forward next");
+    expect(body).not.toContain("## Additional information");
+  });
+
+  it("puts looking forward next last and leaves both out for an empty library", async () => {
+    const texts = { additionalInformation: "Plays chess.", lookingForwardNext: " Staff roles. " };
+    const calls = await askWith(texts);
+    expect(bodyOf(calls[0]?.system ?? "")).toBe(
+      `${today}\n\n## Additional information\n\nPlays chess.\n\n## Looking forward next\n\nStaff roles.`,
+    );
+    const onlyNext = await askWith({
+      additionalInformation: "",
+      lookingForwardNext: "Staff roles.",
+    });
+    expect(bodyOf(onlyNext[0]?.system ?? "")).toBe(
+      `${today}\n\n## Looking forward next\n\nStaff roles.`,
+    );
+    const empty = await askWith(texts, []);
+    const prompt = empty[0]?.prompt ?? "";
+    expect(prompt).toContain(
+      "The Master CV is empty: tell the visitor there is no career information yet.",
+    );
+    expect(prompt).not.toContain("Plays chess.");
+    expect(prompt).not.toContain("Staff roles.");
+    expect(prompt).not.toContain("## Additional information");
+    expect(prompt).not.toContain("## Looking forward next");
+  });
+});

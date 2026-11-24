@@ -32,3 +32,13 @@ export function appendSections(body: string, sections: BodySection[]): string {
     return trimmed === "" ? out : `${out}\n\n## ${heading}\n\n${trimmed}`;
   }, body);
 }
+
+export function chatSections(profile: {
+  additionalInformation: string;
+  lookingForwardNext: string;
+}): BodySection[] {
+  return [
+    { heading: PROFILE_SECTIONS.additionalInformation, text: profile.additionalInformation },
+    { heading: PROFILE_SECTIONS.lookingForwardNext, text: profile.lookingForwardNext },
+  ];
+}
