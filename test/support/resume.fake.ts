@@ -23,10 +23,10 @@ export class FakeResumeRepo implements ResumeRepo {
     const at = new Date(Date.UTC(2026, 0, 1) + ++this.tick * 60_000);
     const row: ResumeRow = {
       id: `00000000-0000-4000-8000-${String(this.tick).padStart(12, "0")}`,
-      jobLink: "",
-      recruiterName: "",
-      notes: "",
       ...input,
+      jobLink: input.jobLink ?? "",
+      recruiterName: input.recruiterName ?? "",
+      notes: input.notes ?? "",
       headerFields: input.headerFields ?? null,
       model: null,
       structured: null,
@@ -49,6 +49,9 @@ export class FakeResumeRepo implements ResumeRepo {
     if (patch.structured !== undefined) next.structured = structuredClone(patch.structured);
     if (patch.customInstructions !== undefined) next.customInstructions = patch.customInstructions;
     if (patch.headerFields !== undefined) next.headerFields = patch.headerFields;
+    if (patch.jobLink !== undefined) next.jobLink = patch.jobLink;
+    if (patch.recruiterName !== undefined) next.recruiterName = patch.recruiterName;
+    if (patch.notes !== undefined) next.notes = patch.notes;
     if (patch.score !== undefined) next.score = patch.score;
     if (patch.scoreRationale !== undefined) next.scoreRationale = patch.scoreRationale;
     if (patch.missingSkills !== undefined) next.missingSkills = [...patch.missingSkills];

@@ -37,6 +37,42 @@ describe("resume repository", () => {
     expect((await repo.find(all.id))?.headerFields).toBeNull();
   });
 
+  it("stores and updates the tracking fields", async () => {
+    const plain = await repo.insert(input("plain"));
+    expect(plain).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+
+    const tracked = await repo.insert({
+      ...input("tracked"),
+      jobLink: "https://jobs.example.com/1",
+      recruiterName: "Grace",
+      notes: "Applied",
+    });
+    expect(await repo.find(tracked.id)).toMatchObject({
+      jobLink: "https://jobs.example.com/1",
+      recruiterName: "Grace",
+      notes: "Applied",
+    });
+
+    const updated = await repo.update(tracked.id, {
+      jobLink: "https://jobs.example.com/2",
+      recruiterName: "Ada",
+      notes: "Interview",
+    });
+    expect(updated).toMatchObject({
+      jobLink: "https://jobs.example.com/2",
+      recruiterName: "Ada",
+      notes: "Interview",
+    });
+
+    await repo.update(tracked.id, { model: "m/x" });
+    expect(await repo.find(tracked.id)).toMatchObject({
+      model: "m/x",
+      jobLink: "https://jobs.example.com/2",
+      recruiterName: "Ada",
+      notes: "Interview",
+    });
+  });
+
   it("inserts, finds, updates and deletes a resume", async () => {
     const created = await repo.insert({
       title: "T",

@@ -8,6 +8,9 @@ export interface ResumeInsert {
   company: string | null;
   jobDescription: string;
   customInstructions: string;
+  jobLink?: string;
+  recruiterName?: string;
+  notes?: string;
   /** `null` or omitted stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;
 }
@@ -16,6 +19,9 @@ export interface ResumePatch {
   /** The Resume Document, already validated by the service; stored as jsonb. */
   structured?: unknown;
   customInstructions?: string;
+  jobLink?: string;
+  recruiterName?: string;
+  notes?: string;
   /** `null` stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;
   score?: number | null;
