@@ -1,7 +1,7 @@
 # owner-notes proofs
 
-**HEAD**: 61a87a7
-**Tree**: dirty - scripts/seed.sql
+**HEAD**: 23c4ddf
+**Tree**: clean
 **Shell**: /bin/sh
 **Result**: 47 pass, 0 fail
 
@@ -60,20 +60,20 @@
 `Run unit` - exit 0
 
 ```
-stderr | test/unit/routes/recruiter.test.ts > recruiter chat > answers 502 llm_unavailable and gives the question back
-LlmUnavailableError: The language model is unavailable
-    at firstChunk (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/llm/first-chunk.ts:28:57)
-    at LlmService.stream (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/services/llm.service.ts:65:20)
-    at RecruiterChatService.ask (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/services/recruiter-chat.service.ts:213:26)
-    at Object.handler (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/routes/recruiter.ts:81:33)
+PiiLeakError: Personal info field "EMAIL" found in an LLM prompt
+    at LlmService.prepare (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/services/llm.service.ts:126:13)
+    at LlmService.stream (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/services/llm.service.ts:55:55)
+    at PublicChatService.ask (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/services/public-chat.service.ts:35:26)
+    at Object.handler (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/routes/public.ts:69:33)
     at async dispatch (file:///Users/leassis/workspace/lassis-curriculum/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/lassis-curriculum/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35)
     at async dispatch (file:///Users/leassis/workspace/lassis-curriculum/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at Object.handler (/Users/leassis/workspace/lassis-curriculum/curriculum-api/src/middleware/require-session.ts:15:5)
     at async dispatch (file:///Users/leassis/workspace/lassis-curriculum/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/compose.js:35:11)
     at async handler (file:///Users/leassis/workspace/lassis-curriculum/curriculum-api/node_modules/.pnpm/hono@4.13.19/node_modules/hono/dist/hono-base.js:113:35) {
-  code: 'llm_unavailable',
-  status: 502
+  fieldKey: 'EMAIL',
+  code: 'internal_error',
+  status: 500
 }
 ```
 
@@ -86,7 +86,7 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:8877) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+(node:27778) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
 In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
 
 To prepare for this change:
