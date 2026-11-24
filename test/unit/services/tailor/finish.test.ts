@@ -57,13 +57,12 @@ describe("finish", () => {
     );
     expect(result.assessment.omissions).toEqual([
       { what: "A bullet", reason: "Off topic" },
-      { what: "BSc at State", reason: "Education items are always kept; restored by code." },
       {
         what: "Analyst at Initech",
         reason: "Ended more than 15 years ago; shortened to one bullet.",
       },
     ]);
-    expect(result.restored).toBe(1);
+    expect(result.restored).toBe(0);
     expect(result.collapsed).toBe(1);
     expect(result.assessment).toMatchObject({
       score: 72,
@@ -79,6 +78,14 @@ describe("finish", () => {
       "Engineer at Acme",
       "Engineer at Globex",
     ]);
+  });
+
+  it("drops model omissions that name a non-experience item", () => {
+    const edu = item("education", { title: "BSc in CS", organisation: "State" });
+    const result = ok(
+      run([edu], [], { omissions: [{ what: "BSc in CS (2001)", reason: "Old role" }] }),
+    );
+    expect(result.assessment.omissions).toEqual([]);
   });
 
   it("adds no note for a left-out project, publication or honour", () => {
@@ -110,8 +117,8 @@ describe("finish", () => {
     ];
     const result = ok(run(library, []));
     expect(result.doc.items).toHaveLength(6);
-    expect(result.assessment.omissions).toHaveLength(6);
-    expect(result.restored).toBe(6);
+    expect(result.assessment.omissions).toHaveLength(1);
+    expect(result.restored).toBe(1);
   });
 
   it("filters missing skills against the library", () => {
