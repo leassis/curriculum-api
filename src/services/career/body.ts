@@ -15,3 +15,20 @@ export function renderCareerBody(
     .filter(Boolean)
     .join("\n\n");
 }
+
+export const PROFILE_SECTIONS = {
+  additionalInformation: "Additional information",
+  lookingForwardNext: "Looking forward next",
+} as const;
+
+export interface BodySection {
+  heading: string;
+  text: string;
+}
+
+export function appendSections(body: string, sections: BodySection[]): string {
+  return sections.reduce((out, { heading, text }) => {
+    const trimmed = text.trim();
+    return trimmed === "" ? out : `${out}\n\n## ${heading}\n\n${trimmed}`;
+  }, body);
+}
