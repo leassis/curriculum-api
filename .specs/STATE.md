@@ -100,12 +100,12 @@
 
 ## Handoff
 
-- **Feature**: `career-library` implemented on branch `feat/career-library` (local, not pushed; cut from `main` after `feat/structured-resume` was fast-forward merged): T1-T26 done and marked in tasks.md, Verifier F1-F5 fixed and closed, screens round 2 all 4 match (3 confirmed differences), `validate_verification.py career-library` exits 0, proofs 76/76. `structured-resume` is merged into `main` (local).
-- **Next**: user review and merge of `feat/career-library` into `main`; `proofs.md` is left uncommitted on purpose (the validator needs it to name HEAD; rerun `check_proofs.py career-library` before validating after any new commit). Then rewrite and approve `honest-assessment`.
-- **Before deploy**: migration `0005` (career_library table, profile summary) and `0006_drop_master_cv` (drops `master_cv`, nulls tailored `structured`/`model`); running them in production needs the Owner's go-ahead. The Owner must load the Career Library first (markdown editor or import); a converted copy of the Owner's CV is in the side-session notes folder.
-- **Notes**: Lessons from the run: the plan's Phase 3 gate could not be green because the v2 schema broke v1 admin tests until T23 (partial gate approved for T14-T22); picture checks need exact capture size (headless Chrome at deviceScaleFactor 2, not the browser pane). Tailored editor shows only kinds that have items (AC 8). Neon Local sample data is throwaway.
-- **Blockers**: none.
-- **Stale**: the `honest-assessment` spec was written against the markdown Master CV and the section-based Resume Document; `career-library` replaced both (Career Items, Resume Document v2, migration 0006), so that spec must be rewritten before it is approved.
+- **Feature**: `owner-notes` on branch `feat/owner-notes` (local, not pushed): T1-T12 done and marked in tasks.md (2f560ca..c1ef0f6, migration `drizzle/0008_lazy_ben_urich.sql`). Verifier F1-F5 closed: b8444f6 (F2, F5), bdcbf85 (F3, F4; new checks C42-C44, C23 narrowed to the tailor), 685b625 (F1: OWN-22 narrowed, user: "Allow model wording (Recommended)"). Proofs 47/47 at 0ed1010. Commit 3ae7e12 on this branch is another session's chat-list UI work, not owner-notes.
+- **Next**: `validate_verification.py owner-notes` fails only because the untracked `scripts/seed.sql` (the user's) makes the tree dirty; once the user commits, moves or ignores it, rerun `check_proofs.py owner-notes` then `validate_verification.py owner-notes`. `proofs.md` stays uncommitted (it names HEAD). Then user review and merge into `main`.
+- **Before deploy**: migration `0008` (five `text not null default ''` columns) in production needs the Owner's go-ahead.
+- **Notes**: Lessons L-005..L-009 recorded as candidates. The Verifier's verdict line still reads FAIL (round 1); its round-2 rows judge every check `yes` except C39 (partly; proved by C43, C44).
+- **Blockers**: `scripts/seed.sql` untracked (user decision).
+- **Stale**: the `honest-assessment` spec must be rewritten before approval (career-library replaced its base).
 
 ### AD-005
 - **Decision**: `drizzle-orm/node-postgres` (`pg` Pool, max 5) replaces `neon-http` everywhere (supersedes AD-002; ADR 0003). Production uses Neon's pooled (`-pooler`) string; `migrate` uses `DATABASE_URL_UNPOOLED` when set. Docker Compose runs plain `postgres:17` at `localhost:5432`; the `neon-proxy` service and the `db.localtest.me` host are gone.
