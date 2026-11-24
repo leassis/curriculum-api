@@ -382,3 +382,99 @@ describe("recruiter chat service", () => {
     }
   });
 });
+
+describe("recruiter chat service owner notes", () => {
+  const library = renderCareerBody({ headline: "Engineer", summary: "" }, LIBRARY);
+  const ADDITIONAL = "\n\n## Additional information\n\nPlays chess.";
+  const NEXT = "\n\n## Looking forward next\n\nStaff roles.";
+  const bodyOf = (system: string | undefined) =>
+    (system ?? "").slice(
+      (system ?? "").indexOf("<cv>\n") + 5,
+      (system ?? "").lastIndexOf("\n</cv>"),
+    );
+  const testAsk = [{ role: "user" as const, content: "What do you do?" }];
+
+  async function withTexts(
+    texts: { additionalInformation: string; lookingForwardNext: string },
+    items?: unknown[],
+  ) {
+    const setup = await recruiterSetup(items ? { items } : {});
+    await setup.profile.update({ ...(await setup.profile.get()), ...texts });
+    const resumeId = "00000000-0000-4000-8000-000000000061";
+    const doc = sampleDocumentV2();
+    setup.repo.resumes.set(resumeId, {
+      title: "Tailored",
+      structured: doc,
+      jobLink: "https://jobs.example.com/postgres-42",
+      recruiterName: "Morgan Hiring",
+      notes: "Salary band discussed privately",
+    });
+    const unlinked = await setup.newChat();
+    const linked = await setup.newChat({ tailoredResumeId: resumeId });
+    await readAll((await setup.recruiterChat.ask(unlinked, messages)).stream);
+    await readAll((await setup.recruiterChat.ask(linked, messages)).stream);
+    await readAll(await setup.recruiterChat.test(testAsk));
+    return { calls: setup.calls, resume: renderCareerBody(doc, doc.items) };
+  }
+
+  it("ends the body with additional information with and without a linked resume", async () => {
+    const { calls, resume } = await withTexts({
+      additionalInformation: " Plays chess. ",
+      lookingForwardNext: "",
+    });
+    expect(calls).toHaveLength(3);
+    expect(bodyOf(calls[0]?.system)).toBe(`${library}${ADDITIONAL}`);
+    expect(bodyOf(calls[1]?.system)).toBe(`${resume}${ADDITIONAL}`);
+    expect(bodyOf(calls[2]?.system)).toBe(`${library}${ADDITIONAL}`);
+  });
+
+  it("ends the body with looking forward next and leaves both out for an empty library", async () => {
+    const texts = { additionalInformation: "Plays chess.", lookingForwardNext: "Staff roles. " };
+    const { calls, resume } = await withTexts(texts);
+    expect(bodyOf(calls[0]?.system)).toBe(`${library}${ADDITIONAL}${NEXT}`);
+    expect(bodyOf(calls[1]?.system)).toBe(`${resume}${ADDITIONAL}${NEXT}`);
+    expect(bodyOf(calls[2]?.system)).toBe(`${library}${ADDITIONAL}${NEXT}`);
+
+    const onlyNext = await withTexts({
+      additionalInformation: "",
+      lookingForwardNext: "Staff roles.",
+    });
+    expect(bodyOf(onlyNext.calls[0]?.system)).toBe(`${library}${NEXT}`);
+
+    const empty = await withTexts(texts, []);
+    const emptyCv =
+      "The Master CV is empty: tell the recruiter there is no career information yet.";
+    expect(bodyOf(empty.calls[0]?.system)).toBe(emptyCv);
+    expect(bodyOf(empty.calls[1]?.system)).toBe(empty.resume);
+    expect(bodyOf(empty.calls[2]?.system)).toBe(emptyCv);
+    for (const call of empty.calls) {
+      expect(call.prompt).not.toContain("Plays chess.");
+      expect(call.prompt).not.toContain("Staff roles.");
+    }
+  });
+
+  it("sends today's bodies when both texts are empty", async () => {
+    const { calls, resume } = await withTexts({
+      additionalInformation: " ",
+      lookingForwardNext: "",
+    });
+    expect(bodyOf(calls[0]?.system)).toBe(library);
+    expect(bodyOf(calls[1]?.system)).toBe(resume);
+    expect(bodyOf(calls[2]?.system)).toBe(library);
+    for (const call of calls) expect(call.prompt).not.toContain("## Looking forward next");
+  });
+
+  it("never sends a linked resume's tracking fields", async () => {
+    const { calls } = await withTexts({
+      additionalInformation: "Plays chess.",
+      lookingForwardNext: "Staff roles.",
+    });
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      const sent = `${call.system ?? ""}\n${call.prompt ?? ""}`;
+      expect(sent).not.toContain("jobs.example.com");
+      expect(sent).not.toContain("Morgan Hiring");
+      expect(sent).not.toContain("Salary band discussed privately");
+    }
+  });
+});
