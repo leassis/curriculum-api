@@ -22,10 +22,22 @@ const EMPTY: Values = {
   fullName: "",
   headline: "",
   summary: "",
+  additionalInformation: "",
+  lookingForwardNext: "",
   publicSystemPrompt: "",
   recruiterSystemPrompt: "",
   tailorSystemPrompt: "",
 };
+
+const PROFILE_TEXTS = [
+  {
+    name: "additionalInformation",
+    label: "Additional information",
+    in: "the additional information",
+  },
+  { name: "lookingForwardNext", label: "Looking forward next", in: "looking forward next" },
+] as const;
+const MAX_PROFILE_TEXT = 5000;
 
 type Ctx = Context<Env>;
 type Fields = Record<string, string>;
@@ -37,6 +49,8 @@ async function currentValues(c: Ctx): Promise<Values> {
       fullName: p.fullName,
       headline: p.headline,
       summary: p.summary,
+      additionalInformation: p.additionalInformation,
+      lookingForwardNext: p.lookingForwardNext,
       publicSystemPrompt: p.publicSystemPrompt,
       recruiterSystemPrompt: p.recruiterSystemPrompt,
       tailorSystemPrompt: p.tailorSystemPrompt,
@@ -136,12 +150,28 @@ profileRouter.post("/profile", async (c) => {
   const missing = FIELDS.find((f) => f.required && values[f.name].trim() === "");
   if (missing) return reject(`${missing.label} is required`, missing.tab);
 
+  for (const { name, label } of PROFILE_TEXTS) {
+    values[name] = values[name].trim();
+    if ([...values[name]].length > MAX_PROFILE_TEXT)
+      return reject(`${label} is limited to ${MAX_PROFILE_TEXT} characters`, "career");
+  }
+
   const found = findPii(
-    `${values.headline}\n${values.summary}`,
+    [values.headline, values.summary, ...PROFILE_TEXTS.map((f) => values[f.name])].join("\n"),
     await c.var.services.personalInfo.allValues(),
   )[0];
   if (found)
     return reject(`Your ${found.label} is in the body — keep contact data in Personal info`);
+
+  const fullName = values.fullName.trim().toLowerCase();
+  const named = PROFILE_TEXTS.find(
+    (f) => fullName !== "" && values[f.name].toLowerCase().includes(fullName),
+  );
+  if (named)
+    return reject(
+      `Your full name is in ${named.in} — the Candidate is never named in prompts`,
+      "career",
+    );
 
   try {
     await c.var.services.profile.update(values);

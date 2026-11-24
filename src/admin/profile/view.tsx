@@ -7,6 +7,20 @@ export const FIELDS = [
   { name: "headline", label: "Headline", long: false, required: false, tab: "career" },
   { name: "summary", label: "Summary", long: true, required: false, tab: "career" },
   {
+    name: "additionalInformation",
+    label: "Additional information",
+    long: true,
+    required: false,
+    tab: "career",
+  },
+  {
+    name: "lookingForwardNext",
+    label: "Looking forward next",
+    long: true,
+    required: false,
+    tab: "career",
+  },
+  {
     name: "publicSystemPrompt",
     label: "Public system prompt",
     long: true,
