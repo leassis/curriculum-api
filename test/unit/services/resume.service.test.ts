@@ -1094,3 +1094,192 @@ describe("resume service v2 print", () => {
     );
   });
 });
+
+describe("resume service tracking fields", () => {
+  const tracking = {
+    jobLink: "https://jobs.example.com/acme/42",
+    recruiterName: "Grace Hopper",
+    notes: "Found on the Acme careers page; follow up Friday",
+  };
+
+  it("stores trimmed tracking fields on create and empty ones when absent", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const created = await resumes.create({
+      ...draft,
+      jobLink: `  ${tracking.jobLink} `,
+      recruiterName: ` ${tracking.recruiterName}\n`,
+      notes: `\t${tracking.notes}  `,
+    });
+    expect(created).toMatchObject(tracking);
+    expect(repo.rows[0]).toMatchObject(tracking);
+
+    const without = await resumes.create(draft);
+    expect(without).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+    expect(repo.rows[1]).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+
+    const blank = await resumes.create({
+      ...draft,
+      jobLink: "  ",
+      recruiterName: " ",
+      notes: "\n",
+    });
+    expect(blank).toMatchObject({ jobLink: "", recruiterName: "", notes: "" });
+  });
+
+  it("updates tracking fields without touching the document, model or assessment", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    const generated = await resumes.generate(id);
+    expect(generated.assessment).not.toBeNull();
+    const before = { ...(repo.rows[0] as (typeof repo.rows)[number]) };
+
+    const saved = await resumes.updateOptions(id, [], undefined, {
+      jobLink: ` ${tracking.jobLink} `,
+      recruiterName: ` ${tracking.recruiterName} `,
+      notes: ` ${tracking.notes} `,
+    });
+    expect(saved).toMatchObject(tracking);
+    expect(saved.document).toEqual(generated.document);
+    expect(saved.model).toBe(generated.model);
+    expect(saved.assessment).toEqual(generated.assessment);
+    expect(repo.rows[0]).toMatchObject({
+      ...tracking,
+      structured: before.structured,
+      model: before.model,
+      score: before.score,
+      scoreRationale: before.scoreRationale,
+      missingSkills: before.missingSkills,
+      omissions: before.omissions,
+    });
+  });
+
+  it("keeps a tracking field that the save omits", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create({ ...draft, ...tracking });
+    await resumes.updateOptions(id, [], undefined, { notes: "Second interview booked" });
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: tracking.jobLink,
+      recruiterName: tracking.recruiterName,
+      notes: "Second interview booked",
+    });
+    await resumes.updateOptions(id, [], "Be brief");
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: tracking.jobLink,
+      recruiterName: tracking.recruiterName,
+      notes: "Second interview booked",
+    });
+    await resumes.updateOptions(id, [], undefined, { jobLink: "", recruiterName: "  " });
+    expect(repo.rows[0]).toMatchObject({
+      jobLink: "",
+      recruiterName: "",
+      notes: "Second interview booked",
+    });
+  });
+
+  it("rejects a job link that is not http or https and stores nothing", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const message = "Job link must start with http:// or https://";
+    for (const jobLink of [
+      "jobs.example.com/42",
+      "ftp://jobs.example.com/42",
+      "javascript:alert(1)",
+      "mailto:hr@example.com",
+      "/relative/path",
+      "https//missing-colon.example.com",
+    ]) {
+      await expect(resumes.create({ ...draft, jobLink })).rejects.toMatchObject({
+        status: 400,
+        message,
+      });
+    }
+    expect(repo.rows).toHaveLength(0);
+
+    const { id } = await resumes.create({ ...draft, ...tracking, customInstructions: "kept" });
+    await expect(
+      resumes.updateOptions(id, [], "changed", {
+        jobLink: "ftp://jobs.example.com/42",
+        recruiterName: "Changed",
+        notes: "Changed",
+      }),
+    ).rejects.toMatchObject({ status: 400, message });
+    expect(repo.rows[0]).toMatchObject({ ...tracking, customInstructions: "kept" });
+
+    const http = await resumes.create({ ...draft, jobLink: "http://jobs.example.com/1" });
+    expect(http.jobLink).toBe("http://jobs.example.com/1");
+    const upper = await resumes.create({ ...draft, jobLink: "HTTPS://Jobs.Example.com/2" });
+    expect(upper.jobLink).toBe("HTTPS://Jobs.Example.com/2");
+  });
+
+  it("rejects over-length tracking fields and accepts the exact limits", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const link = (n: number) => `https://e.com/${"a".repeat(n - "https://e.com/".length)}`;
+    const cases = [
+      {
+        field: "jobLink",
+        max: link(2000),
+        over: link(2001),
+        message: "Job link is limited to 2000 characters",
+      },
+      {
+        field: "recruiterName",
+        max: "r".repeat(200),
+        over: "r".repeat(201),
+        message: "Recruiter name is limited to 200 characters",
+      },
+      {
+        field: "notes",
+        max: "n".repeat(10000),
+        over: "n".repeat(10001),
+        message: "Notes is limited to 10000 characters",
+      },
+    ];
+    for (const { field, over, message } of cases) {
+      await expect(resumes.create({ ...draft, [field]: ` ${over} ` })).rejects.toMatchObject({
+        status: 400,
+        message,
+      });
+    }
+    expect(repo.rows).toHaveLength(0);
+
+    const { id } = await resumes.create({ ...draft, ...tracking });
+    for (const { field, over, message } of cases) {
+      await expect(
+        resumes.updateOptions(id, [], undefined, { [field]: over }),
+      ).rejects.toMatchObject({ status: 400, message });
+    }
+    expect(repo.rows[0]).toMatchObject(tracking);
+
+    for (const { field, max } of cases) {
+      const created = await resumes.create({ ...draft, [field]: ` ${max} ` });
+      expect(created).toMatchObject({ [field]: max });
+      const saved = await resumes.updateOptions(id, [], undefined, { [field]: max });
+      expect(saved).toMatchObject({ [field]: max });
+    }
+  });
+
+  it("never sends tracking fields to the tailor model", async () => {
+    const { resumes, calls } = await resumeSetup();
+    const { id } = await resumes.create({ ...draft, ...tracking });
+    await resumes.generate(id);
+    await resumes.updateOptions(id, [], undefined, {
+      jobLink: "https://jobs.example.com/acme/43",
+      recruiterName: "Katherine Johnson",
+      notes: "Asked about remote work",
+    });
+    await resumes.generate(id, "Be brief");
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      const sent = `${call.system ?? ""}\n${call.prompt}`;
+      for (const secret of [
+        tracking.jobLink,
+        tracking.recruiterName,
+        tracking.notes,
+        "https://jobs.example.com/acme/43",
+        "Katherine Johnson",
+        "Asked about remote work",
+      ]) {
+        expect(sent).not.toContain(secret);
+      }
+    }
+  });
+});

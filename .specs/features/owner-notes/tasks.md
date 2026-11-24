@@ -143,9 +143,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C2, C4, C5, C8, C9, C10 (service) pass
-- [ ] Every existing `resume service` test passes unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C2, C4, C5, C8, C9, C10 (service) pass
+- [x] Every existing `resume service` test passes unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
