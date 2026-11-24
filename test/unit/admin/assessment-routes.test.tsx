@@ -55,6 +55,6 @@ describe("assessment panels", () => {
     expect(text[0]).toContain("Second rationale.");
     expect(text[1]).toContain("Haskell");
     expect(text.join(" ")).not.toContain("Terraform");
-    expect(second.indexOf('id="career-library"')).toBeLessThan(second.indexOf('id="assessment"'));
+    expect(second.indexOf('id="assessment"')).toBeLessThan(second.indexOf('id="career-library"'));
   });
 });

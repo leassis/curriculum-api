@@ -34,36 +34,134 @@ function setup(seed: boolean) {
       headers: { "content-type": "application/x-www-form-urlencoded", cookie: await cookie },
       body: new URLSearchParams(fields).toString(),
     });
-  const get = async () => app.request("/admin/profile", { headers: { cookie: await cookie } });
-  return { repo, personalInfo, post, get };
+  const postHtmx = async (fields: Record<string, string>) =>
+    app.request("/admin/profile", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        cookie: await cookie,
+        "HX-Request": "true",
+      },
+      body: new URLSearchParams(fields).toString(),
+    });
+  const get = async (query = "") =>
+    app.request(`/admin/profile${query}`, { headers: { cookie: await cookie } });
+  return { repo, personalInfo, post, postHtmx, get };
 }
 
 describe("admin profile", () => {
-  it("prefills the form", async () => {
+  const careerFields = ["fullName", "headline", "summary"];
+  const promptFields = ["publicSystemPrompt", "recruiterSystemPrompt", "tailorSystemPrompt"];
+
+  it("shows the career tab by default, without the prompts", async () => {
     const { get } = setup(true);
     const html = await (await get()).text();
-    for (const name of [
-      "fullName",
-      "headline",
-      "summary",
-      "publicSystemPrompt",
-      "recruiterSystemPrompt",
-      "tailorSystemPrompt",
-    ]) {
-      expect(html).toContain(`name="${name}"`);
-    }
+    for (const name of careerFields) expect(html).toContain(`name="${name}"`);
+    for (const name of promptFields) expect(html).not.toContain(`name="${name}"`);
     expect(html).toContain('value="Ada Lovelace"');
     expect(html).toContain("Built engines");
+    expect(html).toContain('id="career-library"');
+    expect(html).toMatch(/href="\/admin\/profile\?tab=career" aria-selected="true"/);
+    expect(html).toMatch(/href="\/admin\/profile\?tab=ai" aria-selected="false"/);
+    expect(html).toContain('name="tab" value="career"');
+  });
+
+  it("shows the prompts on the AI tab, without career content", async () => {
+    const { get } = setup(true);
+    const html = await (await get("?tab=ai")).text();
+    for (const name of promptFields) expect(html).toContain(`name="${name}"`);
+    for (const name of careerFields) expect(html).not.toContain(`name="${name}"`);
     expect(html).toContain(">p</textarea>");
     expect(html).toContain(">r</textarea>");
     expect(html).toContain(">t</textarea>");
+    expect(html).not.toContain('id="career-library"');
+    expect(html).not.toContain("career.js");
+    expect(html).toMatch(/href="\/admin\/profile\?tab=ai" aria-selected="true"/);
+  });
+
+  it("saves only the career fields and keeps the stored prompts", async () => {
+    const { post, get, repo } = setup(true);
+    const res = await post({
+      tab: "career",
+      fullName: "Ada",
+      headline: "Mathematician",
+      summary: "Notes on engines",
+    });
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe("/admin/profile?tab=career&saved=1");
+    const html = await (await get("?tab=career&saved=1")).text();
+    expect(html).toContain("Saved");
+    expect(html).toContain('data-toast="success"');
+    expect(html).toMatch(/tab=career" aria-selected="true"/);
+    expect(await (await get("?tab=career")).text()).not.toContain('data-toast="success"');
+    expect(repo.upserts).toHaveLength(1);
+    expect(repo.row).toMatchObject({
+      headline: "Mathematician",
+      summary: "Notes on engines",
+      publicSystemPrompt: full.publicSystemPrompt,
+      recruiterSystemPrompt: full.recruiterSystemPrompt,
+      tailorSystemPrompt: full.tailorSystemPrompt,
+    });
+  });
+
+  it("answers an htmx save with only the form fragment and the Saved marker", async () => {
+    const { postHtmx, repo } = setup(true);
+    const res = await postHtmx({ ...full, tab: "career", headline: "Mathematician" });
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).not.toContain("<html");
+    expect(html).toContain('id="profile-form"');
+    expect(html).toContain('hx-target="#profile-form"');
+    expect(html).toMatch(/role="status"[^>]*data-toast="success"/);
+    expect(html).toContain('value="Mathematician"');
+    expect(repo.row).toMatchObject({ headline: "Mathematician" });
+  });
+
+  it("answers an htmx rejection with a 400 form fragment keeping the entered values", async () => {
+    const { postHtmx, repo } = setup(true);
+    const res = await postHtmx({
+      tab: "ai",
+      publicSystemPrompt: "",
+      recruiterSystemPrompt: "Kept",
+      tailorSystemPrompt: "t2",
+    });
+    expect(res.status).toBe(400);
+    const html = await res.text();
+    expect(html).not.toContain("<html");
+    expect(html).toContain('id="profile-form"');
+    expect(html).toMatch(/role="alert"[^>]*data-toast="error"/);
+    expect(html).toContain(">Kept</textarea>");
+    expect(html).not.toContain('data-toast="success"');
+    expect(repo.upserts).toHaveLength(0);
+  });
+
+  it("saves only the prompts and keeps the career content", async () => {
+    const { post, get, repo } = setup(true);
+    const res = await post({
+      tab: "ai",
+      publicSystemPrompt: "p2",
+      recruiterSystemPrompt: "r2",
+      tailorSystemPrompt: "t2",
+    });
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe("/admin/profile?tab=ai&saved=1");
+    expect(await (await get("?tab=ai&saved=1")).text()).toMatch(/tab=ai" aria-selected="true"/);
+    expect(repo.row).toMatchObject({
+      fullName: "Ada Lovelace",
+      headline: "Analyst",
+      summary: "Built engines",
+      publicSystemPrompt: "p2",
+      recruiterSystemPrompt: "r2",
+      tailorSystemPrompt: "t2",
+    });
   });
 
   it("saves valid fields and shows Saved", async () => {
-    const { post, repo } = setup(true);
+    const { post, get, repo } = setup(true);
     const res = await post({ ...full, headline: "Mathematician" });
-    expect(res.status).toBe(200);
-    expect(await res.text()).toContain("Saved");
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toContain("saved=1");
+    expect(await (await get("?saved=1")).text()).toContain("Saved");
     expect(repo.upserts).toHaveLength(1);
     expect(repo.upserts[0]?.headline).toBe("Mathematician");
   });
@@ -74,7 +172,8 @@ describe("admin profile", () => {
     expect(res.status).toBe(400);
     const html = await res.text();
     expect(html).toContain("Recruiter system prompt is required");
-    expect(html).toContain("Built engines");
+    expect(html).toMatch(/tab=ai" aria-selected="true"/);
+    expect(html).toContain('name="recruiterSystemPrompt"');
     expect(repo.upserts).toHaveLength(0);
   });
 
@@ -102,7 +201,7 @@ describe("admin profile", () => {
       value: "Lisbon",
       visibility: "public",
     });
-    expect((await post({ ...full, summary: "Lives in Porto" })).status).toBe(200);
+    expect((await post({ ...full, summary: "Lives in Porto" })).status).toBe(303);
     await personalInfo.update("CITY", { value: "Porto" });
     const res = await post({ ...full, summary: "Lives in Porto" });
     expect(res.status).toBe(400);

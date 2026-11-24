@@ -233,6 +233,39 @@ export class RecruiterChatService {
     }
   }
 
+  /**
+   * The Owner's test of the recruiter assistant: the recruiter prompt over the Career Library, with
+   * no link, no quota and no transcript.
+   */
+  async test(messages: ChatMessage[]): Promise<ReadableStream<string>> {
+    const [maxHistory, maxChars] = await Promise.all([
+      this.settings.limit("maxHistoryMessages"),
+      this.settings.limit("maxQuestionChars"),
+    ]);
+    const last = messages.at(-1);
+    const total = messages.reduce((sum, m) => sum + [...m.content].length, 0);
+    if (
+      messages.length < 1 ||
+      messages.length > maxHistory ||
+      last?.role !== "user" ||
+      last.content.trim() === "" ||
+      [...last.content].length > maxChars ||
+      total > maxChars * maxHistory
+    ) {
+      throw new ValidationError("Invalid request body");
+    }
+    const profile = await this.profile.get();
+    const content = await this.libraryBody(profile);
+    const { stream } = await this.llm.stream({
+      area: "recruiter",
+      system: profile.recruiterSystemPrompt,
+      body: content.trim() === "" ? EMPTY_CV : content,
+      messages: wrapUserMessages(messages, "RECRUITER_MESSAGE"),
+      maxOutputTokens: await this.settings.limit("recruiterMaxOutputTokens"),
+    });
+    return stream;
+  }
+
   /** The chat and its messages, oldest first; NotFound for an unknown or malformed id. */
   async transcript(id: string): Promise<Transcript> {
     const row = UUID.test(id) ? await this.chats.findById(id) : null;

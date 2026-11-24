@@ -1,4 +1,4 @@
-import { type CardView, CareerCards, type FormView } from "../career/view.js";
+import { type CardView, CareerCards, type FormView, Icon } from "../career/view.js";
 import { Layout, PageHeader } from "../layout.js";
 
 /** The slice of a tailored resume the pages show. */
@@ -15,6 +15,8 @@ export interface ResumeView {
   document: { headline: string; summary: string } | null;
   /** The stored document failed its schema. */
   invalid: boolean;
+  /** The last assessment's score (0-100); null or absent when not assessed yet. */
+  score?: number | null;
 }
 
 /** The last generation's assessment, with the band label already resolved by the route. */
@@ -36,6 +38,29 @@ export interface HeaderOption {
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
+/** A rounded track filled to the score, then the score as a percentage; a muted dash when not assessed. */
+export const ScoreBar = ({ score }: { score: number | null | undefined }) => {
+  if (score === null || score === undefined) {
+    return (
+      <span class="muted">
+        <span aria-hidden="true">—</span>
+        <span class="sr-only">Not assessed</span>
+      </span>
+    );
+  }
+  const pct = Math.max(0, Math.min(100, Math.round(score)));
+  return (
+    <span class="score">
+      <span class="score-track" aria-hidden="true">
+        <span class="score-fill" style={`width: ${pct}%`} />
+      </span>
+      <span class="score-value">
+        {pct}%<span class="sr-only"> match score</span>
+      </span>
+    </span>
+  );
+};
+
 const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView }) => {
   const url = `${basePath}/admin/resumes/${resume.id}`;
   return (
@@ -46,18 +71,21 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
         </a>
       </td>
       <td>{resume.company ?? ""}</td>
-      <td class="mono muted">{resume.model ?? ""}</td>
       <td class="muted">{day(resume.updatedAt)}</td>
+      <td>
+        <ScoreBar score={resume.score} />
+      </td>
       <td>
         <button
           type="button"
-          class="btn-ghost btn-sm btn-danger"
+          class="career-icon career-danger"
+          aria-label={`Delete ${resume.title}`}
           hx-delete={url}
           hx-confirm={`Delete ${resume.title}?`}
           hx-target="closest tr"
           hx-swap="outerHTML"
         >
-          Delete
+          <Icon name="remove" />
         </button>
       </td>
     </tr>
@@ -88,9 +116,11 @@ export const ResumesPage = ({
             <tr>
               <th>Title</th>
               <th>Company</th>
-              <th>Model</th>
               <th>Updated</th>
-              <th />
+              <th>Score</th>
+              <th>
+                <span class="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +229,7 @@ const HeaderCard = ({
         </textarea>
       </div>
       {error ? (
-        <div class="error career-wide" role="alert">
+        <div class="error career-wide" role="alert" data-toast="error">
           {error}
         </div>
       ) : null}
@@ -242,7 +272,7 @@ export const ResumeCards = ({
   return (
     <CareerCards cards={cards} url={`${url}/items`} leftOutUrl={`${url}/left-out`} form={form}>
       {leftOutError ? (
-        <div class="error" role="alert">
+        <div class="error" role="alert" data-toast="error">
           {leftOutError}
         </div>
       ) : null}
@@ -267,7 +297,7 @@ export const AssessmentPanels = ({ assessment }: { assessment: AssessmentView | 
     );
   }
   return (
-    <div class="flex flex-col gap-6" id="assessment">
+    <div class="assessment-grid" id="assessment">
       <article class="card-pad">
         <h2 class="section-title">Why this score</h2>
         <p>
@@ -409,8 +439,8 @@ export const Editor = ({
             {error && <span class="text-danger">{error}</span>}
           </p>
         </form>
-        <ResumeCards basePath={basePath} resume={resume} fullName={fullName} cards={cards} />
         <AssessmentPanels assessment={assessment} />
+        <ResumeCards basePath={basePath} resume={resume} fullName={fullName} cards={cards} />
       </div>
     </div>
   );

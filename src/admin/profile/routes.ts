@@ -12,7 +12,9 @@ import {
   ImportForm,
   LibraryCards,
   MarkdownEditor,
+  ProfileForm,
   ProfilePage,
+  type Tab,
   type Values,
 } from "./view.js";
 
@@ -51,6 +53,10 @@ async function currentCards(c: Ctx) {
 
 async function cardsFragment(c: Ctx, form?: FormView) {
   return LibraryCards({ basePath: c.var.config.basePath, cards: await currentCards(c), form });
+}
+
+function tabOf(value: unknown): Tab {
+  return value === "ai" ? "ai" : "career";
 }
 
 function kindOf(value: unknown): Kind {
@@ -98,6 +104,8 @@ profileRouter.get("/profile", async (c) =>
       basePath: c.var.config.basePath,
       values: await currentValues(c),
       cards: await currentCards(c),
+      tab: tabOf(c.req.query("tab")),
+      saved: c.req.query("saved") === "1",
     }),
   ),
 );
@@ -109,16 +117,24 @@ profileRouter.get("/profile/career.js", (c) =>
 profileRouter.post("/profile", async (c) => {
   const basePath = c.var.config.basePath;
   const body = await c.req.parseBody();
-  const values = { ...EMPTY };
+  // Each tab posts only its own fields; the rest keep their stored values.
+  const values = await currentValues(c);
   for (const f of FIELDS) {
     const raw = body[f.name];
-    values[f.name] = typeof raw === "string" ? raw : "";
+    if (typeof raw === "string") values[f.name] = raw;
   }
-  const reject = async (message: string) =>
-    c.html(ProfilePage({ basePath, values, cards: await currentCards(c), error: message }), 400);
+  const tab = tabOf(body.tab);
+  const htmx = c.req.header("HX-Request") === "true";
+  const reject = async (message: string, on: Tab = tab) =>
+    htmx
+      ? c.html(ProfileForm({ basePath, values, tab, error: message }), 400)
+      : c.html(
+          ProfilePage({ basePath, values, cards: await currentCards(c), tab: on, error: message }),
+          400,
+        );
 
   const missing = FIELDS.find((f) => f.required && values[f.name].trim() === "");
-  if (missing) return reject(`${missing.label} is required`);
+  if (missing) return reject(`${missing.label} is required`, missing.tab);
 
   const found = findPii(
     `${values.headline}\n${values.summary}`,
@@ -133,7 +149,10 @@ profileRouter.post("/profile", async (c) => {
     if (error instanceof ValidationError) return reject(error.message);
     throw error;
   }
-  return c.html(ProfilePage({ basePath, values, cards: await currentCards(c), saved: true }));
+  // htmx swaps just the form (with the "Saved" toast marker); a plain POST uses Post/Redirect/Get
+  // so a refresh does not resubmit.
+  if (htmx) return c.html(ProfileForm({ basePath, values, tab, saved: true }));
+  return c.redirect(`${basePath}/admin/profile?tab=${tab}&saved=1`, 303);
 });
 
 profileRouter.get("/profile/items", async (c) => c.html(await cardsFragment(c)));

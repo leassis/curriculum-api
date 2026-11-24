@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { signSession } from "../../../src/security/session";
-import { recruiterApp } from "../../support/recruiter-chat";
+import { EMAIL, RECRUITER_PROMPT, recruiterApp } from "../../support/recruiter-chat";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const ids = [MISSING, "not-a-uuid"];
@@ -21,7 +21,13 @@ async function adminChats() {
       body: fields ? new URLSearchParams(fields).toString() : undefined,
     });
   const form = { recruiterName: "Jane Roe", company: "Acme", maxQuestions: "10" };
-  return { ...s, send, form, get: (path: string) => send("GET", path) };
+  return {
+    ...s,
+    send,
+    form,
+    cookie: `curr_admin=${admin}`,
+    get: (path: string) => send("GET", path),
+  };
 }
 
 describe("admin chats", () => {
@@ -150,5 +156,57 @@ describe("admin chats", () => {
         expect(await res.text()).toContain('role="alert"');
       }
     }
+  });
+
+  it("splits the page and shows the test panel on the right", async () => {
+    const s = await adminChats();
+    const html = await (await s.get("/admin/chats")).text();
+    expect(html).toContain('class="chats-split"');
+    expect(html).toContain('data-url="/admin/chats/test"');
+    expect(html).toContain("Test the assistant");
+    expect(html).toContain('placeholder="Ask like a recruiter..."');
+  });
+
+  it("streams a test answer with the recruiter prompt, counting and storing nothing", async () => {
+    const s = await adminChats();
+    const chat = await s.newChat({ maxQuestions: 10 });
+    const messages = [{ role: "user", content: `What is his strongest area? ${EMAIL}` }];
+    const res = await s.app.request("/admin/chats/test", {
+      method: "POST",
+      headers: { cookie: s.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("Hello world");
+    expect(s.calls).toHaveLength(1);
+    expect(s.calls[0]?.system).toContain(RECRUITER_PROMPT);
+    expect(s.calls[0]?.prompt).not.toContain(EMAIL);
+    const row = s.repo.rows.find((r) => r.id === chat.id);
+    expect(row?.used).toBe(0);
+    expect((await s.recruiterChat.transcript(chat.id)).messages).toHaveLength(0);
+  });
+
+  it("rejects an empty or malformed test request", async () => {
+    const s = await adminChats();
+    for (const body of ["nope", JSON.stringify({ messages: [] })]) {
+      const res = await s.app.request("/admin/chats/test", {
+        method: "POST",
+        headers: { cookie: s.cookie, "content-type": "application/json" },
+        body,
+      });
+      expect(res.status).toBe(400);
+    }
+    expect(s.calls).toHaveLength(0);
+  });
+
+  it("shows public questions today and active recruiter chats below the test panel", async () => {
+    const s = await adminChats();
+    s.loginAttempts.dashboard = { activeChats: 3, resumes: 9, publicQuestionsToday: 7 };
+    const html = await (await s.get("/admin/chats")).text();
+    const side = html.slice(html.indexOf('class="chats-side"'));
+    expect(side.indexOf("Test the assistant")).toBeLessThan(side.indexOf("Public questions today"));
+    expect(side).toContain('<dd id="public-questions">7</dd>');
+    expect(side).toContain('<dd id="active-chats">3</dd>');
+    expect(side).not.toContain("Tailored resumes");
   });
 });

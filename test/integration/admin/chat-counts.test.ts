@@ -8,26 +8,26 @@ import { createTestApp } from "../../support/test-app";
 
 const db = testDb();
 
-async function dashboard() {
+async function counts() {
   const { app } = createTestApp();
   const token = await signSession({ scope: "admin" }, resolvedConfig().sessionSecret, 60);
-  const res = await app.request("/admin", { headers: { cookie: `curr_admin=${token}` } });
+  const res = await app.request("/admin/chats", { headers: { cookie: `curr_admin=${token}` } });
   expect(res.status).toBe(200);
   const html = await res.text();
   const read = (id: string) => new RegExp(`id="${id}">(\\d+)<`).exec(html)?.[1];
-  return { chats: read("active-chats"), resumes: read("resumes"), usage: read("public-questions") };
+  return { chats: read("active-chats"), usage: read("public-questions") };
 }
 
-describe("admin dashboard", () => {
+describe("admin chats counts", () => {
   beforeEach(async () => {
     await resetDb(db);
   });
 
   it("shows zero for each count when empty", async () => {
-    expect(await dashboard()).toEqual({ chats: "0", resumes: "0", usage: "0" });
+    expect(await counts()).toEqual({ chats: "0", usage: "0" });
   });
 
-  it("shows active chats, resumes and usage today", async () => {
+  it("shows active chats and usage today", async () => {
     const chat = (token: string, extra: Partial<typeof recruiterChats.$inferInsert> = {}) => ({
       token,
       recruiterName: "R",
@@ -49,6 +49,6 @@ describe("admin dashboard", () => {
       { ipHash: "h2", day: sql`current_date`, used: 1 },
       { ipHash: "h3", day: sql`current_date - 1`, used: 50 },
     ]);
-    expect(await dashboard()).toEqual({ chats: "2", resumes: "3", usage: "4" });
+    expect(await counts()).toEqual({ chats: "2", usage: "4" });
   });
 });

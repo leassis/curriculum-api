@@ -19,6 +19,7 @@ export const CLIENTS = [
   { page: "personal-info", name: "UI_JS" },
   { page: "print", name: "PRINT_JS" },
   { page: "resumes", name: "EDITOR_JS" },
+  { page: "toast", name: "TOAST_JS" },
 ] as const;
 
 /** Generated file path (relative to the repo root) and its expected content, per client. */

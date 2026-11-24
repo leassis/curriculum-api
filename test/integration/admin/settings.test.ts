@@ -43,10 +43,10 @@ describe("admin settings with database", () => {
     };
 
     expect(await ask()).toBe("cfg/public");
-    expect((await save("x/y")).status).toBe(200);
+    expect((await save("x/y")).status).toBe(303);
     expect(await ask()).toBe("x/y");
     expect(calls.at(-1)?.modelId).toBe("x/y");
-    expect((await save("")).status).toBe(200);
+    expect((await save("")).status).toBe(303);
     expect(await ask()).toBe("cfg/public");
   });
 });

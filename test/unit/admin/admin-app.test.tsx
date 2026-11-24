@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { dashboardRouter } from "../../../src/admin/dashboard/routes";
 import { Layout } from "../../../src/admin/layout";
 import { profileRouter } from "../../../src/admin/profile/routes";
 import htmx from "../../../src/admin/static/htmx.generated";
 import { signSession } from "../../../src/security/session";
 import { NotFoundError } from "../../../src/services/errors";
+import { item } from "../../support/career";
+import { careerSetup } from "../../support/career-service";
 import { createTestApp } from "../../support/test-app";
 
 const { app, config } = createTestApp({ config: { basePath: "" } });
@@ -16,10 +17,10 @@ profileRouter.post("/__csrf", (c) => {
   handled();
   return c.text("ran");
 });
-dashboardRouter.get("/__domain-error", () => {
+profileRouter.get("/__domain-error", () => {
   throw new NotFoundError("Resume 42 is missing");
 });
-dashboardRouter.get("/__unknown-error", () => {
+profileRouter.get("/__unknown-error", () => {
   throw new Error("stack secret: password=hunter2");
 });
 
@@ -82,23 +83,39 @@ describe("admin shell", () => {
 
   it("layout renders navigation and logout", () => {
     const html = String(
-      <Layout title="Dashboard" basePath="/x">
+      <Layout title="Profile" basePath="/x">
         <p>content</p>
       </Layout>,
     );
     for (const [label, path] of [
-      ["Dashboard", "/x/admin"],
       ["Profile", "/x/admin/profile"],
       ["Settings", "/x/admin/settings"],
       ["Personal info", "/x/admin/personal-info"],
       ["Resumes", "/x/admin/resumes"],
       ["Chats", "/x/admin/chats"],
     ] as const) {
-      expect(html).toContain(`<a href="${path}">${label}</a>`);
+      expect(html).toMatch(
+        new RegExp(
+          `<a href="${path}"><svg [^>]*aria-hidden="true"[^>]*>(?:<path [^>]*></path>)+</svg>${label}</a>`,
+        ),
+      );
     }
     expect(html).toMatch(/<form method="post" action="\/x\/admin\/logout">/);
     expect(html).toContain("Logout");
     expect(html).toContain('src="/x/admin/static/htmx.min.js"');
     expect(html).toContain("<p>content</p>");
+    expect(html).not.toContain("Dashboard");
+  });
+
+  it.each([
+    ["filled", [item("experience")], "/x/admin/resumes"],
+    ["empty", [], "/x/admin/profile"],
+  ])("redirects the admin root when the Career Body is %s", async (_, items, location) => {
+    const { career } = careerSetup({ items });
+    const root = createTestApp({ config: { basePath: "/x" }, services: { career } });
+    const cookie = `curr_admin=${await signSession({ scope: "admin" }, root.config.sessionSecret, 60)}`;
+    const res = await root.app.request("/x/admin", { headers: { cookie } });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(location);
   });
 });

@@ -56,7 +56,7 @@ const cards = (html: string) =>
   sections(html).filter((c) => /^(Experience|Projects)/.test(c.title));
 
 describe("admin resumes", () => {
-  it("lists resumes newest first with links, company, model and date", async () => {
+  it("lists resumes newest first with links, company and date", async () => {
     const { get, resumes, repo } = await resumeApp();
     const first = await resumes.create({ ...newResume, title: "Older <b>one</b>" });
     const second = await resumes.create({ ...newResume, title: "Newer", company: "Globex" });
@@ -67,7 +67,7 @@ describe("admin resumes", () => {
     expect(html).toContain(`href="/admin/resumes/${second.id}"`);
     expect(html).toContain(`href="/admin/resumes/${first.id}"`);
     expect(html).toContain("Globex");
-    expect(html).toContain("vendor/tailor");
+    expect(html).not.toContain("vendor/tailor");
     expect(html).toContain("2026-01-01");
     expect(html).toContain("Older &lt;b&gt;one&lt;/b&gt;");
     expect(html).not.toContain("No tailored resumes yet");
@@ -159,6 +159,26 @@ describe("admin resumes", () => {
     expect(html).toContain("Staff Engineer");
     expect(html).toContain("Header");
     expect(html).not.toMatch(/name="sections\./);
+  });
+
+  it("shows the three assessment cards side by side above the Header card", async () => {
+    const { page } = await generated();
+    const html = await page();
+    const grid = tags(
+      html.slice(html.lastIndexOf("<div", html.indexOf('id="assessment"'))),
+      "div",
+    )[0];
+    expect(grid?.attrs.id).toBe("assessment");
+    expect(grid?.attrs.class).toBe("assessment-grid");
+    const titles = ["Why this score", "Missing skills", "What was left out"];
+    const inGrid = tags(grid?.html ?? "", "article").map((a) => a.html);
+    expect(inGrid).toHaveLength(3);
+    titles.forEach((title, i) => {
+      expect(inGrid[i]).toContain(title);
+    });
+    const header = html.indexOf('class="career-title">Header<');
+    expect(header).toBeGreaterThan(-1);
+    for (const title of titles) expect(html.indexOf(title)).toBeLessThan(header);
   });
 
   it("shows the empty state until the resume is generated", async () => {

@@ -37,7 +37,10 @@ resumesRouter.get("/resumes", async (c) =>
   c.html(
     ResumesPage({
       basePath: c.var.config.basePath,
-      resumes: await c.var.services.resumes.list(),
+      resumes: (await c.var.services.resumes.list()).map((resume) => ({
+        ...resume,
+        score: resume.assessment?.score ?? null,
+      })),
       options: await c.var.services.resumes.headerOptions(),
     }),
   ),
@@ -127,7 +130,7 @@ resumesRouter.post("/resumes/:id/generate", async (c) => {
     return c.html(Editor(await editor(c, resume)));
   } catch (error) {
     if (error instanceof LlmUnavailableError) {
-      return c.html(ErrorFragment({ message: "Generation failed, try again" }), 503);
+      return c.html(ErrorFragment({ message: "Generation failed, try again", toast: true }), 503);
     }
     throw error;
   }

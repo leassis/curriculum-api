@@ -1,7 +1,6 @@
 import type { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { chatsRouter } from "../../../src/admin/chats/routes";
-import { dashboardRouter } from "../../../src/admin/dashboard/routes";
 import { loginRouter } from "../../../src/admin/login/routes";
 import { personalInfoRouter } from "../../../src/admin/personal-info/routes";
 import { printRouter } from "../../../src/admin/print/routes";
@@ -15,7 +14,6 @@ import { createTestApp } from "../../support/test-app";
 
 const adminRouters: [string, Hono<never>][] = [
   ["login", loginRouter],
-  ["dashboard", dashboardRouter],
   ["profile", profileRouter],
   ["settings", settingsRouter],
   ["personal-info", personalInfoRouter],

@@ -8,7 +8,6 @@ import { DomainError, ForbiddenError } from "../services/errors.js";
 import { chatPageRouter } from "./chat-page/routes.js";
 import { messagesRouter } from "./chats/messages/routes.js";
 import { chatsRouter } from "./chats/routes.js";
-import { dashboardRouter } from "./dashboard/routes.js";
 import { ErrorFragment } from "./error-fragment.js";
 import { loginRouter } from "./login/routes.js";
 import { personalInfoRouter } from "./personal-info/routes.js";
@@ -19,6 +18,7 @@ import { settingsRouter } from "./settings/routes.js";
 import adminCss from "./static/admin-css.generated.js";
 import { FONTS } from "./static/fonts.generated.js";
 import htmx from "./static/htmx.generated.js";
+import { TOAST_JS } from "./static/toast-js.generated.js";
 
 const decodedFonts = new Map<string, Uint8Array<ArrayBuffer>>();
 
@@ -55,10 +55,10 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
     if (error instanceof DomainError) {
       const message = error.status >= 500 ? "Something went wrong" : error.message;
       if (error.status >= 500) console.error(error);
-      return c.html(<ErrorFragment message={message} />, error.status as 400);
+      return c.html(<ErrorFragment message={message} toast />, error.status as 400);
     }
     console.error(error);
-    return c.html(<ErrorFragment message="Something went wrong" />, 500);
+    return c.html(<ErrorFragment message="Something went wrong" toast />, 500);
   });
 
   admin.use("*", async (c, next) => {
@@ -69,6 +69,12 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
   admin.use("*", sameOrigin);
   admin.get("/static/htmx.min.js", (c) =>
     c.body(htmx, 200, {
+      "Content-Type": "text/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    }),
+  );
+  admin.get("/static/toast.js", (c) =>
+    c.body(TOAST_JS, 200, {
       "Content-Type": "text/javascript; charset=utf-8",
       "Cache-Control": "public, max-age=31536000, immutable",
     }),
@@ -90,7 +96,11 @@ export function adminRouter(config: ResolvedConfig, services: Services): Hono<En
   admin.use("*", requireAdmin);
 
   admin.route("/", loginRouter);
-  admin.route("/", dashboardRouter);
+  // The admin root has no page: it opens Resumes once the Career Body has content, else Profile.
+  admin.get("/", async (c) => {
+    const filled = (await c.var.services.career.library()).items.length > 0;
+    return c.redirect(`${config.basePath}/admin/${filled ? "resumes" : "profile"}`, 302);
+  });
   admin.route("/", profileRouter);
   admin.route("/", settingsRouter);
   admin.route("/", personalInfoRouter);

@@ -3,13 +3,55 @@ import { ErrorFragment } from "../error-fragment.js";
 import { Layout, PageHeader } from "../layout.js";
 
 export const FIELDS = [
-  { name: "fullName", label: "Full name", long: false, required: false },
-  { name: "headline", label: "Headline", long: false, required: false },
-  { name: "summary", label: "Summary", long: true, required: false },
-  { name: "publicSystemPrompt", label: "Public system prompt", long: true, required: true },
-  { name: "recruiterSystemPrompt", label: "Recruiter system prompt", long: true, required: true },
-  { name: "tailorSystemPrompt", label: "Tailor system prompt", long: true, required: true },
+  { name: "fullName", label: "Full name", long: false, required: false, tab: "career" },
+  { name: "headline", label: "Headline", long: false, required: false, tab: "career" },
+  { name: "summary", label: "Summary", long: true, required: false, tab: "career" },
+  {
+    name: "publicSystemPrompt",
+    label: "Public system prompt",
+    long: true,
+    required: true,
+    tab: "ai",
+  },
+  {
+    name: "recruiterSystemPrompt",
+    label: "Recruiter system prompt",
+    long: true,
+    required: true,
+    tab: "ai",
+  },
+  {
+    name: "tailorSystemPrompt",
+    label: "Tailor system prompt",
+    long: true,
+    required: true,
+    tab: "ai",
+  },
 ] as const;
+
+export type Tab = "career" | "ai";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "career", label: "Career content" },
+  { id: "ai", label: "AI behaviour" },
+];
+
+/** Server-rendered tabs: each is a plain link to `?tab=…`, no client script. */
+export const ProfileTabs = ({ basePath, active }: { basePath: string; active: Tab }) => (
+  <div class="tabs" role="tablist" aria-label="Profile sections">
+    {TABS.map((t) => (
+      <a
+        class="tab"
+        role="tab"
+        href={`${basePath}/admin/profile?tab=${t.id}`}
+        aria-selected={t.id === active ? "true" : "false"}
+        aria-current={t.id === active ? "page" : undefined}
+      >
+        {t.label}
+      </a>
+    ))}
+  </div>
+);
 
 export type FieldName = (typeof FIELDS)[number]["name"];
 export type Values = Record<FieldName, string>;
@@ -72,7 +114,7 @@ export const MarkdownEditor = ({
       <textarea class="input mono" id="career-markdown" name="markdown" rows={28}>
         {markdown}
       </textarea>
-      {error ? <ErrorFragment message={error} /> : null}
+      {error ? <ErrorFragment message={error} toast /> : null}
       <Actions cancel={`${basePath}/admin/profile/items`} submit="Save" />
     </form>
   </div>
@@ -101,7 +143,7 @@ export const ImportForm = ({
       <textarea class="input" id="career-import" name="text" rows={20}>
         {text}
       </textarea>
-      {error ? <ErrorFragment message={error} /> : null}
+      {error ? <ErrorFragment message={error} toast /> : null}
       <div class="career-actions">
         <span id="import-indicator" class="htmx-indicator muted">
           Converting…
@@ -117,16 +159,72 @@ export const ImportForm = ({
   </div>
 );
 
+/** The profile form card; swapped in place by htmx (`#profile-form`, outerHTML). */
+export const ProfileForm = ({
+  basePath,
+  values,
+  tab,
+  error,
+  saved,
+}: {
+  basePath: string;
+  values: Values;
+  tab: Tab;
+  error?: string;
+  saved?: boolean;
+}) => (
+  <form
+    id="profile-form"
+    class="card-pad"
+    method="post"
+    action={`${basePath}/admin/profile`}
+    hx-post={`${basePath}/admin/profile`}
+    hx-target="#profile-form"
+    hx-swap="outerHTML"
+    hx-disabled-elt="find button[type=submit]"
+    data-swap-errors
+  >
+    {error ? <ErrorFragment message={error} toast /> : null}
+    {saved ? (
+      <p class="status" role="status" data-toast="success">
+        Saved
+      </p>
+    ) : null}
+    <input type="hidden" name="tab" value={tab} />
+    {FIELDS.filter((f) => f.tab === tab).map((f) => (
+      <div class="field">
+        <label class="field-label" for={f.name}>
+          {f.label}
+        </label>
+        {f.long ? (
+          <textarea class="input" id={f.name} name={f.name} rows={f.name === "summary" ? 5 : 8}>
+            {values[f.name]}
+          </textarea>
+        ) : (
+          <input class="input" id={f.name} type="text" name={f.name} value={values[f.name]} />
+        )}
+      </div>
+    ))}
+    <div class="actions">
+      <button type="submit" class="btn">
+        Save
+      </button>
+    </div>
+  </form>
+);
+
 export const ProfilePage = ({
   basePath,
   values,
   cards,
+  tab,
   error,
   saved,
 }: {
   basePath: string;
   values: Values;
   cards: CardView[];
+  tab: Tab;
   error?: string;
   saved?: boolean;
 }) => (
@@ -134,36 +232,15 @@ export const ProfilePage = ({
     <PageHeader
       eyebrow="Profile"
       title="Profile"
-      sub="Your career history and the prompts the AI follows. Contact data lives in Personal info."
+      sub="What the AI knows about you, and how it talks about it. Contact data lives in Personal info."
     />
-    {error ? <ErrorFragment message={error} /> : null}
-    {saved ? (
-      <p class="status" role="status">
-        Saved
-      </p>
+    <ProfileTabs basePath={basePath} active={tab} />
+    <ProfileForm basePath={basePath} values={values} tab={tab} error={error} saved={saved} />
+    {tab === "career" ? (
+      <>
+        <LibraryCards basePath={basePath} cards={cards} />
+        <script src={`${basePath}/admin/profile/career.js`} />
+      </>
     ) : null}
-    <form class="card-pad" method="post" action={`${basePath}/admin/profile`}>
-      {FIELDS.map((f) => (
-        <div class="field">
-          <label class="field-label" for={f.name}>
-            {f.label}
-          </label>
-          {f.long ? (
-            <textarea class="input" id={f.name} name={f.name} rows={f.name === "summary" ? 5 : 8}>
-              {values[f.name]}
-            </textarea>
-          ) : (
-            <input class="input" id={f.name} type="text" name={f.name} value={values[f.name]} />
-          )}
-        </div>
-      ))}
-      <div class="actions">
-        <button type="submit" class="btn">
-          Save
-        </button>
-      </div>
-    </form>
-    <LibraryCards basePath={basePath} cards={cards} />
-    <script src={`${basePath}/admin/profile/career.js`} />
   </Layout>
 );

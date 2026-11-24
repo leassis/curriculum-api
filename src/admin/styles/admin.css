@@ -5,6 +5,7 @@
  * Tokens: see design-system/tokens.json.
  */
 @import "tailwindcss" source(none);
+@import "notyf/notyf.min.css";
 
 @source "../";
 @source not "../static";
@@ -138,9 +139,11 @@
     @apply flex flex-col gap-1;
   }
   .sidebar nav a {
-    @apply flex min-h-control items-center rounded-control px-3.5 text-[15px] font-medium text-muted no-underline hover:bg-subtle hover:text-ink;
+    @apply flex min-h-control items-center gap-3 rounded-control px-3.5 text-[15px] font-medium text-muted no-underline hover:bg-subtle hover:text-ink;
   }
-  body[data-section="dashboard"] .sidebar nav a[href$="/admin"],
+  .sidebar nav a svg {
+    @apply size-5 shrink-0;
+  }
   body[data-section="profile"] .sidebar nav a[href$="/admin/profile"],
   body[data-section="settings"] .sidebar nav a[href$="/admin/settings"],
   body[data-section="personal-info"] .sidebar nav a[href$="/admin/personal-info"],
@@ -173,6 +176,20 @@
   }
   .back-link {
     @apply inline-flex items-center gap-1.5 text-sm no-underline;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    @apply my-5 flex gap-1 border-b border-line;
+  }
+  .tab {
+    @apply -mb-px border-b-2 border-transparent px-4 py-2.5 font-semibold text-muted no-underline;
+  }
+  .tab:hover {
+    @apply text-ink;
+  }
+  .tab[aria-selected="true"] {
+    @apply border-primary text-ink;
   }
 
   /* ---------- Buttons ---------- */
@@ -277,6 +294,19 @@
   .table .input {
     @apply min-h-9 py-1.5;
   }
+  /* Score bar: rounded track filled to the score, then the percentage */
+  .score {
+    @apply inline-flex items-center gap-3 whitespace-nowrap;
+  }
+  .score-track {
+    @apply block h-2 w-28 overflow-hidden rounded-pill bg-line;
+  }
+  .score-fill {
+    @apply block h-full rounded-pill bg-success;
+  }
+  .score-value {
+    @apply min-w-[3ch] text-right font-semibold tabular-nums;
+  }
 
   /* ---------- Feedback ---------- */
   .error {
@@ -300,6 +330,10 @@
   }
 
   /* ---------- Resume editor ---------- */
+  /* Assessment cards side by side above the Header card, equal height */
+  .assessment-grid {
+    @apply grid grid-cols-1 items-stretch gap-6 md:grid-cols-3;
+  }
   .editor-grid {
     @apply grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] items-start gap-6;
   }
@@ -448,10 +482,66 @@
     @apply font-semibold;
   }
 
+  /* Chats page: list and form on the left, the test panel on the right */
+  .chats-split {
+    @apply grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px];
+  }
+  .chats-main {
+    @apply flex min-w-0 flex-col gap-6;
+  }
+  .chats-side {
+    @apply flex flex-col gap-4 lg:sticky lg:top-6;
+  }
+  .chats-side .stats {
+    @apply grid-cols-2;
+  }
+  .chats-side .stat {
+    @apply justify-end;
+  }
+  .test-panel {
+    @apply flex flex-col gap-4 rounded-card border border-line bg-surface p-6;
+  }
+  .test-head {
+    @apply flex items-center justify-between gap-3;
+  }
+  .test-title {
+    @apply m-0 font-display text-lg font-bold;
+  }
+  .test-tag {
+    @apply font-mono text-xs font-semibold tracking-[2px] text-muted uppercase;
+  }
+  .test-log {
+    @apply flex max-h-[60vh] min-h-24 flex-col gap-3 overflow-y-auto;
+  }
+  .test-log:empty::before {
+    content: "Questions here are not counted or stored.";
+    @apply text-sm text-muted;
+  }
+  .test-msg {
+    @apply max-w-[88%] rounded-control px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap;
+  }
+  .test-msg.user {
+    @apply self-end bg-subtle;
+  }
+  .test-msg.assistant {
+    @apply self-start bg-primary-soft;
+  }
+  .test-msg.assistant:empty::before {
+    content: "...";
+    @apply text-muted;
+  }
+  .test-form {
+    @apply flex items-center gap-3;
+  }
+  .test-form .input {
+    @apply min-w-0 flex-1;
+  }
+
   /* Empty htmx targets take no space until something is swapped in */
   .status:empty,
   #pi-error:empty,
-  #created:empty {
+  #created:empty,
+  #test-status:empty {
     @apply hidden;
   }
   .table .actions {
@@ -475,4 +565,33 @@
   .paper ol {
     @apply list-decimal pl-5;
   }
+}
+
+/* ---------- Toasts (Notyf) ---------- */
+/* Tagged feedback lives in a toast, never in the page flow. Hidden from first paint (toast.js is
+   deferred, so waiting for it would flash the inline text); toast.js reads textContent. */
+[data-toast] {
+  display: none;
+}
+.notyf {
+  z-index: 100;
+}
+.notyf__toast {
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-raised);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+.notyf__toast--success .notyf__icon--success,
+.notyf__toast--error .notyf__icon--error {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+.notyf__toast--success .notyf__icon--success::before,
+.notyf__toast--success .notyf__icon--success::after,
+.notyf__toast--error .notyf__icon--error::before,
+.notyf__toast--error .notyf__icon--error::after {
+  background-color: var(--color-on-primary);
+}
+.notyf__message {
+  color: var(--color-on-primary);
 }

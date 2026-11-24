@@ -41,7 +41,7 @@ const ICONS = {
   remove: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6",
 } as const;
 
-const Icon = ({ name }: { name: keyof typeof ICONS }) => (
+export const Icon = ({ name }: { name: keyof typeof ICONS }) => (
   <svg
     viewBox="0 0 24 24"
     width="20"
@@ -118,7 +118,7 @@ export const ItemForm = ({ form, url }: { form: FormView; url: string }) => {
         </>
       ))}
       {form.error ? (
-        <div class="error career-wide" role="alert">
+        <div class="error career-wide" role="alert" data-toast="error">
           {form.error}
         </div>
       ) : null}

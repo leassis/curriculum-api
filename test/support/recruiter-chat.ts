@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import type { CurriculumApiConfig } from "../../src/config";
+import { AdminAuthService } from "../../src/security/admin-auth";
 import { signSession } from "../../src/security/session";
 import { CareerService } from "../../src/services/career.service";
 import { LlmService } from "../../src/services/llm.service";
@@ -7,6 +8,7 @@ import { PersonalInfoService } from "../../src/services/personal-info.service";
 import { ProfileService } from "../../src/services/profile.service";
 import { RecruiterChatService } from "../../src/services/recruiter-chat.service";
 import { SettingsService } from "../../src/services/settings.service";
+import { FakeAdminLoginAttemptRepo } from "./admin-login-attempt.fake";
 import { item } from "./career";
 import { resolvedConfig, TEST_PII_KEY } from "./config";
 import { FakeCareerRepo } from "./fakes/career.fake";
@@ -98,6 +100,7 @@ export async function recruiterSetup(
 /** The test app on fakes; `session(chat)` builds a recruiter cookie, `ask` posts a question. */
 export async function recruiterApp(opts: Parameters<typeof recruiterSetup>[0] = {}) {
   const setup = await recruiterSetup(opts);
+  const loginAttempts = new FakeAdminLoginAttemptRepo();
   const { app } = createTestApp({
     config: opts.config,
     services: {
@@ -108,6 +111,7 @@ export async function recruiterApp(opts: Parameters<typeof recruiterSetup>[0] = 
       llm: setup.llm,
       career: setup.career,
       recruiterChat: setup.recruiterChat,
+      adminAuth: new AdminAuthService(loginAttempts, setup.config),
     },
   });
   const cookieFor = async (cid: string | undefined, scope: "recruiter" | "public" = "recruiter") =>
@@ -136,5 +140,5 @@ export async function recruiterApp(opts: Parameters<typeof recruiterSetup>[0] = 
       body: JSON.stringify({ turnstileToken: "tok" }),
     });
   };
-  return { ...setup, app, cookieFor, ask, startSession };
+  return { ...setup, app, loginAttempts, cookieFor, ask, startSession };
 }

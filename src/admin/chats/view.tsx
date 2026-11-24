@@ -123,18 +123,49 @@ export const Rows = ({
     </>
   );
 
+/** Ask the recruiter assistant like a recruiter would; nothing is counted or stored. */
+export const TestPanel = ({ basePath }: { basePath: string }) => (
+  <aside class="test-panel" id="test-panel" data-url={`${basePath}/admin/chats/test`}>
+    <div class="test-head">
+      <h2 class="test-title">Test the assistant</h2>
+      <span class="test-tag" title="Not counted, not stored">
+        Draft
+      </span>
+    </div>
+    <div id="test-log" class="test-log" aria-live="polite" />
+    <p id="test-status" class="status" role="status" />
+    <form id="test-ask" class="test-form">
+      <input
+        class="input"
+        id="test-question"
+        type="text"
+        name="question"
+        placeholder="Ask like a recruiter..."
+        aria-label="Question"
+        autocomplete="off"
+        required
+      />
+      <button type="submit" class="btn" id="test-send">
+        Ask
+      </button>
+    </form>
+  </aside>
+);
+
 export const ChatsPage = ({
   basePath,
   origin,
   chats,
   resumes,
   defaultMax,
+  counts,
 }: {
   basePath: string;
   origin: string;
   chats: ChatView[];
   resumes: ResumeChoice[];
   defaultMax: number;
+  counts: { activeChats: number; publicQuestionsToday: number };
 }) => (
   <Layout title="Chats" basePath={basePath} section="chats">
     <PageHeader
@@ -142,99 +173,116 @@ export const ChatsPage = ({
       title="Recruiter chats"
       sub="Each link opens a chat with one resume as context. Revoke or reset it any time."
     />
-    <script src={`${basePath}/admin/chats/chats.js`} />
-    <p id="chat-status" class="status" role="status" />
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Recruiter</th>
-            <th>Company</th>
-            <th>Used</th>
-            <th>Status</th>
-            <th>Expires</th>
-            <th>Last used</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody
-          id="chat-rows"
-          hx-get={`${basePath}/admin/chats/rows`}
-          hx-trigger="chats-changed from:body"
-          hx-swap="innerHTML"
+    <script src={`${basePath}/admin/chats/chats.js`} defer />
+    <div class="chats-split">
+      <div class="chats-main">
+        <p id="chat-status" class="status" role="status" />
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Recruiter</th>
+                <th>Company</th>
+                <th>Used</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th>Last used</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody
+              id="chat-rows"
+              hx-get={`${basePath}/admin/chats/rows`}
+              hx-trigger="chats-changed from:body"
+              hx-swap="innerHTML"
+            >
+              <Rows basePath={basePath} origin={origin} chats={chats} />
+            </tbody>
+          </table>
+        </div>
+        <form
+          class="card-pad"
+          hx-post={`${basePath}/admin/chats`}
+          hx-target="#created"
+          hx-swap="outerHTML"
         >
-          <Rows basePath={basePath} origin={origin} chats={chats} />
-        </tbody>
-      </table>
+          <h2 class="section-title">New chat</h2>
+          <div id="created" />
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label" for="recruiterName">
+                Recruiter name
+              </label>
+              <input class="input" id="recruiterName" type="text" name="recruiterName" required />
+            </div>
+            <div class="field">
+              <label class="field-label" for="company">
+                Company
+              </label>
+              <input class="input" id="company" type="text" name="company" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="jobDescriptionShort">
+              Job Description (max 2000 characters)
+            </label>
+            <textarea class="input" id="jobDescriptionShort" name="jobDescriptionShort" rows={6} />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label" for="maxQuestions">
+                Max questions
+              </label>
+              <input
+                class="input"
+                id="maxQuestions"
+                type="number"
+                name="maxQuestions"
+                min={1}
+                max={100}
+                value={defaultMax}
+              />
+            </div>
+            <div class="field">
+              <label class="field-label" for="expiresAt">
+                Expires at
+              </label>
+              <input class="input" id="expiresAt" type="datetime-local" name="expiresAt" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="tailoredResumeId">
+                Resume
+              </label>
+              <select class="input" id="tailoredResumeId" name="tailoredResumeId">
+                <option value="" selected>
+                  Master CV
+                </option>
+                {resumes.map((r) => (
+                  <option value={r.id}>{r.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn">
+              Create
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="chats-side">
+        <TestPanel basePath={basePath} />
+        <dl class="stats">
+          <div class="stat">
+            <dt>Public questions today</dt>
+            <dd id="public-questions">{counts.publicQuestionsToday}</dd>
+          </div>
+          <div class="stat">
+            <dt>Active recruiter chats</dt>
+            <dd id="active-chats">{counts.activeChats}</dd>
+          </div>
+        </dl>
+      </div>
     </div>
-    <form
-      class="card-pad"
-      hx-post={`${basePath}/admin/chats`}
-      hx-target="#created"
-      hx-swap="outerHTML"
-    >
-      <h2 class="section-title">New chat</h2>
-      <div id="created" />
-      <div class="form-grid">
-        <div class="field">
-          <label class="field-label" for="recruiterName">
-            Recruiter name
-          </label>
-          <input class="input" id="recruiterName" type="text" name="recruiterName" required />
-        </div>
-        <div class="field">
-          <label class="field-label" for="company">
-            Company
-          </label>
-          <input class="input" id="company" type="text" name="company" />
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label" for="jobDescriptionShort">
-          Job Description (max 2000 characters)
-        </label>
-        <textarea class="input" id="jobDescriptionShort" name="jobDescriptionShort" rows={6} />
-      </div>
-      <div class="form-grid">
-        <div class="field">
-          <label class="field-label" for="maxQuestions">
-            Max questions
-          </label>
-          <input
-            class="input"
-            id="maxQuestions"
-            type="number"
-            name="maxQuestions"
-            min={1}
-            max={100}
-            value={defaultMax}
-          />
-        </div>
-        <div class="field">
-          <label class="field-label" for="expiresAt">
-            Expires at
-          </label>
-          <input class="input" id="expiresAt" type="datetime-local" name="expiresAt" />
-        </div>
-        <div class="field">
-          <label class="field-label" for="tailoredResumeId">
-            Resume
-          </label>
-          <select class="input" id="tailoredResumeId" name="tailoredResumeId">
-            <option value="" selected>
-              Master CV
-            </option>
-            {resumes.map((r) => (
-              <option value={r.id}>{r.title}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div class="actions">
-        <button type="submit" class="btn">
-          Create
-        </button>
-      </div>
-    </form>
   </Layout>
 );

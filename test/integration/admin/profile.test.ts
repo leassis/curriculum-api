@@ -43,7 +43,7 @@ describe("admin profile routes", () => {
       headline: "Staff Engineer",
       summary: "Ten years of platform work.",
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(303);
     const stored = await services.profile.get();
     expect(stored.headline).toBe("Staff Engineer");
     expect(stored.summary).toBe("Ten years of platform work.");
@@ -60,7 +60,7 @@ describe("admin profile with database", () => {
     const empty = await get();
     expect(empty.status).toBe(200);
     expect(await empty.text()).toContain('name="fullName"');
-    expect((await post(form)).status).toBe(200);
+    expect((await post(form)).status).toBe(303);
     expect((await services.profile.get()).fullName).toBe("Ada");
   });
 
