@@ -133,6 +133,31 @@ export interface ResumeInput {
   customInstructions?: string;
   /** Posted header keys; `undefined` when the form offered none (stored as all fields). */
   headerKeys?: string[];
+  jobLink?: string;
+  recruiterName?: string;
+  notes?: string;
+}
+
+export interface Tracking {
+  jobLink: string;
+  recruiterName: string;
+  notes: string;
+}
+
+const TRACKING_LIMITS: [keyof Tracking, string, number][] = [
+  ["jobLink", "Job link", 2000],
+  ["recruiterName", "Recruiter name", 200],
+  ["notes", "Notes", 10000],
+];
+const JOB_LINK_INVALID = "Job link must start with http:// or https://";
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 /** Everything a Print View needs, already resolved and sanitized. */
@@ -207,6 +232,7 @@ export class ResumeService {
       input.headerKeys,
       fields.map((f) => f.key),
     );
+    const tracking = this.checkTracking(input);
     return this.toResume(
       await this.resumes.insert({
         title,
@@ -214,6 +240,9 @@ export class ResumeService {
         jobDescription,
         customInstructions,
         headerFields,
+        jobLink: tracking.jobLink ?? "",
+        recruiterName: tracking.recruiterName ?? "",
+        notes: tracking.notes ?? "",
       }),
     );
   }
@@ -317,6 +346,7 @@ export class ResumeService {
     id: string,
     headerKeys: string[],
     customInstructions?: string,
+    tracking: Partial<Tracking> = {},
   ): Promise<Resume> {
     await this.get(id);
     const fields = await this.personalInfo.allValues();
@@ -324,7 +354,9 @@ export class ResumeService {
       customInstructions === undefined
         ? undefined
         : this.checkInstructions(customInstructions, fields);
+    const checked = this.checkTracking(tracking);
     return this.update(id, {
+      ...checked,
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),
@@ -474,6 +506,25 @@ export class ResumeService {
       );
     }
     return trimmed;
+  }
+
+  private checkTracking(input: Partial<Tracking>): Partial<Tracking> {
+    const out: Partial<Tracking> = {};
+    for (const [key, label, max] of TRACKING_LIMITS) {
+      const value = input[key];
+      if (value === undefined) continue;
+      const trimmed = value.trim();
+      if (trimmed.length > max) {
+        throw new ValidationError(`${label} is limited to ${max} characters`, {
+          [key]: "is too long",
+        });
+      }
+      out[key] = trimmed;
+    }
+    if (out.jobLink && !isHttpUrl(out.jobLink)) {
+      throw new ValidationError(JOB_LINK_INVALID, { jobLink: "is invalid" });
+    }
+    return out;
   }
 
   private async update(id: string, patch: Parameters<ResumeRepo["update"]>[1]): Promise<Resume> {
