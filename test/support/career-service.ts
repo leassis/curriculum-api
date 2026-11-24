@@ -28,6 +28,8 @@ export function careerSetup(
   profileRepo.row = {
     ...profileInput,
     summary: "",
+    additionalInformation: "",
+    lookingForwardNext: "",
     fullName: FULL_NAME,
     id: 1,
     updatedAt: new Date(),

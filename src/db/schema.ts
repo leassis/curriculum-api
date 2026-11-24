@@ -22,6 +22,8 @@ export const profile = curriculum.table(
     fullName: text().notNull(),
     headline: text().notNull(),
     summary: text().notNull().default(""),
+    additionalInformation: text().notNull().default(""),
+    lookingForwardNext: text().notNull().default(""),
     publicSystemPrompt: text().notNull(),
     recruiterSystemPrompt: text().notNull(),
     tailorSystemPrompt: text().notNull(),
@@ -68,6 +70,9 @@ export const tailoredResumes = curriculum.table(
     company: text(),
     jobDescription: text().notNull(),
     customInstructions: text().notNull().default(""),
+    jobLink: text().notNull().default(""),
+    recruiterName: text().notNull().default(""),
+    notes: text().notNull().default(""),
     headerFields: text().array(),
     model: text(),
     /** The Resume Document; NULL until the first successful generation. Parsed by the service. */

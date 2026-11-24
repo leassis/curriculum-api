@@ -23,6 +23,9 @@ export class FakeResumeRepo implements ResumeRepo {
     const at = new Date(Date.UTC(2026, 0, 1) + ++this.tick * 60_000);
     const row: ResumeRow = {
       id: `00000000-0000-4000-8000-${String(this.tick).padStart(12, "0")}`,
+      jobLink: "",
+      recruiterName: "",
+      notes: "",
       ...input,
       headerFields: input.headerFields ?? null,
       model: null,

@@ -14,7 +14,14 @@ export class FakeProfileRepo implements ProfileRepo {
 
   async upsert(input: ProfileInput): Promise<ProfileRow> {
     this.upserts.push(input);
-    this.row = { summary: "", ...input, id: 1, updatedAt: new Date() };
+    this.row = {
+      summary: "",
+      additionalInformation: "",
+      lookingForwardNext: "",
+      ...input,
+      id: 1,
+      updatedAt: new Date(),
+    };
     return this.row;
   }
 }

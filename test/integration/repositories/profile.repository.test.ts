@@ -33,4 +33,19 @@ describe("ProfileRepository", () => {
 
     expect(await repo.find()).toEqual(second);
   });
+
+  it("upsert stores additional information and looking forward next", async () => {
+    const created = await repo.upsert(input);
+    expect(created.additionalInformation).toBe("");
+    expect(created.lookingForwardNext).toBe("");
+
+    const saved = await repo.upsert({
+      ...input,
+      additionalInformation: "Plays chess",
+      lookingForwardNext: "Platform roles",
+    });
+    expect(saved.additionalInformation).toBe("Plays chess");
+    expect(saved.lookingForwardNext).toBe("Platform roles");
+    expect(await repo.find()).toEqual(saved);
+  });
 });
