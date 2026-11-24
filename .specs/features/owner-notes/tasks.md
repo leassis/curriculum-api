@@ -201,8 +201,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C35, C36 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C35, C36 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
@@ -457,7 +457,7 @@ Proof: run unit | ✓ admin print > keeps tracking fields out of print and downl
 The feature's live state, written as it happens - a compaction gives no warning.
 
 **Settled mid-build:** none. Paused after approval: user "Approve, don't build". Next: `validate_tasks.py owner-notes --execute` on `feat/owner-notes`, then the sub-agent offer (2 batches).
-**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24
+**Dispatched:** Batch A (Phases 1-2, T1-T5) worker at HEAD 83750d5 - sent 2026-11-24, returned (2f560ca..14e74f0); Batch B (Phases 3-5, T6-T12) worker at HEAD 14e74f0 - sent 2026-11-24
 **Walked:** none
 
 ---
