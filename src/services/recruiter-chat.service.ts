@@ -6,7 +6,7 @@ import type {
   RecruiterChatRow,
   ResumeOption,
 } from "../repositories/recruiter-chat.repository.js";
-import { renderCareerBody } from "./career/body.js";
+import { appendSections, chatSections, renderCareerBody } from "./career/body.js";
 import type { CareerService } from "./career.service.js";
 import {
   ChatExpiredError,
@@ -209,7 +209,6 @@ export class RecruiterChatService {
     try {
       const profile = await this.profile.get();
       const resume = await this.resumeMarkdown(granted.tailoredResumeId);
-      const content = resume ?? (await this.libraryBody(profile));
       const jd = granted.jobDescriptionShort;
       const { stream } = await this.llm.stream({
         area: "recruiter",
@@ -217,7 +216,7 @@ export class RecruiterChatService {
           jd === null
             ? profile.recruiterSystemPrompt
             : `${profile.recruiterSystemPrompt}\n\nJob Description:\n${dataBlock("JOB_DESCRIPTION", jd)}`,
-        body: content.trim() === "" ? EMPTY_CV : content,
+        body: await this.chatBody(profile, resume),
         messages: wrapUserMessages(messages, "RECRUITER_MESSAGE"),
         maxOutputTokens: await this.settings.limit("recruiterMaxOutputTokens"),
       });
@@ -255,11 +254,10 @@ export class RecruiterChatService {
       throw new ValidationError("Invalid request body");
     }
     const profile = await this.profile.get();
-    const content = await this.libraryBody(profile);
     const { stream } = await this.llm.stream({
       area: "recruiter",
       system: profile.recruiterSystemPrompt,
-      body: content.trim() === "" ? EMPTY_CV : content,
+      body: await this.chatBody(profile, null),
       messages: wrapUserMessages(messages, "RECRUITER_MESSAGE"),
       maxOutputTokens: await this.settings.limit("recruiterMaxOutputTokens"),
     });
@@ -310,9 +308,10 @@ export class RecruiterChatService {
     );
   }
 
-  private async libraryBody(profile: Profile): Promise<string> {
+  private async chatBody(profile: Profile, resume: string | null): Promise<string> {
     const { items } = await this.career.library();
-    return items.length === 0 ? "" : renderCareerBody(profile, items);
+    if (items.length === 0) return resume ?? EMPTY_CV;
+    return appendSections(resume ?? renderCareerBody(profile, items), chatSections(profile));
   }
 
   /** The linked resume's document as markdown; null when unlinked, missing, invalid or empty. */

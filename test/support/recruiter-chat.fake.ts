@@ -11,7 +11,16 @@ import type {
 export class FakeRecruiterChatRepo implements RecruiterChatRepo {
   rows: RecruiterChatRow[] = [];
   /** id -> { title, structured }; the Tailored Resumes table. */
-  resumes = new Map<string, { title: string; structured?: unknown }>();
+  resumes = new Map<
+    string,
+    {
+      title: string;
+      structured?: unknown;
+      jobLink?: string;
+      recruiterName?: string;
+      notes?: string;
+    }
+  >();
   acquires = 0;
   /** chat id -> stored messages, oldest first; deleted with the chat. */
   transcripts = new Map<string, ChatMessageRow[]>();

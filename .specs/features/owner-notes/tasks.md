@@ -259,8 +259,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Unit tests C21, C30 (recruiter), C38, C39 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Unit tests C21, C30 (recruiter), C38, C39 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
