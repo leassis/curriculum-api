@@ -40,7 +40,7 @@
 - **Trade-off**: Dev and integration tests need network and Neon credentials; no offline database.
 - **Scope**: `docker-compose.yml`, `src/db/client.ts`, `test/support/`, RUNNING.md, CLAUDE.md, `.env.example`.
 - **Date**: 2026-11-22
-- **Status**: active for dev; superseded for integration tests by AD-013
+- **Status**: superseded by AD-014 for dev and CI; superseded for integration tests by AD-013
 
 ### AD-006
 - **Decision**: The tailor model works on CV items parsed from the Master CV markdown per generation: every `### ` heading is an item whose heading line is fixed and copied by code; text before the first `## ` and between a `## ` and its first `###` are droppable items. Items in sections titled Experience/Education (English or Portuguese variants) are never dropped; code restores any the model omits. Ids `i1..in` live only for one call.
@@ -103,6 +103,14 @@
 - **Reason**: CI queries crossed the Atlantic to the Neon project in Frankfurt: tests ran about 7x slower than locally, the suite took about 460s, and `owner-notes-migration.test.ts` hit the 10s hook limit. Question: where to use the container. User: "Everywhere". Question: the uncommitted `hookTimeout: 30_000`. User: "Revert it".
 - **Trade-off**: No test runs against real Neon; Docker is required wherever integration tests run.
 - **Scope**: `test/support/`, `package.json` (`@testcontainers/postgresql`), RUNNING.md, CLAUDE.md, `.env.example`; supersedes TEST-01..11 of `neon-dev-test-db` with TC-01..11.
+- **Date**: 2026-11-25
+- **Status**: active
+
+### AD-014
+- **Decision**: Dev (`pnpm db:up`) and CI run a plain `postgres:18-alpine` container from `docker-compose.yml` (service `db`, `localhost:5432`, user, password and database `postgres`/`postgres`/`curriculum`, named volume `pgdata`, `pg_isready` healthcheck). The integration-test container uses the same `postgres:18-alpine` image. Neon Local, `NEON_API_KEY`, `NEON_PROJECT_ID` and `PARENT_BRANCH_ID` are removed from compose, CI, `.env.example` and the docs. Production stays on Neon; `DATABASE_URL_UNPOOLED` stays for it. Supersedes AD-005.
+- **Reason**: Integration tests no longer need Neon (AD-013), so Neon Local was the only non-production use of the Neon API key, which was exposed in a session transcript on 2026-11-25. User: "I will replace non local to postgres 18 alpine as well".
+- **Trade-off**: Dev and CI no longer run on real Neon (no branching, no Neon-specific behaviour); dev data lives in the `pgdata` volume until `docker compose down -v`.
+- **Scope**: `docker-compose.yml`, `package.json` db scripts, `.github/workflows/ci.yml`, `.env.example`, `test/support/postgres-container.ts`, RUNNING.md, CLAUDE.md. Removing the `NEON_*` GitHub secrets and rotating the key are the user's own account actions.
 - **Date**: 2026-11-25
 - **Status**: active
 
