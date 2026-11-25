@@ -148,8 +148,8 @@ T4 → T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Test named exactly as in C11 passes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`, with no `hookTimeout` in `vitest.config.ts`
+- [x] Test named exactly as in C11 passes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`, with no `hookTimeout` in `vitest.config.ts`
 
 **Tests**: integration
 **Gate**: full
