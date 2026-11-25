@@ -305,7 +305,7 @@ describe("repo layout", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("docs describe Neon, not the old Postgres stack", () => {
+  it("docs describe the local Postgres", () => {
     const banned = [
       "curriculum_test",
       "db.localtest.me",
@@ -318,7 +318,10 @@ describe("repo layout", () => {
       for (const word of banned) {
         expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
       }
-      expect(text, `${file} mentions Neon Local`).toContain("Neon Local");
+      expect(text, `${file} mentions postgres:18-alpine`).toContain("postgres:18-alpine");
+      for (const word of ["Neon Local", "NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
+        expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
+      }
     }
   });
 
