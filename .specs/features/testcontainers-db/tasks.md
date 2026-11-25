@@ -254,7 +254,7 @@ Proof: run unit | ✓ repo layout > test support makes no Neon API call
 Proof: run int | ✓ test database isolation > connects to the run's container, not DATABASE_URL
 
 **C12** - The unit project passes with no reachable Docker (TC-09, AC 9)
-Proof: `DOCKER_HOST=unix:///nonexistent.sock pnpm test:unit`
+Proof: `DOCKER_HOST=tcp://127.0.0.1:1 pnpm test:unit`
 
 **C13** - The full integration suite passes with the default `hookTimeout` (TC-10, AC 10)
 Proof: `! grep -q hookTimeout vitest.config.ts && pnpm test:int`
