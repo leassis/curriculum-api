@@ -128,8 +128,8 @@ T4 → T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Test named exactly as in C10 passes
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
+- [x] Test named exactly as in C10 passes
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
 
 **Tests**: unit
 **Gate**: build
