@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { inject } from "vitest";
 import { createDb, type Db } from "../../src/db/client";
 
-/** The run's throwaway Neon branch (integration only); unit tests never query. */
+/** The run's Testcontainers postgres container (integration only); unit tests never query. */
 export const TEST_DATABASE_URL =
   inject("testDatabaseUrl") ?? "postgres://unused@unused.invalid/unused";
 
@@ -26,7 +26,7 @@ const TABLES = [
   "admin_login_attempts",
 ];
 
-/** Wipes the run's throwaway Neon branch (never the dev database: its URL is injected by global setup). */
+/** Wipes the run's Testcontainers postgres container data (never the dev database: its URL is injected by global setup). */
 export async function resetDb(db: Db = testDb()): Promise<void> {
   const list = TABLES.map((t) => `"curriculum_api"."${t}"`).join(", ");
   await db.execute(sql.raw(`TRUNCATE ${list} RESTART IDENTITY CASCADE`));
