@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("test database container", () => {
-  it("starts postgres:18 and returns its URL", async () => {
+  it("starts postgres:18-alpine and returns its URL", async () => {
     const { container } = fakeContainer();
     const images: string[] = [];
     const db = await startTestDatabase({
@@ -32,7 +32,7 @@ describe("test database container", () => {
       },
       migrate: async () => {},
     });
-    expect(images).toEqual(["postgres:18"]);
+    expect(images).toEqual(["postgres:18-alpine"]);
     expect(db.url).toBe(URL_WITH_SECRET);
   });
 

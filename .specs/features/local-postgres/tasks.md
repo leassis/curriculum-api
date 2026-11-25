@@ -107,8 +107,8 @@ T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] Test named exactly as in C7 passes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Test named exactly as in C7 passes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

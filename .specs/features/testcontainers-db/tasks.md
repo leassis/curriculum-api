@@ -220,8 +220,8 @@ T4 → T5 → T6 → T7 → T8
 
 ## Checks
 
-**C1** - The setup starts a `postgres:18` container and returns its URL (TC-01, AC 1)
-Proof: run unit | ✓ test database container > starts postgres:18 and returns its URL
+**C1** - The setup starts a `postgres:18-alpine` container and returns its URL (TC-01, AC 1; image changed from `postgres:18` by AD-014 of local-postgres)
+Proof: run unit | ✓ test database container > starts postgres:18-alpine and returns its URL
 
 **C2** - Migrations run on the container before the URL is returned (TC-02, AC 2)
 Proof: run unit | ✓ test database container > migrates the container before returning

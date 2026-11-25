@@ -1,6 +1,6 @@
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 
-export const POSTGRES_IMAGE = "postgres:18";
+export const POSTGRES_IMAGE = "postgres:18-alpine";
 
 export interface StartedContainer {
   getConnectionUri(): string;
