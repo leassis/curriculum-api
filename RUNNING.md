@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node >= 22, pnpm 10 (`corepack enable`), Docker (runs Neon Local for local dev) and a Neon project (Neon Local and the integration tests both use the Neon API).
+- Node >= 22, pnpm 10 (`corepack enable`), Docker (runs Neon Local for local dev and the Testcontainers Postgres container the integration tests use) and a Neon project (Neon Local uses the Neon API).
 
 ## Environment
 
@@ -22,9 +22,8 @@ Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is 
 | `PII_ENCRYPTION_KEY`                                                 | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                                |
 | `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` / `MODEL_IMPORT` | OpenRouter model IDs; `MODEL_IMPORT` converts pasted CV text on the Profile page (Settings in admin override them)               |
 | `TEMPERATURE_PUBLIC` / `_TAILOR` / `_RECRUITER` / `_IMPORT`          | Optional sampling temperature 0..2 (defaults 0.4 / 0.1 / 0.3 / 0.1); Settings in admin override, `default` sends none            |
-| `NEON_API_KEY` / `NEON_PROJECT_ID`                                   | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`) and by the integration tests (`.env` or `.env.local`) |
-| `PARENT_BRANCH_ID`                                                   | Neon branch Neon Local forks its ephemeral dev branch from; also the default parent of the test branch                           |
-| `TEST_PARENT_BRANCH_ID`                                              | Optional: parent of the integration test branch instead of `PARENT_BRANCH_ID`                                                    |
+| `NEON_API_KEY` / `NEON_PROJECT_ID`                                   | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`)                                                       |
+| `PARENT_BRANCH_ID`                                                   | Neon branch Neon Local forks its ephemeral dev branch from                                                                       |
 
 ## Start
 
@@ -53,9 +52,9 @@ Migration `0004` drops the generated markdown of every Tailored Resume (and clea
 ```bash
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm test:unit      # no database
-pnpm test:int       # needs NEON_API_KEY, NEON_PROJECT_ID and PARENT_BRANCH_ID (or TEST_PARENT_BRANCH_ID) in .env or .env.local
+pnpm test:int       # needs Docker; no Neon variables
 ```
-Each `pnpm test:int` run creates a throwaway Neon branch through the Neon API, migrates it, and deletes it at teardown (a 1 hour `expires_at` removes it if teardown fails). It never touches the dev database, so the suite cannot wipe your dev data.
+Each `pnpm test:int` run starts one `postgres:18` container with Testcontainers, migrates it, and stops it at teardown (Testcontainers' reaper removes it if the run crashes). It never touches the dev database, so the suite cannot wipe your dev data.
 Tests use a recording mock model and never call OpenRouter or Cloudflare.
 
 ## What needs a real key
