@@ -244,7 +244,7 @@ Proof: run unit | ✓ global setup > teardown stops the container it started
 **C8** - Global setup runs with no Neon variable set (TC-06, AC 6)
 Proof: run unit | ✓ global setup > needs no Neon variable
 
-**C9** - One container is started per run and never restarted (TC-11, edge case)
+**C9** - One container is started per run, and the setup never restarts it (TC-11, edge case)
 Proof: run unit | ✓ global setup > starts one container per run
 
 **C10** - No file under `test/support` calls the Neon API (TC-06, AC 6)
