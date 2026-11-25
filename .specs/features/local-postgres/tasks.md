@@ -246,7 +246,7 @@ Proof: run unit | ✓ repo layout > compose runs postgres:18-alpine only
 ## Handoff
 
 **Settled mid-build:** user: "at the end push the branch I will review it"
-**Dispatched:** batch worker 1 (T1-T7, Sonnet)
+**Dispatched:** batch worker 1 (T1-T7, Sonnet) - done at fa4916d; Verifier round 1 (Opus)
 **Walked:** none
 
 ---
