@@ -156,6 +156,18 @@ describe("repo layout", () => {
     expect(position("dist/cli.js migrate")).toBeGreaterThan(position("pnpm build"));
   });
 
+  it("ci uses the compose Postgres and no Neon variable", () => {
+    const ci = parse(read(".github/workflows/ci.yml"));
+    const env = ci.jobs.verify.env;
+    expect(env.DATABASE_URL).toBe("postgres://postgres:postgres@localhost:5432/curriculum");
+    expect(Object.keys(env).filter((k) => /^NEON_|^PARENT_BRANCH_ID$/.test(k))).toEqual([]);
+    expect(read(".github/workflows/ci.yml")).not.toMatch(/NEON_|PARENT_BRANCH_ID/);
+  });
+
+  it("ci comments skip Neon Local", () => {
+    expect(read(".github/workflows/ci.yml")).not.toContain("Neon Local");
+  });
+
   it("compose runs postgres:18-alpine only", () => {
     const composeFile = parse(read("docker-compose.yml"));
     expect(Object.keys(composeFile.services)).toEqual(["db"]);

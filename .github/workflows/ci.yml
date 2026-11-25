@@ -22,13 +22,9 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
-      # Neon Local (docker compose) forks an ephemeral branch of PARENT_BRANCH_ID;
-      # the integration tests run on a Testcontainers Postgres container;
-      # the Neon variables are for the docker compose step only.
-      DATABASE_URL: postgres://neon:npg@localhost:5432/neondb
-      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
-      PARENT_BRANCH_ID: ${{ secrets.PARENT_BRANCH_ID }}
+      # The compose Postgres, the same service as local development;
+      # the integration tests run on a Testcontainers Postgres container.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/curriculum
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,7 +33,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Neon Local, the same service as local development
+      # The compose Postgres, the same service as local development
       - name: Start database services
         run: docker compose up -d --wait
       - name: Lint

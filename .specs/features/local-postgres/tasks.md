@@ -127,9 +127,9 @@ T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] Tests named exactly as in C5 and C11 pass
-- [ ] C6 proof exits 0
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
+- [x] Tests named exactly as in C5 and C11 pass
+- [x] C6 proof exits 0
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
 
 **Tests**: unit
 **Gate**: build
