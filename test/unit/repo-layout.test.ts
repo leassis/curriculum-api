@@ -310,6 +310,18 @@ describe("repo layout", () => {
       expect(/throwaway Neon branch/i.test(text), `${file} mentions a throwaway Neon branch`).toBe(
         false,
       );
+      const lines = text.split("\n");
+      const runLines = lines.filter((line) => line.includes("pnpm test:int"));
+      expect(runLines.length, `${file} documents pnpm test:int`).toBeGreaterThan(0);
+      const runText = runLines.join("\n");
+      expect(runText, `${file} test:int line names Testcontainers`).toContain("Testcontainers");
+      expect(runText, `${file} test:int line names Docker`).toContain("Docker");
+      for (const line of lines.filter((l) => /integration test|test:int/i.test(l))) {
+        expect(
+          /Neon (test )?branch/i.test(line),
+          `${file} ties tests to a Neon branch: ${line}`,
+        ).toBe(false);
+      }
     }
   });
 });
