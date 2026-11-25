@@ -68,8 +68,8 @@ T4 → T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] `package.json` devDependencies hold `@testcontainers/postgresql` at an exact version
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test:unit`
+- [x] `package.json` devDependencies hold `@testcontainers/postgresql` at an exact version
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test:unit`
 
 **Tests**: none
 **Gate**: build
@@ -273,7 +273,7 @@ Proof: `grep -q "^### AD-013" .specs/STATE.md && grep -A8 "^### AD-005" .specs/S
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** none
+**Dispatched:** batch worker 1 (T1-T8, Sonnet) at 3f5a110
 **Walked:** none
 
 ---
