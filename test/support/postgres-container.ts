@@ -31,13 +31,9 @@ export async function startTestDatabase(deps: TestDatabaseDeps): Promise<TestDat
   try {
     container = await start(POSTGRES_IMAGE);
   } catch (err) {
-    const reason = message(err);
-    if (/container runtime|docker/i.test(reason)) {
-      throw new Error(
-        `Docker is required for the integration tests and is not reachable: ${reason}`,
-      );
-    }
-    throw new Error(reason);
+    throw new Error(
+      `could not start the ${POSTGRES_IMAGE} test container - is Docker running? ${message(err)}`,
+    );
   }
 
   const stop = async (): Promise<void> => {

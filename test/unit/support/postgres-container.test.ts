@@ -77,6 +77,14 @@ describe("test database container", () => {
     });
     await expect(failed).rejects.toThrow(/Docker/);
     expect(migrated).toBe(false);
+
+    const refused = startTestDatabase({
+      startContainer: async () => {
+        throw new Error("connect ECONNREFUSED 127.0.0.1:2375");
+      },
+      migrate: async () => {},
+    });
+    await expect(refused).rejects.toThrow(/Docker.*ECONNREFUSED/);
   });
 
   it("never logs or throws a connection string", async () => {
