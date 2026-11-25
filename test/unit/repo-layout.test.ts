@@ -184,7 +184,7 @@ describe("repo layout", () => {
 
   it("compose waits for pg_isready", () => {
     const db = parse(read("docker-compose.yml")).services.db;
-    expect([db.healthcheck.test].flat().join(" ")).toContain("pg_isready");
+    expect(db.healthcheck.test).toEqual(["CMD-SHELL", "pg_isready -U postgres -d curriculum"]);
   });
 
   it("compose keeps data in the pgdata volume", () => {
