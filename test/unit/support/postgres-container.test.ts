@@ -3,6 +3,8 @@ import { startTestDatabase } from "../../support/postgres-container";
 
 const URL_WITH_SECRET = "postgres://test:s3cret@localhost:55432/test";
 
+const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
+
 function fakeContainer() {
   const events: string[] = [];
   const container = {
@@ -40,7 +42,7 @@ describe("test database container", () => {
     const db = await startTestDatabase({
       startContainer: async () => container,
       migrate: async (url) => {
-        await Promise.resolve();
+        await tick();
         migrated = url;
         migrationDone = true;
       },
