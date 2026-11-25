@@ -186,7 +186,7 @@ describe("repo layout", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("env example documents every variable", () => {
+  it("env example drops the test branch variable", () => {
     const lines = read(".env.example").split("\n");
     const variables = [
       "DATABASE_URL",
@@ -203,7 +203,6 @@ describe("repo layout", () => {
       "NEON_API_KEY",
       "NEON_PROJECT_ID",
       "PARENT_BRANCH_ID",
-      "TEST_PARENT_BRANCH_ID",
     ];
     for (const name of variables) {
       const index = lines.findIndex((l) => l.startsWith(`${name}=`));
@@ -214,6 +213,17 @@ describe("repo layout", () => {
       lines.some((l) => l.includes("TEST_DATABASE_URL")),
       "TEST_DATABASE_URL is gone",
     ).toBe(false);
+    expect(
+      lines.some((l) => l.includes("TEST_PARENT_BRANCH_ID")),
+      "TEST_PARENT_BRANCH_ID is gone",
+    ).toBe(false);
+    for (const name of ["NEON_API_KEY", "NEON_PROJECT_ID"]) {
+      const comment = lines[lines.findIndex((l) => l.startsWith(`${name}=`)) - 1] ?? "";
+      expect(comment, `${name} comment names docker compose`).toContain("docker compose");
+      expect(comment, `${name} comment skips the integration tests`).not.toMatch(
+        /integration|test/i,
+      );
+    }
   });
 
   it("ships the init migration and the transcripts migration", () => {
