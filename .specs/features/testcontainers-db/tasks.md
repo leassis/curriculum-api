@@ -273,7 +273,7 @@ Proof: `grep -q "^### AD-013" .specs/STATE.md && grep -A8 "^### AD-005" .specs/S
 ## Handoff
 
 **Settled mid-build:** none
-**Dispatched:** batch worker 1 (T1-T8, Sonnet) at 3f5a110 - returned 690035a; Verifier at 690035a - returned 7a352d7 (FAIL, F1-F6); fix worker (Sonnet) at 7a352d7
+**Dispatched:** batch worker 1 (T1-T8, Sonnet) at 3f5a110 - returned 690035a; Verifier at 690035a - returned 7a352d7 (FAIL, F1-F6); fix worker (Sonnet) at 7a352d7 - returned 6aa675d; round 2 check_proofs 19/19 at 6aa675d
 **Walked:** none
 
 ---
