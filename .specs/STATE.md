@@ -40,7 +40,7 @@
 - **Trade-off**: Dev and integration tests need network and Neon credentials; no offline database.
 - **Scope**: `docker-compose.yml`, `src/db/client.ts`, `test/support/`, RUNNING.md, CLAUDE.md, `.env.example`.
 - **Date**: 2026-11-22
-- **Status**: active
+- **Status**: active for dev; superseded for integration tests by AD-013
 
 ### AD-006
 - **Decision**: The tailor model works on CV items parsed from the Master CV markdown per generation: every `### ` heading is an item whose heading line is fixed and copied by code; text before the first `## ` and between a `## ` and its first `###` are droppable items. Items in sections titled Experience/Education (English or Portuguese variants) are never dropped; code restores any the model omits. Ids `i1..in` live only for one call.
@@ -97,6 +97,14 @@
 - **Scope**: `career-library`; `src/services/tailor/`, `src/admin/resumes/`.
 - **Date**: 2026-11-23
 - **Status**: active (AD-012)
+
+### AD-013
+- **Decision**: Integration tests run on one Testcontainers `postgres:18` container started per run by Vitest `globalSetup` (`test/support/postgres-container.ts`) and stopped in teardown, locally and in CI. The Neon test-branch setup (`test/support/neon-branch.ts`) and `TEST_PARENT_BRANCH_ID` are removed. Dev keeps Neon Local (AD-005).
+- **Reason**: CI queries crossed the Atlantic to the Neon project in Frankfurt: tests ran about 7x slower than locally, the suite took about 460s, and `owner-notes-migration.test.ts` hit the 10s hook limit. Question: where to use the container. User: "Everywhere". Question: the uncommitted `hookTimeout: 30_000`. User: "Revert it".
+- **Trade-off**: No test runs against real Neon; Docker is required wherever integration tests run.
+- **Scope**: `test/support/`, `package.json` (`@testcontainers/postgresql`), RUNNING.md, CLAUDE.md, `.env.example`; supersedes TEST-01..11 of `neon-dev-test-db` with TC-01..11.
+- **Date**: 2026-11-25
+- **Status**: active
 
 ## Handoff
 
