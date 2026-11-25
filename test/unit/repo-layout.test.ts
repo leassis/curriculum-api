@@ -189,7 +189,7 @@ describe("repo layout", () => {
 
   it("compose keeps data in the pgdata volume", () => {
     const composeFile = parse(read("docker-compose.yml"));
-    expect(composeFile.services.db.volumes).toEqual([expect.stringMatching(/^pgdata:\//)]);
+    expect(composeFile.services.db.volumes).toEqual(["pgdata:/var/lib/postgresql"]);
     expect(Object.keys(composeFile.volumes)).toEqual(["pgdata"]);
   });
 
