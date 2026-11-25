@@ -10,6 +10,7 @@ function fakeContainer() {
   const container = {
     getConnectionUri: () => URL_WITH_SECRET,
     stop: async () => {
+      await tick();
       events.push("stop");
     },
   };
