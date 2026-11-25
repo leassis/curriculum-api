@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.3.0...curriculum-api-v0.3.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **test:** name Docker in every container start failure ([8faabd3](https://github.com/leassis/curriculum-api/commit/8faabd322f1bb38a4642684985fe952232434609))
+
 ## [0.3.0](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.2.0...curriculum-api-v0.3.0) (2026-11-24)
 
 

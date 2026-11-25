@@ -1,6 +1,6 @@
 {
   "name": "curriculum-api",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Hono backend for a personal curriculum site: public chat, recruiter chat and admin",
   "license": "MIT",
   "repository": {
