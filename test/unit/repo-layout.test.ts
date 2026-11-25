@@ -181,6 +181,12 @@ describe("repo layout", () => {
     expect(Object.keys(composeFile.volumes)).toEqual(["pgdata"]);
   });
 
+  it("db scripts need no env file", () => {
+    const { scripts } = JSON.parse(read("package.json"));
+    expect(scripts["db:up"]).toBe("docker compose up -d --wait");
+    expect(scripts["db:down"]).toBe("docker compose down");
+  });
+
   it("has no local Postgres stack", () => {
     const compose = read("docker-compose.yml");
     expect(compose).not.toContain("postgres:17");
