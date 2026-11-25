@@ -156,22 +156,29 @@ describe("repo layout", () => {
     expect(position("dist/cli.js migrate")).toBeGreaterThan(position("pnpm build"));
   });
 
-  it("compose runs Neon Local only", () => {
+  it("compose runs postgres:18-alpine only", () => {
     const composeFile = parse(read("docker-compose.yml"));
     expect(Object.keys(composeFile.services)).toEqual(["db"]);
     const db = composeFile.services.db;
-    expect(db.image).toBe("neondatabase/neon_local:latest");
+    expect(db.image).toBe("postgres:18-alpine");
     expect(db.ports).toEqual(["5432:5432"]);
-    expect(Object.keys(db.environment).sort()).toEqual([
-      "DELETE_BRANCH",
-      "NEON_API_KEY",
-      "NEON_PROJECT_ID",
-      "PARENT_BRANCH_ID",
-    ]);
-    expect(db.environment.DELETE_BRANCH).toMatch(/^\$\{DELETE_BRANCH:-true\}$/);
-    for (const name of ["NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
-      expect(db.environment[name], name).toMatch(new RegExp(`^\\$\\{${name}(:-)?\\}$`));
-    }
+    expect(db.environment).toEqual({
+      POSTGRES_USER: "postgres",
+      POSTGRES_PASSWORD: "postgres",
+      POSTGRES_DB: "curriculum",
+    });
+    expect(JSON.stringify(composeFile)).not.toMatch(/NEON|PARENT_BRANCH_ID/);
+  });
+
+  it("compose waits for pg_isready", () => {
+    const db = parse(read("docker-compose.yml")).services.db;
+    expect([db.healthcheck.test].flat().join(" ")).toContain("pg_isready");
+  });
+
+  it("compose keeps data in the pgdata volume", () => {
+    const composeFile = parse(read("docker-compose.yml"));
+    expect(composeFile.services.db.volumes).toEqual([expect.stringMatching(/^pgdata:\//)]);
+    expect(Object.keys(composeFile.volumes)).toEqual(["pgdata"]);
   });
 
   it("has no local Postgres stack", () => {

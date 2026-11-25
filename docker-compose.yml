@@ -1,12 +1,20 @@
-# Neon Local: proxies to a branch of your Neon cloud project.
-# Requires NEON_API_KEY and NEON_PROJECT_ID (see .env.example). Run: pnpm db:up
+# Local Postgres for development. Run: pnpm db:up
 services:
   db:
-    image: neondatabase/neon_local:latest
+    image: postgres:18-alpine
     ports:
       - "5432:5432"
     environment:
-      NEON_API_KEY: ${NEON_API_KEY}
-      NEON_PROJECT_ID: ${NEON_PROJECT_ID}
-      PARENT_BRANCH_ID: ${PARENT_BRANCH_ID:-}
-      DELETE_BRANCH: ${DELETE_BRANCH:-true}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: curriculum
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d curriculum"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  pgdata:

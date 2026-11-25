@@ -67,8 +67,8 @@ T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] Tests named exactly as in C1-C3 pass
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Tests named exactly as in C1-C3 pass
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
