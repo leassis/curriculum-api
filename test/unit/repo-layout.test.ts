@@ -197,6 +197,9 @@ describe("repo layout", () => {
     const { scripts } = JSON.parse(read("package.json"));
     expect(scripts["db:up"]).toBe("docker compose up -d --wait");
     expect(scripts["db:down"]).toBe("docker compose down");
+    const compose = read("docker-compose.yml");
+    expect(parse(compose).services.db.env_file).toBeUndefined();
+    expect(compose).not.toContain("${");
   });
 
   it("has no local Postgres stack", () => {
