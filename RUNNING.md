@@ -10,20 +10,20 @@
 
 Copy `.env.example` to `.env` (gitignored) and fill every variable, no value is optional except the `MODEL_*` ones and `DATABASE_URL_UNPOOLED`:
 
-| Variable                                                             | Notes                                                                                                                            |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                       | Local dev: `postgres://neon:npg@localhost:5432/neondb` (Neon Local)                                                              |
-| `DATABASE_URL_UNPOOLED`                                              | Optional: direct (non-pooled) Neon connection used only by `migrate`; falls back to `DATABASE_URL`                               |
-| `OPENROUTER_API_KEY`                                                 | Real key needed for real LLM answers                                                                                             |
-| `SESSION_SECRET`                                                     | >= 32 bytes: `openssl rand -base64 32`                                                                                           |
-| `TURNSTILE_SECRET`                                                   | Real secret for real captchas (see below)                                                                                        |
-| `ADMIN_PASSWORD_HASH`                                                | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`)            |
-| `IP_HASH_SALT`                                                       | any random string                                                                                                                |
-| `PII_ENCRYPTION_KEY`                                                 | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                                |
-| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` / `MODEL_IMPORT` | OpenRouter model IDs; `MODEL_IMPORT` converts pasted CV text on the Profile page (Settings in admin override them)               |
-| `TEMPERATURE_PUBLIC` / `_TAILOR` / `_RECRUITER` / `_IMPORT`          | Optional sampling temperature 0..2 (defaults 0.4 / 0.1 / 0.3 / 0.1); Settings in admin override, `default` sends none            |
-| `NEON_API_KEY` / `NEON_PROJECT_ID`                                   | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`)                                                       |
-| `PARENT_BRANCH_ID`                                                   | Neon branch Neon Local forks its ephemeral dev branch from                                                                       |
+| Variable                                                             | Notes                                                                                                                 |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                       | Local dev: `postgres://neon:npg@localhost:5432/neondb` (Neon Local)                                                   |
+| `DATABASE_URL_UNPOOLED`                                              | Optional: direct (non-pooled) Neon connection used only by `migrate`; falls back to `DATABASE_URL`                    |
+| `OPENROUTER_API_KEY`                                                 | Real key needed for real LLM answers                                                                                  |
+| `SESSION_SECRET`                                                     | >= 32 bytes: `openssl rand -base64 32`                                                                                |
+| `TURNSTILE_SECRET`                                                   | Real secret for real captchas (see below)                                                                             |
+| `ADMIN_PASSWORD_HASH`                                                | `printf '%s' 'your-password' \| pnpm tsx src/cli.ts hash-password` (single-quote it in `.env`, the hash contains `$`) |
+| `IP_HASH_SALT`                                                       | any random string                                                                                                     |
+| `PII_ENCRYPTION_KEY`                                                 | 32 bytes base64: `openssl rand -base64 32` (losing it loses stored personal info)                                     |
+| `MODEL_PUBLIC` / `MODEL_TAILOR` / `MODEL_RECRUITER` / `MODEL_IMPORT` | OpenRouter model IDs; `MODEL_IMPORT` converts pasted CV text on the Profile page (Settings in admin override them)    |
+| `TEMPERATURE_PUBLIC` / `_TAILOR` / `_RECRUITER` / `_IMPORT`          | Optional sampling temperature 0..2 (defaults 0.4 / 0.1 / 0.3 / 0.1); Settings in admin override, `default` sends none |
+| `NEON_API_KEY` / `NEON_PROJECT_ID`                                   | Neon API credentials, read by Neon Local (`pnpm db:up`, from `.env.local`)                                            |
+| `PARENT_BRANCH_ID`                                                   | Neon branch Neon Local forks its ephemeral dev branch from                                                            |
 
 ## Start
 

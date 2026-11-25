@@ -208,8 +208,8 @@ T4 → T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] C16 proof exits 0
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
+- [x] C16 proof exits 0
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
 
 **Tests**: none
 **Gate**: build
