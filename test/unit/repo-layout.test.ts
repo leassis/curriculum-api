@@ -321,7 +321,10 @@ describe("repo layout", () => {
       for (const word of banned) {
         expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
       }
-      expect(text, `${file} mentions postgres:18-alpine`).toContain("postgres:18-alpine");
+      const dbUp = text.split("\n").find((line) => line.startsWith("pnpm db:up"));
+      expect(dbUp, `${file} describes pnpm db:up as postgres:18-alpine`).toContain(
+        "postgres:18-alpine",
+      );
       for (const word of ["Neon Local", "NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
         expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
       }
