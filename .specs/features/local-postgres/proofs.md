@@ -1,6 +1,6 @@
 # local-postgres proofs
 
-**HEAD**: fa4916d
+**HEAD**: 4ff8947
 **Tree**: clean
 **Shell**: /bin/sh
 **Result**: 16 pass, 0 fail
@@ -33,17 +33,17 @@
  ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > starts postgres:18-alpine and returns its URL 1ms
  ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > migrates the container before returning 6ms
  ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > stops the container when migrations fail 7ms
- ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > fails naming Docker when no container runtime is reachable 1ms
- ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > never logs or throws a connection string 7ms
- ✓ |unit| test/unit/support/global-setup.test.ts > global setup > provides the container URL 2ms
+ ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > fails naming Docker when no container runtime is reachable 0ms
+ ✓ |unit| test/unit/support/postgres-container.test.ts > test database container > never logs or throws a connection string 8ms
+ ✓ |unit| test/unit/support/global-setup.test.ts > global setup > provides the container URL 1ms
  ✓ |unit| test/unit/support/global-setup.test.ts > global setup > teardown stops the container it started 1ms
  ✓ |unit| test/unit/support/global-setup.test.ts > global setup > needs no Neon variable 0ms
  ✓ |unit| test/unit/support/global-setup.test.ts > global setup > starts one container per run 1ms
 
  Test Files  3 passed (3)
       Tests  26 passed (26)
-   Start at  11:05:07
-   Duration  648ms (import 90%, tests 6%, transform 3%, worker 1%)
+   Start at  11:09:00
+   Duration  569ms (import 88%, tests 8%, transform 4%, worker 1%)
 ```
 
 `docker compose up -d --wait && pnpm build && DATABASE_URL=postgres://postgres:postgres@localhost:5432/curricul` - exit 0
@@ -53,12 +53,12 @@ CLI Cleaning output folder
 ESM Build start
 ESM dist/cli.js            3.34 KB
 ESM dist/index.js          83.82 KB
-ESM dist/admin-TN4VKOFU.js 349.48 KB
-ESM dist/chunk-WUNDND5G.js 26.56 KB
 ESM dist/chunk-YAMX5625.js 10.32 KB
+ESM dist/chunk-WUNDND5G.js 26.56 KB
+ESM dist/admin-TN4VKOFU.js 349.48 KB
 ESM ⚡️ Build success in 28ms
 DTS Build start
-DTS ⚡️ Build success in 1410ms
+DTS ⚡️ Build success in 1257ms
 DTS dist/index.d.ts 5.08 KB
 migrations applied to localhost:5432/curriculum
  Container curriculum-api-db-1 Running 
@@ -78,8 +78,8 @@ migrations applied to localhost:5432/curriculum
 
  Test Files  28 passed (28)
       Tests  95 passed (95)
-   Start at  11:05:11
-   Duration  17.34s (import 59%, tests 40%, transform 1%)
+   Start at  11:09:04
+   Duration  17.25s (import 58%, tests 40%, transform 1%)
 ```
 
 `grep -q "^### AD-014" .specs/STATE.md && grep -A8 "^### AD-005" .specs/STATE.md / grep -q "superseded by AD-01` - exit 0
