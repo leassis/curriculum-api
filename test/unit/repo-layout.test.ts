@@ -298,4 +298,18 @@ describe("repo layout", () => {
       expect(text, `${file} mentions Neon Local`).toContain("Neon Local");
     }
   });
+
+  it("docs describe the test container", () => {
+    for (const file of ["RUNNING.md", "CLAUDE.md"]) {
+      const text = read(file);
+      expect(text, `${file} mentions Testcontainers`).toContain("Testcontainers");
+      expect(text, `${file} mentions Docker`).toContain("Docker");
+      expect(text.includes("TEST_PARENT_BRANCH_ID"), `${file} mentions TEST_PARENT_BRANCH_ID`).toBe(
+        false,
+      );
+      expect(/throwaway Neon branch/i.test(text), `${file} mentions a throwaway Neon branch`).toBe(
+        false,
+      );
+    }
+  });
 });

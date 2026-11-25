@@ -20,7 +20,7 @@ pnpm typecheck
 pnpm build                    # tsup -> dist/ (index + cli)
 pnpm test                     # all vitest projects
 pnpm test:unit                # no DB
-pnpm test:int                 # throwaway Neon branch per run (needs NEON_API_KEY, NEON_PROJECT_ID, PARENT_BRANCH_ID or TEST_PARENT_BRANCH_ID in .env/.env.local)
+pnpm test:int                 # Testcontainers postgres:18 container per run (needs Docker, no Neon variables)
 pnpm vitest run --project unit test/unit/path/to.test.ts   # single file
 pnpm vitest run -t "name"                                  # single test by name
 pnpm db:generate              # drizzle-kit generate (new migration in drizzle/)
@@ -29,7 +29,7 @@ pnpm build:css                # regenerate src/admin/static/*.generated.ts
 
 CI order: lint, typecheck, test, build, then `node dist/cli.js migrate`.
 
-The integration suite creates a throwaway Neon branch per run via the Neon API (migrated, then deleted at teardown, with a 1h `expires_at` safety net), so it can no longer wipe the dev DB. Integration files run serially (`fileParallelism: false`). Tests use a recording mock model (`test/support/mock-llm.ts`) and never call OpenRouter/Cloudflare.
+The integration suite starts one Testcontainers `postgres:18` container per run (migrated, then stopped at teardown), so it can never wipe the dev DB. Integration files run serially (`fileParallelism: false`). Tests use a recording mock model (`test/support/mock-llm.ts`) and never call OpenRouter/Cloudflare.
 
 ## Architecture
 
