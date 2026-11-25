@@ -263,6 +263,15 @@ describe("repo layout", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("test support makes no Neon API call", () => {
+    const files = (readdirSync(join(root, "test/support"), { recursive: true }) as string[]).filter(
+      (f) => /\.tsx?$/.test(f),
+    );
+    expect(files.length).toBeGreaterThan(0);
+    const offenders = files.filter((f) => read(`test/support/${f}`).includes("console.neon.tech"));
+    expect(offenders).toEqual([]);
+  });
+
   it("docs describe Neon, not the old Postgres stack", () => {
     const banned = [
       "curriculum_test",
