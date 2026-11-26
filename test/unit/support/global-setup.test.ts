@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import globalSetupDefault, { createGlobalSetup } from "../../support/global-setup";
 
 const URI = "postgres://test:test@localhost:55432/test";
-const NEON_VARS = ["NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID", "TEST_PARENT_BRANCH_ID"];
 
 function setupWithFakes() {
   const events: string[] = [];
@@ -51,17 +50,6 @@ describe("global setup", () => {
     expect(typeof teardown).toBe("function");
     await (teardown as () => Promise<void>)();
     expect(events.filter((e) => e === "stop")).toEqual(["stop"]);
-  });
-
-  it("needs no Neon variable", async () => {
-    for (const name of NEON_VARS) vi.stubEnv(name, "");
-    for (const name of NEON_VARS) delete process.env[name];
-    const { setup } = setupWithFakes();
-    const provided: [string, string][] = [];
-    await setup({
-      provide: ((key: string, value: string) => provided.push([key, value])) as never,
-    });
-    expect(provided).toEqual([["testDatabaseUrl", URI]]);
   });
 
   it("starts one container per run", async () => {

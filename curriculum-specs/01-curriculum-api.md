@@ -485,7 +485,7 @@ JSON errors for `/api/*`: `{ error: string, message?: string }` with proper stat
 
 - Unit: prompt builder, session sign/verify, IP hashing, config validation.
 - Route tests with `app.request()` (Hono) and a mocked LLM provider (AI SDK test utilities / mock model).
-- DB tests against a Neon **branch** or local Postgres (Docker) — configurable via `TEST_DATABASE_URL`.
+- DB tests against a Testcontainers Postgres container (Docker), one per `pnpm test:int` run.
 - Must cover: counter limits and atomicity (parallel requests), revoke takes effect immediately, scope mismatch rejected, CSRF required on admin mutations, decrement on LLM failure.
 - PII (mandatory): the mock LLM records every prompt it receives — assert that **no personal-info value ever appears** in any recorded prompt across all flows (public, recruiter, tailor); guard blocks saving a body that contains a personal-info value (incl. normalized phone/email); `contact` in API responses respects visibility; encryption round-trip and wrong-key failure; print view joins header + body correctly.
 - CI (GitHub Actions): lint, typecheck, test, build on every PR.

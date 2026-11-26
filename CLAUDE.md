@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Hono backend (TypeScript, ESM, Node >= 22, pnpm) for one person's career site: a public AI chat, private per-recruiter chats, tailored resumes, and an HTMX admin. Domain terms (Owner, Candidate, Career Body, Personal Header, Recruiter Chat, PII Guard…) are defined in [GLOSSARY.md](GLOSSARY.md); use them and respect its "Avoid" lists. Setup details and env vars are in [RUNNING.md](RUNNING.md).
+Hono backend (TypeScript, ESM, Node >= 22, pnpm) for one person's career site: a public AI chat, private per-recruiter chats, tailored resumes, and an HTMX admin. Domain terms (Owner, Candidate, Career Body, Personal Header, Recruiter Chat, PII Guard…) are defined in [GLOSSARY.md](GLOSSARY.md); use them and respect its "Avoid" lists. Setup details and env vars are in [README.md](README.md).
 
 Core invariant: **personal data never reaches an LLM.** Only the Career Body (markdown) is sent; Personal Info Fields are stored encrypted (`PII_ENCRYPTION_KEY`), the Owner is always "the Candidate" in prompts, and `src/llm/pii-guard.ts` rejects/redacts any PII value.
 
@@ -12,7 +12,7 @@ Core invariant: **personal data never reaches an LLM.** Only the Career Body (ma
 
 ```bash
 pnpm db:up                    # postgres:18-alpine container on localhost:5432 (required for dev; data kept in the pgdata volume); pnpm db:down stops it
-pnpm db:migrate               # / pnpm db:seed: CLI migrate/seed with .env.local
+pnpm db:migrate               # / pnpm db:seed: CLI migrate/seed, load .env then .env.local if present
 pnpm dev                      # tsx --env-file=.env examples/node/server.ts, http://localhost:3001
 pnpm tsx --env-file=.env src/cli.ts <migrate|seed|hash-password|cleanup>
 pnpm lint                     # biome check + scripts/check-architecture.ts (import-boundary rules)

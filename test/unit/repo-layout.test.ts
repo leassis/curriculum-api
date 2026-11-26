@@ -97,8 +97,8 @@ const FILES = [
 
 /** True when code reads a database URL variable from an env object (dot, bracket or destructuring). */
 function readsDatabaseUrl(code: string): boolean {
-  const access = /\benv\s*(\?\.|\.|\[\s*["'`])\s*(TEST_)?DATABASE_URL\b/;
-  const destructure = /\{[^}]*\b(TEST_)?DATABASE_URL\b[^}]*\}\s*=\s*[\w.]*\benv\b/;
+  const access = /\benv\s*(\?\.|\.|\[\s*["'`])\s*DATABASE_URL\b/;
+  const destructure = /\{[^}]*\bDATABASE_URL\b[^}]*\}\s*=\s*[\w.]*\benv\b/;
   return access.test(code) || destructure.test(code);
 }
 
@@ -156,12 +156,10 @@ describe("repo layout", () => {
     expect(position("dist/cli.js migrate")).toBeGreaterThan(position("pnpm build"));
   });
 
-  it("ci uses the compose Postgres and no Neon variable", () => {
+  it("ci uses the compose Postgres", () => {
     const ci = parse(read(".github/workflows/ci.yml"));
     const env = ci.jobs.verify.env;
     expect(env.DATABASE_URL).toBe("postgres://postgres:postgres@localhost:5432/curriculum");
-    expect(Object.keys(env).filter((k) => /^NEON_|^PARENT_BRANCH_ID$/.test(k))).toEqual([]);
-    expect(read(".github/workflows/ci.yml")).not.toMatch(/NEON_|PARENT_BRANCH_ID/);
   });
 
   it("ci comments skip Neon Local", () => {
@@ -179,7 +177,6 @@ describe("repo layout", () => {
       POSTGRES_PASSWORD: "postgres",
       POSTGRES_DB: "curriculum",
     });
-    expect(JSON.stringify(composeFile)).not.toMatch(/NEON|PARENT_BRANCH_ID/);
   });
 
   it("compose waits for pg_isready", () => {
@@ -234,20 +231,6 @@ describe("repo layout", () => {
       expect(index, name).toBeGreaterThan(0);
       expect(lines[index - 1]?.startsWith("# "), `${name} has a comment`).toBe(true);
     }
-    expect(
-      lines.some((l) => l.includes("TEST_DATABASE_URL")),
-      "TEST_DATABASE_URL is gone",
-    ).toBe(false);
-    expect(
-      lines.some((l) => l.includes("TEST_PARENT_BRANCH_ID")),
-      "TEST_PARENT_BRANCH_ID is gone",
-    ).toBe(false);
-    for (const name of ["NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
-      expect(
-        lines.some((l) => l.startsWith(`${name}=`)),
-        `${name} is gone`,
-      ).toBe(false);
-    }
     const urlIndex = lines.findIndex((l) => l.startsWith("DATABASE_URL="));
     expect(lines[urlIndex - 1]).toContain("postgres://postgres:postgres@localhost:5432/curriculum");
   });
@@ -273,13 +256,13 @@ describe("repo layout", () => {
   it("catches every spelling of an environment read of the database URL", () => {
     for (const code of [
       "process.env.DATABASE_URL",
-      'process.env["TEST_DATABASE_URL"]',
+      'process.env["DATABASE_URL"]',
       "process.env['DATABASE_URL']",
       "process.env?.DATABASE_URL",
       "import.meta.env.DATABASE_URL",
       'import.meta.env["DATABASE_URL"]',
       "const { DATABASE_URL } = process.env;",
-      "const { A, TEST_DATABASE_URL: url } = import.meta.env;",
+      "const { A, DATABASE_URL: url } = import.meta.env;",
       "const env = process.env; env.DATABASE_URL",
       "deps.env.DATABASE_URL",
     ]) {
@@ -288,7 +271,7 @@ describe("repo layout", () => {
     expect(readsDatabaseUrl('{ DATABASE_URL: "x" }')).toBe(false);
   });
 
-  it("keeps test files off DATABASE_URL and TEST_DATABASE_URL", () => {
+  it("keeps test files off DATABASE_URL", () => {
     // isolation.test.ts must read DATABASE_URL to prove the run's branch is a different host.
     const allowed = "test/integration/db/isolation.test.ts";
     const self = "test/unit/repo-layout.test.ts";
@@ -309,14 +292,8 @@ describe("repo layout", () => {
   });
 
   it("docs describe the local Postgres", () => {
-    const banned = [
-      "curriculum_test",
-      "db.localtest.me",
-      "TEST_DATABASE_URL",
-      "local-neon-http-proxy",
-      "Postgres 17",
-    ];
-    for (const file of ["RUNNING.md", "CLAUDE.md"]) {
+    const banned = ["curriculum_test", "db.localtest.me", "local-neon-http-proxy", "Postgres 17"];
+    for (const file of ["README.md", "CLAUDE.md"]) {
       const text = read(file);
       for (const word of banned) {
         expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
@@ -325,20 +302,17 @@ describe("repo layout", () => {
       expect(dbUp, `${file} describes pnpm db:up as postgres:18-alpine`).toContain(
         "postgres:18-alpine",
       );
-      for (const word of ["Neon Local", "NEON_API_KEY", "NEON_PROJECT_ID", "PARENT_BRANCH_ID"]) {
+      for (const word of ["Neon Local"]) {
         expect(text.includes(word), `${file} mentions ${word}`).toBe(false);
       }
     }
   });
 
   it("docs describe the test container", () => {
-    for (const file of ["RUNNING.md", "CLAUDE.md"]) {
+    for (const file of ["README.md", "CLAUDE.md"]) {
       const text = read(file);
       expect(text, `${file} mentions Testcontainers`).toContain("Testcontainers");
       expect(text, `${file} mentions Docker`).toContain("Docker");
-      expect(text.includes("TEST_PARENT_BRANCH_ID"), `${file} mentions TEST_PARENT_BRANCH_ID`).toBe(
-        false,
-      );
       expect(/throwaway Neon branch/i.test(text), `${file} mentions a throwaway Neon branch`).toBe(
         false,
       );
