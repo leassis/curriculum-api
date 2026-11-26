@@ -56,6 +56,12 @@ Other things that span files:
 
 Feature work is spec-driven: `.specs/features/<feature>/{spec,tasks,proofs,verification}.md` and `.specs/STATE.md` (decisions AD-xxx, handoff) are the source of truth; product background in `curriculum-specs/`. Schema changes are serialized on `main` as their own migration (parallel branches collide on `drizzle/meta/_journal.json`).
 
+## Working agreement
+
+Do not assume anything. When in doubt about scope, intent, or an ambiguous instruction, ask before acting. Never push, open PRs, or take other outward-facing actions unless explicitly told to.
+
+**Pushing always needs explicit confirmation**, every time. Permission to commit (or a vague "bypass") is not permission to push; a prior approval to push does not carry over to later pushes.
+
 ## Commits
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): subject` in the imperative, with types such as `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `chore`. One atomic commit per task. Breaking changes are marked `!` or with a `BREAKING CHANGE:` footer.
