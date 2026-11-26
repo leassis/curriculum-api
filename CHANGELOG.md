@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.3.1...curriculum-api-v0.3.2) (2026-11-26)
+
+
+### Bug Fixes
+
+* **db:** make db:migrate and db:seed env files optional ([e494738](https://github.com/leassis/curriculum-api/commit/e494738e0b3305b114578017a1bb58983cefed3b))
+
 ## [0.3.1](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.3.0...curriculum-api-v0.3.1) (2026-11-25)
 
 
