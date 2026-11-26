@@ -19,6 +19,8 @@ export interface LayoutProps {
   section?: Section;
   /** Renders only the content (no sidebar or logout); for pages shown before sign-in. */
   bare?: boolean;
+  /** The package `faviconUrl`; no icon link when unset. */
+  faviconUrl?: string;
 }
 
 /** Lucide-style outline icons (24 viewBox, stroked), one per nav Section. */
@@ -67,6 +69,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
   basePath,
   section,
   bare,
+  faviconUrl,
   children,
 }) => {
   const admin = `${basePath}/admin`;
@@ -76,6 +79,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
+        {faviconUrl ? <link rel="icon" href={faviconUrl} /> : null}
         <link rel="stylesheet" href={`${admin}/static/admin.css?v=${ADMIN_CSS_VERSION}`} />
         <script src={`${admin}/static/htmx.min.js`} />
         <script src={`${admin}/static/toast.js?v=${TOAST_JS_VERSION}`} defer />

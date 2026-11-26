@@ -55,6 +55,7 @@ describe("config", () => {
     const resolved = resolveConfig(rest);
     expect(resolved.basePath).toBe("");
     expect(resolved.secureCookies).toBe(true);
+    expect(resolved.faviconUrl).toBeUndefined();
     expect(resolved.limits).toEqual({
       publicQuestionsPerIpPerDay: 5,
       recruiterQuestionsDefault: 10,
@@ -87,5 +88,20 @@ describe("config", () => {
     expect(failure(validConfig({ temperatures: { recruiter: Number.NaN } })).fields).toEqual([
       "temperatures.recruiter",
     ]);
+  });
+
+  it("accepts only a same-origin faviconUrl path", () => {
+    expect(resolveConfig(validConfig({ faviconUrl: "/favicon.svg?v=2" })).faviconUrl).toBe(
+      "/favicon.svg?v=2",
+    );
+    for (const bad of [
+      "favicon.svg",
+      "//evil.example/x.svg",
+      "/\\evil.example",
+      "https://x.io/f.ico",
+      "/a b",
+    ]) {
+      expect(failure(validConfig({ faviconUrl: bad })).fields).toEqual(["faviconUrl"]);
+    }
   });
 });

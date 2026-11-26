@@ -128,6 +128,7 @@ export const SettingsForm = ({
 
 export const SettingsPage = ({
   basePath,
+  faviconUrl,
   models,
   limits,
   pageSize,
@@ -136,6 +137,7 @@ export const SettingsPage = ({
   saved,
 }: {
   basePath: string;
+  faviconUrl?: string;
   models: ModelGroup[];
   limits: Row[];
   pageSize: Row;
@@ -143,7 +145,7 @@ export const SettingsPage = ({
   error?: string;
   saved?: boolean;
 }) => (
-  <Layout title="Settings" basePath={basePath} section="settings">
+  <Layout title="Settings" basePath={basePath} faviconUrl={faviconUrl} section="settings">
     <PageHeader
       eyebrow="Settings"
       title="Settings"

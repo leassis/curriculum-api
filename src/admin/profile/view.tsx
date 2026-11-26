@@ -229,6 +229,7 @@ export const ProfileForm = ({
 
 export const ProfilePage = ({
   basePath,
+  faviconUrl,
   values,
   cards,
   tab,
@@ -236,13 +237,14 @@ export const ProfilePage = ({
   saved,
 }: {
   basePath: string;
+  faviconUrl?: string;
   values: Values;
   cards: CardView[];
   tab: Tab;
   error?: string;
   saved?: boolean;
 }) => (
-  <Layout title="Profile" basePath={basePath} section="profile">
+  <Layout title="Profile" basePath={basePath} faviconUrl={faviconUrl} section="profile">
     <PageHeader
       eyebrow="Profile"
       title="Profile"

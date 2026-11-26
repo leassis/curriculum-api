@@ -12,7 +12,9 @@ import { LoginPage } from "./view.js";
 /** Mounted at `/admin`. Login and logout. */
 export const loginRouter = new Hono<Env>();
 
-loginRouter.get("/login", (c) => c.html(LoginPage({ basePath: c.var.config.basePath })));
+loginRouter.get("/login", (c) =>
+  c.html(LoginPage({ basePath: c.var.config.basePath, faviconUrl: c.var.config.faviconUrl })),
+);
 
 loginRouter.post("/login", async (c) => {
   const config = c.var.config;
@@ -30,11 +32,22 @@ loginRouter.post("/login", async (c) => {
   }
   if (result === "throttled") {
     return c.html(
-      LoginPage({ basePath: config.basePath, error: "Too many attempts. Try again later." }),
+      LoginPage({
+        basePath: config.basePath,
+        faviconUrl: config.faviconUrl,
+        error: "Too many attempts. Try again later.",
+      }),
       429,
     );
   }
-  return c.html(LoginPage({ basePath: config.basePath, error: "Invalid password" }), 401);
+  return c.html(
+    LoginPage({
+      basePath: config.basePath,
+      faviconUrl: config.faviconUrl,
+      error: "Invalid password",
+    }),
+    401,
+  );
 });
 
 loginRouter.post("/logout", (c) => {

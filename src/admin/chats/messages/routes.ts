@@ -9,6 +9,7 @@ messagesRouter.get("/chats/:id/messages", async (c) =>
   c.html(
     MessagesPage({
       basePath: c.var.config.basePath,
+      faviconUrl: c.var.config.faviconUrl,
       transcript: await c.var.services.recruiterChat.transcript(c.req.param("id")),
     }),
   ),

@@ -18,7 +18,7 @@ printRouter.get("/profile/print", async (c) => {
   c.header("X-Robots-Tag", noindex["X-Robots-Tag"]);
   const basePath = c.var.config.basePath;
   const back = { href: `${basePath}/admin/profile`, label: "Back to profile" };
-  return c.html(PrintPage({ basePath, data, back }));
+  return c.html(PrintPage({ basePath, data, back, faviconUrl: c.var.config.faviconUrl }));
 });
 
 printRouter.get("/resumes/:id/print", async (c) => {
@@ -28,7 +28,7 @@ printRouter.get("/resumes/:id/print", async (c) => {
   c.header("X-Robots-Tag", noindex["X-Robots-Tag"]);
   const basePath = c.var.config.basePath;
   const back = { href: `${basePath}/admin/resumes/${id}`, label: "Back to resume" };
-  return c.html(PrintPage({ basePath, data, back }));
+  return c.html(PrintPage({ basePath, data, back, faviconUrl: c.var.config.faviconUrl }));
 });
 
 printRouter.get("/resumes/:id/download.md", async (c) => {

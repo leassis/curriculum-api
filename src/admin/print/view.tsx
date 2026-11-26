@@ -15,8 +15,10 @@ export const PrintPage = ({
   basePath,
   data,
   back,
+  faviconUrl,
 }: {
   basePath: string;
+  faviconUrl?: string;
   data: PrintView;
   back: { href: string; label: string };
 }) => (
@@ -26,6 +28,7 @@ export const PrintPage = ({
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="robots" content="noindex" />
       <title>{data.fullName || "Resume"}</title>
+      {faviconUrl ? <link rel="icon" href={faviconUrl} /> : null}
       <style>{raw(printCss(data.pageSize === "Letter" ? "Letter" : "A4"))}</style>
       <script src={`${basePath}/admin/print/print.js`} defer />
     </head>

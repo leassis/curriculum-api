@@ -17,6 +17,11 @@ export interface CurriculumApiConfig {
   basePath?: string;
   /** Default true; false for local http development. */
   secureCookies?: boolean;
+  /**
+   * Same-origin path of the admin pages' favicon, e.g. "/favicon.svg" (the admin CSP blocks
+   * other origins). Unset: no icon link is added.
+   */
+  faviconUrl?: string;
   /** OpenRouter model IDs; the settings table overrides them. */
   models?: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits?: Partial<Limits>;
@@ -53,6 +58,7 @@ export interface ResolvedConfig {
   piiEncryptionKey: string;
   basePath: string;
   secureCookies: boolean;
+  faviconUrl?: string;
   models: { public?: string; tailor?: string; recruiter?: string; import?: string };
   limits: Limits;
   temperatures: Temperatures;
@@ -101,6 +107,10 @@ const schema = z.object({
   }, "piiEncryptionKey must be base64 of exactly 32 bytes"),
   basePath: z.string().optional(),
   secureCookies: z.boolean().optional(),
+  faviconUrl: z
+    .string()
+    .regex(/^\/(?![/\\])\S*$/, "faviconUrl must be a same-origin path starting with /")
+    .optional(),
   models: z
     .object({
       public: z.string().optional(),
@@ -156,6 +166,7 @@ export function resolveConfig(input: CurriculumApiConfig): ResolvedConfig {
     piiEncryptionKey: c.piiEncryptionKey,
     basePath: c.basePath ?? "",
     secureCookies: c.secureCookies ?? true,
+    faviconUrl: c.faviconUrl,
     models: { ...c.models },
     limits,
     temperatures,

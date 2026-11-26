@@ -172,6 +172,7 @@ export const TestPanel = ({ basePath }: { basePath: string }) => (
 
 export const ChatsPage = ({
   basePath,
+  faviconUrl,
   origin,
   chats,
   resumes,
@@ -179,13 +180,14 @@ export const ChatsPage = ({
   counts,
 }: {
   basePath: string;
+  faviconUrl?: string;
   origin: string;
   chats: ChatView[];
   resumes: ResumeChoice[];
   defaultMax: number;
   counts: { activeChats: number; publicQuestionsToday: number };
 }) => (
-  <Layout title="Chats" basePath={basePath} section="chats">
+  <Layout title="Chats" basePath={basePath} faviconUrl={faviconUrl} section="chats">
     <PageHeader
       eyebrow="Chat links"
       title="Recruiter chats"

@@ -100,14 +100,16 @@ const ResumeRow = ({ basePath, resume }: { basePath: string; resume: ResumeView 
 
 export const ResumesPage = ({
   basePath,
+  faviconUrl,
   resumes,
   options,
 }: {
   basePath: string;
+  faviconUrl?: string;
   resumes: ResumeView[];
   options: HeaderOption[];
 }) => (
-  <Layout title="Resumes" basePath={basePath} section="resumes">
+  <Layout title="Resumes" basePath={basePath} faviconUrl={faviconUrl} section="resumes">
     <PageHeader
       eyebrow="Resumes"
       title="Tailored resumes"
@@ -506,6 +508,7 @@ export const Editor = ({
 
 export const EditorPage = (p: {
   basePath: string;
+  faviconUrl?: string;
   resume: ResumeView;
   options: HeaderOption[];
   fullName: string;
@@ -513,7 +516,7 @@ export const EditorPage = (p: {
   assessment: AssessmentView | null;
   error?: string;
 }) => (
-  <Layout title={p.resume.title} basePath={p.basePath} section="resumes">
+  <Layout title={p.resume.title} basePath={p.basePath} faviconUrl={p.faviconUrl} section="resumes">
     <a class="back-link" href={`${p.basePath}/admin/resumes`}>
       ← Back to resumes
     </a>

@@ -1,7 +1,15 @@
 import { Layout, PageHeader } from "../layout.js";
 
-export const ChatPage = ({ basePath, token }: { basePath: string; token: string }) => (
-  <Layout title="Recruiter chat" basePath={basePath} section="chats">
+export const ChatPage = ({
+  basePath,
+  faviconUrl,
+  token,
+}: {
+  basePath: string;
+  faviconUrl?: string;
+  token: string;
+}) => (
+  <Layout title="Recruiter chat" basePath={basePath} faviconUrl={faviconUrl} section="chats">
     <script src={`${basePath}/admin/chat/page.js`} defer />
     <div id="chat-page" class="flex flex-col gap-6" data-base={basePath} data-token={token}>
       <PageHeader
