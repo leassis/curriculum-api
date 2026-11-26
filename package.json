@@ -35,7 +35,7 @@
     "!dist/.claude-repo.tgz"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "verify:tailor": "tsx --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/verify-tailor.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/admin/tsconfig.client.json",
     "lint": "biome check . && tsx scripts/check-architecture.ts && tsx scripts/build-js.ts --check",
@@ -81,7 +81,7 @@
     "htmx.org": "2.0.11",
     "notyf": "3.10.0",
     "tailwindcss": "4.3.5",
-    "tsup": "9.0.0",
+    "tsdown": "0.23.7",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.1.1",

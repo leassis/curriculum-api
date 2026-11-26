@@ -17,7 +17,7 @@ pnpm dev                      # tsx --env-file=.env examples/node/server.ts, htt
 pnpm tsx --env-file=.env src/cli.ts <migrate|seed|hash-password|cleanup>
 pnpm lint                     # biome check + scripts/check-architecture.ts (import-boundary rules)
 pnpm typecheck
-pnpm build                    # tsup -> dist/ (index + cli)
+pnpm build                    # tsdown -> dist/ (index + cli)
 pnpm test                     # all vitest projects
 pnpm test:unit                # no DB
 pnpm test:int                 # Testcontainers postgres:18-alpine container per run (needs Docker, no Neon variables)

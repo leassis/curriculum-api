@@ -88,7 +88,7 @@ const FILES = [
   "drizzle.config.ts",
   "biome.json",
   "tsconfig.json",
-  "tsup.config.ts",
+  "tsdown.config.ts",
   "vitest.config.ts",
   ".github/workflows/ci.yml",
   ".env.example",
