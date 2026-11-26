@@ -1,6 +1,23 @@
 # curriculum-api
 
-TypeScript ESM backend built with Hono, Drizzle ORM and PostgreSQL (schema `curriculum_api`) for a personal career site: a public AI chat, private per-recruiter chats, tailored resume generation, and an HTML/HTMX admin. `examples/node/server.ts` runs it on port `3001`.
+An open-source backend for a personal career site. One person (the **Owner**) puts their career into it, and it gives them:
+
+- **A public AI chat**: anyone can ask questions about the Owner's experience and get answers grounded in their career data.
+- **Private recruiter chats**: a unique link (`/r/:token`) per recruiter, with a question quota, an optional expiry, and a switch to revoke it.
+- **Tailored resumes**: paste a job description and the model rewrites the Owner's career data for that role. You also get a fit score, the skills the job asks for that the career does not show, and what was left out. The result is editable and prints to PDF from an A4 page.
+- **An admin UI** (server-rendered HTML + HTMX) to manage the career data, personal info, prompts, models, limits, resumes and recruiter links.
+
+One deployment serves one person. The package is a headless API: bring your own frontend, or just use the admin.
+
+## Privacy by design
+
+**Personal data never reaches an LLM.** Only the career content (the _Career Body_, plain markdown) is sent to the model. Name, email, phone and other personal fields are stored encrypted (`PII_ENCRYPTION_KEY`) and shown only where the Owner allows. In every prompt the Owner is just "the Candidate", and a PII guard rejects or redacts any personal value before it is stored or sent.
+
+## Stack
+
+TypeScript (ESM), [Hono](https://hono.dev), Drizzle ORM and PostgreSQL (schema `curriculum_api`), LLMs through [OpenRouter](https://openrouter.ai), Cloudflare Turnstile for captchas. The package is host-agnostic; `examples/node/server.ts` is a Node adapter that runs it on port `3001`.
+
+Domain terms (Owner, Candidate, Career Body, Recruiter Chat…) are defined in [GLOSSARY.md](GLOSSARY.md).
 
 ## Prerequisites
 
@@ -65,3 +82,7 @@ Tests use a recording mock model and never call OpenRouter or Cloudflare.
 - `OPENROUTER_API_KEY`: every LLM call (public chat, recruiter chat, resume generation). Without it these answer 502 `llm_unavailable`; resume generation answers 503 "Generation failed".
 - `TURNSTILE_SECRET` (+ a widget token from the site): `POST /api/public/session` and `/api/r/:token/session`. For local runs Cloudflare's dummy secret `1x0000000000000000000000000000000AA` accepts any token (it still calls Cloudflare, so needs internet).
 - Admin, Master CV, personal info, settings, resumes (except Generate) and recruiter link management need no external key.
+
+## License
+
+[MIT](LICENSE)
