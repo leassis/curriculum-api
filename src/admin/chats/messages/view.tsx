@@ -7,15 +7,17 @@ const BLOCK = "white-space: pre-wrap; overflow-wrap: anywhere; margin: 0.25rem 0
 /** Messages render as plain text: JSX escapes every character, no markdown, no raw HTML. */
 export const MessagesPage = ({
   basePath,
+  faviconUrl,
   transcript: { chat, messages },
 }: {
   basePath: string;
+  faviconUrl?: string;
   transcript: {
     chat: { recruiterName: string };
     messages: { role: string; content: string; createdAt: Date }[];
   };
 }) => (
-  <Layout title="Chat messages" basePath={basePath} section="chats">
+  <Layout title="Chat messages" basePath={basePath} faviconUrl={faviconUrl} section="chats">
     <a class="back-link" href={`${basePath}/admin/chats`}>
       ← Back to chats
     </a>

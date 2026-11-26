@@ -28,6 +28,7 @@ personalInfoRouter.get("/personal-info", async (c) =>
   c.html(
     PersonalInfoPage({
       basePath: c.var.config.basePath,
+      faviconUrl: c.var.config.faviconUrl,
       fields: await c.var.services.personalInfo.list(),
       visibilities: VISIBILITIES,
     }),

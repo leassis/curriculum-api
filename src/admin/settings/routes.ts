@@ -62,6 +62,7 @@ settingsRouter.get("/settings", async (c) =>
   c.html(
     SettingsPage({
       basePath: c.var.config.basePath,
+      faviconUrl: c.var.config.faviconUrl,
       ...(await rowsFor(c)),
       saved: c.req.query("saved") === "1",
     }),
@@ -80,7 +81,15 @@ settingsRouter.post("/settings", async (c) => {
   const reject = async (message: string) =>
     htmx
       ? c.html(SettingsForm({ basePath, ...(await rowsFor(c, submitted)), error: message }), 400)
-      : c.html(SettingsPage({ basePath, ...(await rowsFor(c, submitted)), error: message }), 400);
+      : c.html(
+          SettingsPage({
+            basePath,
+            faviconUrl: c.var.config.faviconUrl,
+            ...(await rowsFor(c, submitted)),
+            error: message,
+          }),
+          400,
+        );
 
   for (const [key, value] of Object.entries(submitted)) {
     if (key.startsWith("limits.") && value !== "" && !/^[1-9]\d*$/.test(value)) {

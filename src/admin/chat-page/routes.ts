@@ -20,7 +20,9 @@ chatPageRouter.get("/chat/page.js", (c) =>
 chatPageRouter.get("/chat/:token", async (c) => {
   const token = c.req.param("token");
   await c.var.services.recruiterChat.byToken(token);
-  return c.html(ChatPage({ basePath: c.var.config.basePath, token }));
+  return c.html(
+    ChatPage({ basePath: c.var.config.basePath, faviconUrl: c.var.config.faviconUrl, token }),
+  );
 });
 
 /**

@@ -136,16 +136,23 @@ export const List = ({
 
 export const PersonalInfoPage = ({
   basePath,
+  faviconUrl,
   fields,
   visibilities,
 }: {
   basePath: string;
+  faviconUrl?: string;
   fields: PersonalInfoField[];
   visibilities: readonly string[];
 }) => {
   const base = `${basePath}/admin/personal-info`;
   return (
-    <Layout title="Personal info" basePath={basePath} section="personal-info">
+    <Layout
+      title="Personal info"
+      basePath={basePath}
+      faviconUrl={faviconUrl}
+      section="personal-info"
+    >
       <PageHeader
         eyebrow="Personal info"
         title="Personal info"

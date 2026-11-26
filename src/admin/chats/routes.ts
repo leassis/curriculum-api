@@ -19,6 +19,7 @@ chatsRouter.get("/chats", async (c) => {
   return c.html(
     ChatsPage({
       basePath: config.basePath,
+      faviconUrl: config.faviconUrl,
       origin: new URL(c.req.url).origin,
       chats: await services.recruiterChat.list(),
       resumes: await services.recruiterChat.resumeOptions(),

@@ -116,6 +116,7 @@ profileRouter.get("/profile", async (c) =>
   c.html(
     ProfilePage({
       basePath: c.var.config.basePath,
+      faviconUrl: c.var.config.faviconUrl,
       values: await currentValues(c),
       cards: await currentCards(c),
       tab: tabOf(c.req.query("tab")),
@@ -143,7 +144,14 @@ profileRouter.post("/profile", async (c) => {
     htmx
       ? c.html(ProfileForm({ basePath, values, tab, error: message }), 400)
       : c.html(
-          ProfilePage({ basePath, values, cards: await currentCards(c), tab: on, error: message }),
+          ProfilePage({
+            basePath,
+            faviconUrl: c.var.config.faviconUrl,
+            values,
+            cards: await currentCards(c),
+            tab: on,
+            error: message,
+          }),
           400,
         );
 

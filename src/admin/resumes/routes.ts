@@ -37,6 +37,7 @@ resumesRouter.get("/resumes", async (c) =>
   c.html(
     ResumesPage({
       basePath: c.var.config.basePath,
+      faviconUrl: c.var.config.faviconUrl,
       resumes: (await c.var.services.resumes.list()).map((resume) => ({
         ...resume,
         score: resume.assessment?.score ?? null,
@@ -119,7 +120,11 @@ async function cardsFragment(c: Ctx, resume: Resume, reopen: Reopen = {}) {
 resumesRouter.get("/resumes/:id", async (c) => {
   const resume = await c.var.services.resumes.get(c.req.param("id"));
   return c.html(
-    EditorPage({ ...(await editor(c, resume)), error: createError(c.req.query("error")) }),
+    EditorPage({
+      ...(await editor(c, resume)),
+      faviconUrl: c.var.config.faviconUrl,
+      error: createError(c.req.query("error")),
+    }),
   );
 });
 

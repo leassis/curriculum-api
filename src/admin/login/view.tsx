@@ -1,8 +1,16 @@
 import { ErrorFragment } from "../error-fragment.js";
 import { Layout } from "../layout.js";
 
-export const LoginPage = ({ basePath, error }: { basePath: string; error?: string }) => (
-  <Layout title="Sign in" basePath={basePath} bare>
+export const LoginPage = ({
+  basePath,
+  faviconUrl,
+  error,
+}: {
+  basePath: string;
+  faviconUrl?: string;
+  error?: string;
+}) => (
+  <Layout title="Sign in" basePath={basePath} faviconUrl={faviconUrl} bare>
     <div class="card-pad mx-auto w-full max-w-sm">
       <h1 class="section-title">Sign in</h1>
       {error ? <ErrorFragment message={error} /> : null}
