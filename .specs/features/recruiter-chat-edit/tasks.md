@@ -144,9 +144,9 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Save answers the New chat form, "Saved" and `HX-Trigger: chats-changed`; errors answer 400/404 with the message in the status line
-- [ ] Edit of a deleted chat shows "Recruiter Chat not found" and keeps the New chat form
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Save answers the New chat form, "Saved" and `HX-Trigger: chats-changed`; errors answer 400/404 with the message in the status line
+- [x] Edit of a deleted chat shows "Recruiter Chat not found" and keeps the New chat form
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

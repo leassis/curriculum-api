@@ -180,6 +180,13 @@ export class RecruiterChatService {
     };
   }
 
+  /** One chat for the edit form; NotFound for an unknown or malformed id. */
+  async get(id: string): Promise<RecruiterChat> {
+    const row = UUID.test(id) ? await this.chats.findById(id) : null;
+    if (!row) throw new NotFoundError("Recruiter Chat not found");
+    return toChat(row);
+  }
+
   async revoke(id: string): Promise<RecruiterChat> {
     return this.found(UUID.test(id) ? await this.chats.revoke(id) : null);
   }
