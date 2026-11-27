@@ -19,6 +19,7 @@ export interface ResumePatch {
   /** The Resume Document, already validated by the service; stored as jsonb. */
   structured?: unknown;
   customInstructions?: string;
+  company?: string | null;
   jobLink?: string;
   recruiterName?: string;
   notes?: string;
@@ -29,6 +30,8 @@ export interface ResumePatch {
   missingSkills?: string[];
   /** Array of `{ what, reason }`, already validated by the service; stored as jsonb. */
   omissions?: unknown;
+  /** The Short Job Description, already trimmed and bounded by the service; `null` clears it. */
+  jobDescriptionShort?: string | null;
 }
 
 export interface ResumeRepo {

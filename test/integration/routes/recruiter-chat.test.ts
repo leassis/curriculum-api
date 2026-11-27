@@ -204,3 +204,46 @@ describe("recruiter chat with database", () => {
     }
   });
 });
+
+describe("recruiter chat edit", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  it("next question uses the saved job description", async () => {
+    const s = await setup();
+    const resumes = new ResumeRepository(db);
+    const resume = await resumes.insert({
+      title: "R",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
+    await resumes.update(resume.id, { structured: textDocumentV2("Edited resume text.") });
+    const chat = await s.create({ jobDescriptionShort: "Old postgres role" });
+    const cookie = await s.cookieFor(chat.id);
+    expect((await s.ask(chat.token, cookie, "First?")).status).toBe(200);
+    const earlier = await s.repo.messages(chat.id);
+
+    await s.recruiterChat.update(chat.id, {
+      recruiterName: RECRUITER,
+      company: COMPANY,
+      jobDescriptionShort: "Brand new platform role",
+      maxQuestions: 5,
+      tailoredResumeId: resume.id,
+    });
+
+    const res = await s.ask(chat.token, cookie, "Second?");
+    expect(res.status).toBe(200);
+    expect(s.calls).toHaveLength(2);
+    expect(s.calls[0]?.system).toContain("Old postgres role");
+    expect(s.calls[1]?.system).toContain("Brand new platform role");
+    expect(s.calls[1]?.system).not.toContain("Old postgres role");
+    expect(s.calls[1]?.prompt).toContain("Edited resume text.");
+    expect(s.calls[0]?.prompt).not.toContain("Edited resume text.");
+    const later = await s.repo.messages(chat.id);
+    expect(later).toHaveLength(4);
+    expect(later.slice(0, 2)).toEqual(earlier);
+    expect(await s.used(chat.id)).toBe(2);
+  });
+});

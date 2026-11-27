@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gt, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { recruiterChatMessages, recruiterChats, tailoredResumes } from "../db/schema.js";
 
@@ -15,9 +15,18 @@ export interface RecruiterChatInsert {
   expiresAt: Date | null;
 }
 
+/** The fields an edit may change; token, used and status are never part of it. */
+export type RecruiterChatPatch = Omit<RecruiterChatInsert, "token">;
+
 export interface ResumeOption {
   id: string;
   title: string;
+}
+
+/** What the New chat form copies from a Tailored Resume. */
+export interface ResumeContext {
+  company: string | null;
+  jobDescriptionShort: string | null;
 }
 
 export type MessageRole = "user" | "assistant";
@@ -39,6 +48,8 @@ export interface RecruiterChatRepo {
   findByToken(token: string): Promise<RecruiterChatRow | null>;
   findById(id: string): Promise<RecruiterChatRow | null>;
   insert(input: RecruiterChatInsert): Promise<RecruiterChatRow>;
+  /** Saves the editable fields only while `used <= maxQuestions`; null when the id is gone or `used` is higher. */
+  update(id: string, patch: RecruiterChatPatch): Promise<RecruiterChatRow | null>;
   revoke(id: string): Promise<RecruiterChatRow | null>;
   reset(id: string): Promise<RecruiterChatRow | null>;
   delete(id: string): Promise<boolean>;
@@ -50,6 +61,8 @@ export interface RecruiterChatRepo {
   /** Raw stored Resume Document of a Tailored Resume; null when the id or the document is null or the resume is gone. */
   resumeDocument(id: string | null): Promise<unknown>;
   resumeExists(id: string): Promise<boolean>;
+  /** A Tailored Resume's company and Short Job Description; null when the resume is gone. */
+  resumeContext(id: string): Promise<ResumeContext | null>;
   resumeOptions(): Promise<ResumeOption[]>;
   /** Stores messages in one statement, in array order; the chat's messages go with the chat. */
   addMessages(chatId: string, messages: ChatMessageInsert[]): Promise<void>;
@@ -89,6 +102,15 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
   async insert(input: RecruiterChatInsert): Promise<RecruiterChatRow> {
     const [row] = await this.db.insert(recruiterChats).values(input).returning(columns);
     return row as RecruiterChatRow;
+  }
+
+  async update(id: string, patch: RecruiterChatPatch): Promise<RecruiterChatRow | null> {
+    const [row] = await this.db
+      .update(recruiterChats)
+      .set(patch)
+      .where(and(eq(recruiterChats.id, id), lte(recruiterChats.used, patch.maxQuestions)))
+      .returning(columns);
+    return row ?? null;
   }
 
   async revoke(id: string): Promise<RecruiterChatRow | null> {
@@ -162,6 +184,17 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
       .from(tailoredResumes)
       .where(eq(tailoredResumes.id, id));
     return rows.length > 0;
+  }
+
+  async resumeContext(id: string): Promise<ResumeContext | null> {
+    const [row] = await this.db
+      .select({
+        company: tailoredResumes.company,
+        jobDescriptionShort: tailoredResumes.jobDescriptionShort,
+      })
+      .from(tailoredResumes)
+      .where(eq(tailoredResumes.id, id));
+    return row ?? null;
   }
 
   resumeOptions(): Promise<ResumeOption[]> {

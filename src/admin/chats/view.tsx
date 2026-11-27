@@ -21,6 +21,15 @@ export interface ResumeChoice {
 
 const stamp = (d: Date | null) => (d ? d.toISOString().slice(0, 16).replace("T", " ") : "");
 
+export type FieldNotice = "kept" | "no-source" | "not-found";
+
+/** The notices exactly as the Owner reads them. */
+export const NOTICE_TEXT: Record<FieldNotice, string> = {
+  kept: "Not filled: the field has your own text.",
+  "no-source": "This resume has no short description yet. Regenerate it to get one.",
+  "not-found": "Tailored Resume not found",
+};
+
 /** The Recruiter Link: the site and the API share one origin, so it is `<origin>/r/<token>`. */
 const linkFor = (origin: string, chat: ChatView) => `${origin}/r/${chat.token}`;
 
@@ -57,6 +66,17 @@ export const ChatRow = ({
           <button
             type="button"
             class="icon-btn"
+            aria-label={`Edit chat for ${chat.recruiterName}`}
+            title="Edit"
+            hx-get={`${url}/edit`}
+            hx-target="#chat-form"
+            hx-swap="outerHTML"
+          >
+            <Icon name="edit" />
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
             data-copy={linkFor(origin, chat)}
             aria-label={`Copy link for ${chat.recruiterName}`}
             title="Copy link"
@@ -69,6 +89,9 @@ export const ChatRow = ({
             aria-label={`Revoke chat for ${chat.recruiterName}`}
             title="Revoke"
             hx-patch={`${url}/revoke`}
+            hx-confirm={`Revoke chat for ${chat.recruiterName}? The link stops working for good.`}
+            data-confirm-ok="Revoke"
+            data-confirm-danger
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
@@ -80,6 +103,8 @@ export const ChatRow = ({
             aria-label={`Reset chat for ${chat.recruiterName}`}
             title="Reset"
             hx-patch={`${url}/reset`}
+            hx-confirm={`Reset the question count for ${chat.recruiterName}?`}
+            data-confirm-ok="Reset"
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
@@ -170,6 +195,269 @@ export const TestPanel = ({ basePath }: { basePath: string }) => (
   </aside>
 );
 
+const JobDescriptionField = ({ value, oob }: { value: string; oob?: boolean }) => (
+  <textarea
+    class="input"
+    id="jobDescriptionShort"
+    name="jobDescriptionShort"
+    rows={6}
+    hx-swap-oob={oob ? "true" : undefined}
+  >
+    {value}
+  </textarea>
+);
+
+const CompanyField = ({ value, oob }: { value: string; oob?: boolean }) => (
+  <input
+    class="input"
+    id="company"
+    type="text"
+    name="company"
+    value={value}
+    hx-swap-oob={oob ? "true" : undefined}
+  />
+);
+
+const LastFilled = ({ name, value, oob }: { name: string; value: string; oob?: boolean }) => (
+  <input type="hidden" id={name} name={name} value={value} hx-swap-oob={oob ? "true" : undefined} />
+);
+
+const Notice = ({
+  basePath,
+  field,
+  notice,
+}: {
+  basePath: string;
+  field: "jobDescriptionShort" | "company";
+  notice: FieldNotice;
+}) => (
+  <p class="muted">
+    {NOTICE_TEXT[notice]}
+    {notice === "kept" ? (
+      <>
+        {" "}
+        <button
+          type="button"
+          class="btn-ghost btn-sm"
+          hx-post={`${basePath}/admin/chats/autofill`}
+          hx-include="closest form"
+          hx-vals={JSON.stringify({ replace: field })}
+          hx-swap="none"
+        >
+          Replace
+        </button>
+      </>
+    ) : null}
+  </p>
+);
+
+/**
+ * The answer to an autofill request: the two fields, the values the autofill last put in them, and
+ * a notice under each, all swapped out of band into the New chat form. The notices go into regions
+ * that are already on the page, so a screen reader announces them.
+ */
+export const AutofillFragment = ({
+  basePath,
+  jobDescriptionShort,
+  company,
+  lastJobDescriptionShort,
+  lastCompany,
+  jobDescriptionNotice,
+  companyNotice,
+}: {
+  basePath: string;
+  jobDescriptionShort: string;
+  company: string;
+  lastJobDescriptionShort: string;
+  lastCompany: string;
+  jobDescriptionNotice: FieldNotice | null;
+  companyNotice: FieldNotice | null;
+}) => (
+  <>
+    <JobDescriptionField value={jobDescriptionShort} oob />
+    <CompanyField value={company} oob />
+    <LastFilled name="lastJobDescriptionShort" value={lastJobDescriptionShort} oob />
+    <LastFilled name="lastCompany" value={lastCompany} oob />
+    <div hx-swap-oob="innerHTML:#jd-notice">
+      {jobDescriptionNotice ? (
+        <Notice basePath={basePath} field="jobDescriptionShort" notice={jobDescriptionNotice} />
+      ) : null}
+    </div>
+    <div hx-swap-oob="innerHTML:#company-notice">
+      {companyNotice ? <Notice basePath={basePath} field="company" notice={companyNotice} /> : null}
+    </div>
+  </>
+);
+
+/** What the Edit chat form needs from a stored chat. */
+export interface EditableChat {
+  id: string;
+  recruiterName: string;
+  company: string | null;
+  jobDescriptionShort: string | null;
+  tailoredResumeId: string | null;
+  maxQuestions: number;
+  expiresAt: Date | null;
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** A `datetime-local` value in the server's local time, the way the create route reads it back. */
+const localInput = (d: Date | null) =>
+  d
+    ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    : "";
+
+/**
+ * The New chat form, or the Edit chat form when `chat` is given. Both sit in `#chat-form`, so a
+ * Save or Cancel swaps the whole block. In edit mode the "last autofilled" inputs start empty, so
+ * the stored text counts as the Owner's and a resume pick never overwrites it silently.
+ */
+export const ChatForm = ({
+  basePath,
+  resumes,
+  defaultMax,
+  chat,
+}: {
+  basePath: string;
+  resumes: ResumeChoice[];
+  defaultMax: number;
+  chat?: EditableChat;
+}) => (
+  <div id="chat-form">
+    <form
+      class="card-pad"
+      {...(chat
+        ? {
+            "hx-put": `${basePath}/admin/chats/${chat.id}`,
+            "hx-target": "#chat-form",
+            "hx-swap": "outerHTML",
+          }
+        : {
+            "hx-post": `${basePath}/admin/chats`,
+            "hx-target": "#created",
+            "hx-swap": "outerHTML",
+          })}
+    >
+      <h2 class="section-title">{chat ? "Edit chat" : "New chat"}</h2>
+      <div id="created" />
+      <div class="field">
+        <label class="field-label" for="tailoredResumeId">
+          Resume
+        </label>
+        <select
+          class="input"
+          id="tailoredResumeId"
+          name="tailoredResumeId"
+          hx-post={`${basePath}/admin/chats/autofill`}
+          hx-trigger="change"
+          hx-swap="none"
+        >
+          <option value="" selected={!chat?.tailoredResumeId}>
+            Master CV
+          </option>
+          {resumes.map((r) => (
+            <option value={r.id} selected={r.id === chat?.tailoredResumeId}>
+              {r.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="recruiterName">
+            Recruiter name
+          </label>
+          <input
+            class="input"
+            id="recruiterName"
+            type="text"
+            name="recruiterName"
+            value={chat?.recruiterName ?? ""}
+            required
+          />
+        </div>
+        <div class="field">
+          <label class="field-label" for="company">
+            Company
+          </label>
+          <CompanyField value={chat?.company ?? ""} />
+          <div id="company-notice" aria-live="polite" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="jobDescriptionShort">
+          Job Description (max 2000 characters)
+        </label>
+        <JobDescriptionField value={chat?.jobDescriptionShort ?? ""} />
+        <div id="jd-notice" aria-live="polite" />
+        <LastFilled name="lastJobDescriptionShort" value="" />
+        <LastFilled name="lastCompany" value="" />
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="maxQuestions">
+            Max questions
+          </label>
+          <input
+            class="input"
+            id="maxQuestions"
+            type="number"
+            name="maxQuestions"
+            min={1}
+            max={100}
+            value={chat?.maxQuestions ?? defaultMax}
+          />
+        </div>
+        <div class="field">
+          <label class="field-label" for="expiresAt">
+            Expires at
+          </label>
+          <input
+            class="input"
+            id="expiresAt"
+            type="datetime-local"
+            name="expiresAt"
+            value={localInput(chat?.expiresAt ?? null)}
+          />
+        </div>
+      </div>
+      <div class="actions">
+        {chat ? (
+          <>
+            <button type="submit" class="btn">
+              Save
+            </button>
+            <button
+              type="button"
+              class="btn-ghost"
+              hx-get={`${basePath}/admin/chats/new`}
+              hx-target="#chat-form"
+              hx-swap="outerHTML"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button type="submit" class="btn">
+            Create
+          </button>
+        )}
+      </div>
+    </form>
+  </div>
+);
+
+/** A saved edit's answer: the New chat form, and "Saved" swapped into the status line out of band. */
+export const Saved = ({ form }: { form: unknown }) => (
+  <>
+    {form}
+    <p id="chat-status" class="status" role="status" hx-swap-oob="true">
+      <span data-toast="success">Saved</span>
+    </p>
+  </>
+);
+
 export const ChatsPage = ({
   basePath,
   faviconUrl,
@@ -222,75 +510,7 @@ export const ChatsPage = ({
     </div>
     <div class="chats-split">
       <div class="chats-main">
-        <form
-          class="card-pad"
-          hx-post={`${basePath}/admin/chats`}
-          hx-target="#created"
-          hx-swap="outerHTML"
-        >
-          <h2 class="section-title">New chat</h2>
-          <div id="created" />
-          <div class="form-grid">
-            <div class="field">
-              <label class="field-label" for="recruiterName">
-                Recruiter name
-              </label>
-              <input class="input" id="recruiterName" type="text" name="recruiterName" required />
-            </div>
-            <div class="field">
-              <label class="field-label" for="company">
-                Company
-              </label>
-              <input class="input" id="company" type="text" name="company" />
-            </div>
-          </div>
-          <div class="field">
-            <label class="field-label" for="jobDescriptionShort">
-              Job Description (max 2000 characters)
-            </label>
-            <textarea class="input" id="jobDescriptionShort" name="jobDescriptionShort" rows={6} />
-          </div>
-          <div class="form-grid">
-            <div class="field">
-              <label class="field-label" for="maxQuestions">
-                Max questions
-              </label>
-              <input
-                class="input"
-                id="maxQuestions"
-                type="number"
-                name="maxQuestions"
-                min={1}
-                max={100}
-                value={defaultMax}
-              />
-            </div>
-            <div class="field">
-              <label class="field-label" for="expiresAt">
-                Expires at
-              </label>
-              <input class="input" id="expiresAt" type="datetime-local" name="expiresAt" />
-            </div>
-            <div class="field">
-              <label class="field-label" for="tailoredResumeId">
-                Resume
-              </label>
-              <select class="input" id="tailoredResumeId" name="tailoredResumeId">
-                <option value="" selected>
-                  Master CV
-                </option>
-                {resumes.map((r) => (
-                  <option value={r.id}>{r.title}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div class="actions">
-            <button type="submit" class="btn">
-              Create
-            </button>
-          </div>
-        </form>
+        <ChatForm basePath={basePath} resumes={resumes} defaultMax={defaultMax} />
       </div>
       <div class="chats-side">
         <TestPanel basePath={basePath} />

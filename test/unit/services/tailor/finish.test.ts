@@ -25,6 +25,7 @@ function run(
     score_rationale: "Covers the core requirements.",
     missing_skills: [],
     omissions: [],
+    job_description_short: "- Backend engineer",
     ...overrides,
   };
   return finish(library, annotate(library), out, TODAY);
@@ -133,6 +134,19 @@ describe("finish", () => {
       ok: false,
       reason: "assessment",
     });
+  });
+
+  it("returns ok with a truncated short job description", () => {
+    const library = [item("experience")];
+    const long = `${"a".repeat(1500)}. ${"b".repeat(600)}`;
+    const result = ok(run(library, keep(library), { job_description_short: long }));
+    expect(result.jobDescriptionShort).toBe(`${"a".repeat(1500)}.`);
+  });
+
+  it("returns ok with null for a blank short job description", () => {
+    const library = [item("experience")];
+    const result = ok(run(library, keep(library), { job_description_short: " \n " }));
+    expect(result.jobDescriptionShort).toBeNull();
   });
 
   it("passes an assemble failure through", () => {

@@ -10,6 +10,8 @@ export interface ResumeView {
   model: string | null;
   updatedAt: Date;
   jobDescription: string;
+  /** The Short Job Description; null until the first successful generation. */
+  jobDescriptionShort: string | null;
   customInstructions: string;
   jobLink: string;
   recruiterName: string;
@@ -406,6 +408,26 @@ export const Editor = ({
           <pre>{resume.jobDescription}</pre>
         </details>
         <form id="resume-form" class="card-pad">
+          <div class="field">
+            <label class="field-label" for="resume-company">
+              Company
+            </label>
+            <input
+              class="input"
+              id="resume-company"
+              type="text"
+              name="company"
+              value={resume.company ?? ""}
+            />
+          </div>
+          <div class="field">
+            <label class="field-label" for="job-description-short">
+              Short Job Description (max 2000 characters)
+            </label>
+            <textarea class="input" id="job-description-short" name="jobDescriptionShort" rows={10}>
+              {resume.jobDescriptionShort ?? ""}
+            </textarea>
+          </div>
           <div class="form-grid">
             <div class="field">
               <label class="field-label" for="job-link">

@@ -27,7 +27,19 @@ describe("default prompt rules", () => {
       expect(p).not.toContain("volunteer");
     }
     expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain("never evidence");
-    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain("where the CV does not cover");
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).not.toContain(
+      "say plainly where the CV does not cover",
+    );
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain("lead with the CV experience that matches");
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain(
+      "Never list, point out or bring up a requirement",
+    );
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain("never claim it");
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain(
+      "fits the role or the job description are in scope",
+    );
+    expect(DEFAULT_RECRUITER_SYSTEM_PROMPT).toContain("always add the closest related experience");
+    expect(DEFAULT_PUBLIC_SYSTEM_PROMPT).toContain("say the CV does not mention it");
   });
 
   it("tailor prompt forbids invented facts, copied phrasing, dropped roles and noise", () => {

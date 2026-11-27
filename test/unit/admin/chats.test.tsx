@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { ChatForm, Rows } from "../../../src/admin/chats/view";
 import { signSession } from "../../../src/security/session";
+import { button, decode, tags, voidTags } from "../../support/html";
 import { EMAIL, RECRUITER_PROMPT, recruiterApp } from "../../support/recruiter-chat";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
 const ids = [MISSING, "not-a-uuid"];
+const RESUME = "00000000-0000-4000-8000-000000000042";
 
 async function adminChats() {
   const s = await recruiterApp();
@@ -219,5 +222,305 @@ describe("admin chats", () => {
     expect(side).toContain('<dd id="public-questions">7</dd>');
     expect(side).toContain('<dd id="active-chats">3</dd>');
     expect(side).not.toContain("Tailored resumes");
+  });
+});
+
+const R1 = "00000000-0000-4000-8000-0000000000a1";
+const R2 = "00000000-0000-4000-8000-0000000000b2";
+const CHAT_ID = "00000000-0000-4000-8000-0000000000c1";
+const resumeChoices = [
+  { id: R1, title: "Backend" },
+  { id: R2, title: "Platform" },
+];
+
+describe("chat form view", () => {
+  const edit = (expiresAt: Date | null = new Date(2031, 4, 6, 14, 30)) =>
+    String(
+      <ChatForm
+        basePath=""
+        resumes={resumeChoices}
+        defaultMax={10}
+        chat={{
+          id: CHAT_ID,
+          recruiterName: "Jane <Roe>",
+          company: "Acme",
+          jobDescriptionShort: "Senior Postgres",
+          tailoredResumeId: R2,
+          maxQuestions: 7,
+          expiresAt,
+        }}
+      />,
+    );
+
+  it("holds the six values of the chat in edit mode with Save and Cancel", () => {
+    const html = edit();
+    expect(html).toContain("Edit chat");
+    expect(html).not.toContain("New chat");
+    const form = tags(html, "form")[0];
+    expect(form?.attrs["hx-put"]).toBe(`/admin/chats/${CHAT_ID}`);
+    const inputs = voidTags(html, "input");
+    const value = (name: string) => inputs.find((i) => i.attrs.name === name)?.attrs.value;
+    expect(value("recruiterName")).toBe("Jane <Roe>");
+    expect(value("company")).toBe("Acme");
+    expect(value("maxQuestions")).toBe("7");
+    expect(value("expiresAt")).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(new Date(value("expiresAt") ?? "").getTime()).toBe(
+      new Date(2031, 4, 6, 14, 30).getTime(),
+    );
+    expect(tags(html, "textarea")[0]?.text).toBe("Senior Postgres");
+    const selected = tags(html, "option").filter((o) => "selected" in o.attrs);
+    expect(selected.map((o) => o.attrs.value)).toEqual([R2]);
+    expect(button(html, "Save")).toBeDefined();
+    const cancel = tags(html, "button").find((b) => b.text === "Cancel");
+    expect(cancel?.attrs["hx-get"]).toBe("/admin/chats/new");
+  });
+
+  it("starts edit mode with empty last-autofilled inputs and no expiry value when none", () => {
+    const html = edit(null);
+    const inputs = voidTags(html, "input");
+    const value = (name: string) => inputs.find((i) => i.attrs.name === name)?.attrs.value;
+    expect(value("lastJobDescriptionShort")).toBe("");
+    expect(value("lastCompany")).toBe("");
+    expect(value("expiresAt")).toBe("");
+  });
+
+  it("renders the New chat form as before when no chat is given", () => {
+    const html = String(<ChatForm basePath="" resumes={resumeChoices} defaultMax={10} />);
+    expect(html).toContain("New chat");
+    expect(tags(html, "form")[0]?.attrs["hx-post"]).toBe("/admin/chats");
+    const inputs = voidTags(html, "input");
+    expect(inputs.find((i) => i.attrs.name === "maxQuestions")?.attrs.value).toBe("10");
+    expect(inputs.find((i) => i.attrs.name === "recruiterName")?.attrs.value).toBe("");
+    expect(tags(html, "button").map((b) => b.text)).toEqual(["Create"]);
+    expect(tags(html, "option").filter((o) => "selected" in o.attrs)).toHaveLength(1);
+  });
+
+  it("offers an Edit action on each table row", () => {
+    const html = String(
+      <Rows
+        basePath=""
+        origin="http://localhost"
+        chats={[
+          {
+            id: CHAT_ID,
+            token: "t",
+            recruiterName: "Jane",
+            company: null,
+            maxQuestions: 5,
+            used: 0,
+            status: "active",
+            expiresAt: null,
+            lastUsedAt: null,
+          },
+        ]}
+      />,
+    );
+    const edit = tags(html, "button").find((b) => b.attrs.title === "Edit");
+    expect(edit?.attrs["hx-get"]).toBe(`/admin/chats/${CHAT_ID}/edit`);
+    expect(edit?.attrs["hx-target"]).toBe("#chat-form");
+    expect(edit?.attrs["aria-label"]).toBe("Edit chat for Jane");
+  });
+});
+
+describe("GET /admin/chats/:id/edit", () => {
+  it("shows the edit form filled with the chat", async () => {
+    const s = await adminChats();
+    s.repo.resumes.set(RESUME, { title: "Backend" });
+    const chat = await s.newChat({
+      recruiterName: "Jane <Roe>",
+      company: "Acme",
+      jobDescriptionShort: "Senior Postgres",
+      maxQuestions: 7,
+      tailoredResumeId: RESUME,
+      expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    });
+    const res = await s.get(`/admin/chats/${chat.id}/edit`);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(tags(html, "div")[0]?.attrs.id).toBe("chat-form");
+    expect(html).toContain("Edit chat");
+    expect(tags(html, "form")[0]?.attrs["hx-put"]).toBe(`/admin/chats/${chat.id}`);
+    const inputs = voidTags(html, "input");
+    const value = (name: string) => inputs.find((i) => i.attrs.name === name)?.attrs.value;
+    expect(value("recruiterName")).toBe("Jane <Roe>");
+    expect(value("company")).toBe("Acme");
+    expect(value("maxQuestions")).toBe("7");
+    expect(new Date(value("expiresAt") ?? "").getTime()).toBeGreaterThan(Date.now());
+    expect(tags(html, "textarea")[0]?.text).toBe("Senior Postgres");
+    expect(
+      tags(html, "option")
+        .filter((o) => "selected" in o.attrs)
+        .map((o) => o.attrs.value),
+    ).toEqual([RESUME]);
+    expect(button(html, "Save")).toBeDefined();
+    const cancel = button(html, "Cancel");
+    expect(cancel.attrs["hx-get"]).toBe("/admin/chats/new");
+    expect(cancel.attrs["hx-target"]).toBe("#chat-form");
+  });
+
+  it("shows not found for a deleted chat", async () => {
+    const s = await adminChats();
+    for (const id of ids) {
+      const res = await s.get(`/admin/chats/${id}/edit`);
+      expect(res.status, id).toBe(404);
+      const html = await res.text();
+      expect(html).toContain('role="alert"');
+      expect(html).toContain("Recruiter Chat not found");
+      expect(html).not.toContain("Edit chat");
+      expect(html).not.toContain("chat-form");
+      expect(html).not.toContain("<form");
+    }
+  });
+});
+
+describe("GET /admin/chats/new", () => {
+  it("shows the empty new chat form", async () => {
+    const s = await adminChats();
+    const res = await s.get("/admin/chats/new");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(tags(html, "div")[0]?.attrs.id).toBe("chat-form");
+    expect(html).toContain("New chat");
+    expect(html).not.toContain("Edit chat");
+    expect(tags(html, "form")[0]?.attrs["hx-post"]).toBe("/admin/chats");
+    const inputs = voidTags(html, "input");
+    expect(inputs.find((i) => i.attrs.name === "recruiterName")?.attrs.value).toBe("");
+    expect(inputs.find((i) => i.attrs.name === "maxQuestions")?.attrs.value).toBe("10");
+    expect(tags(html, "textarea")[0]?.text).toBe("");
+    expect(button(html, "Create")).toBeDefined();
+  });
+});
+
+describe("PUT /admin/chats/:id", () => {
+  it("saves, refreshes rows and shows the new chat form", async () => {
+    const s = await adminChats();
+    s.repo.resumes.set(RESUME, { title: "Backend" });
+    const chat = await s.newChat({ recruiterName: "Old", maxQuestions: 5 });
+    const expiresAt = new Date(Date.now() + 86_400_000).toISOString().slice(0, 16);
+    const res = await s.send("PUT", `/admin/chats/${chat.id}`, {
+      recruiterName: "New Name",
+      company: "Initech",
+      jobDescriptionShort: "Fresh JD",
+      maxQuestions: "9",
+      expiresAt,
+      tailoredResumeId: RESUME,
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("hx-trigger")).toBe("chats-changed");
+    expect(s.repo.rows[0]).toMatchObject({
+      recruiterName: "New Name",
+      company: "Initech",
+      jobDescriptionShort: "Fresh JD",
+      maxQuestions: 9,
+      tailoredResumeId: RESUME,
+      token: chat.token,
+    });
+    expect(s.repo.rows[0]?.expiresAt).toBeInstanceOf(Date);
+    const html = await res.text();
+    expect(html).toContain("New chat");
+    expect(html).not.toContain("Edit chat");
+    const status = tags(html, "p").find((p) => p.attrs.id === "chat-status");
+    expect(status?.attrs["hx-swap-oob"]).toBe("true");
+    expect(status?.text).toBe("Saved");
+    const rows = await (await s.get("/admin/chats/rows")).text();
+    expect(rows).toContain("New Name");
+    expect(rows).toContain("Initech");
+    expect(rows).toContain("0/9");
+  });
+
+  it("saves unchanged values", async () => {
+    const s = await adminChats();
+    const chat = await s.newChat({ maxQuestions: 5 });
+    const before = { ...s.repo.rows[0] };
+    const fields = {
+      recruiterName: chat.recruiterName,
+      company: chat.company ?? "",
+      jobDescriptionShort: chat.jobDescriptionShort ?? "",
+      maxQuestions: String(chat.maxQuestions),
+      expiresAt: "",
+      tailoredResumeId: "",
+    };
+    for (let i = 0; i < 2; i++) {
+      const res = await s.send("PUT", `/admin/chats/${chat.id}`, fields);
+      expect(res.status).toBe(200);
+      expect(await res.text()).toContain("Saved");
+    }
+    expect(s.repo.rows[0]).toEqual(before);
+  });
+
+  it("answers 404 for a deleted chat", async () => {
+    const s = await adminChats();
+    for (const id of ids) {
+      const res = await s.send("PUT", `/admin/chats/${id}`, s.form);
+      expect(res.status, id).toBe(404);
+      const html = await res.text();
+      expect(html).toContain('role="alert"');
+      expect(html).toContain("Recruiter Chat not found");
+    }
+  });
+
+  it("answers 400 with the message and keeps the chat for max below used", async () => {
+    const s = await adminChats();
+    const chat = await s.newChat({ maxQuestions: 5 });
+    await s.recruiterChat.ask(chat, [{ role: "user", content: "hi" }]);
+    await s.recruiterChat.ask(chat, [{ role: "user", content: "hi again" }]);
+    const res = await s.send("PUT", `/admin/chats/${chat.id}`, { ...s.form, maxQuestions: "1" });
+    expect(res.status).toBe(400);
+    expect(decode(await res.text())).toContain("must be at least the questions already used (2)");
+    expect(s.repo.rows[0]).toMatchObject({ maxQuestions: 5, used: 2, recruiterName: "Jane Roe" });
+  });
+});
+
+const SHORT_A = "- Short of A";
+
+/** What the browser would send for the edit form after the Owner picks another resume. */
+async function editAfterPick() {
+  const s = await adminChats();
+  s.repo.resumes.set(RESUME, {
+    title: "A",
+    company: "Globex",
+    jobDescriptionShort: SHORT_A,
+  });
+  const chat = await s.newChat({
+    recruiterName: "Jane",
+    company: "Acme",
+    jobDescriptionShort: "My own text",
+  });
+  const html = await (await s.get(`/admin/chats/${chat.id}/edit`)).text();
+  const inputs = voidTags(html, "input");
+  const fields: Record<string, string> = {};
+  for (const i of inputs) fields[i.attrs.name ?? ""] = i.attrs.value ?? "";
+  fields.jobDescriptionShort = tags(html, "textarea")[0]?.text ?? "";
+  fields.tailoredResumeId = RESUME;
+  const post = async (extra: Record<string, string> = {}) =>
+    decode(await (await s.send("POST", "/admin/chats/autofill", { ...fields, ...extra })).text());
+  return { post };
+}
+
+const inputValue = (html: string, name: string) =>
+  voidTags(html, "input").find((i) => i.attrs.name === name)?.attrs.value;
+
+describe("edit chat form", () => {
+  it("treats stored values as owner text", async () => {
+    const { post } = await editAfterPick();
+    const html = await post();
+    expect(html).toContain("Not filled: the field has your own text.");
+    expect(tags(html, "textarea")[0]?.text).toBe("My own text");
+    expect(inputValue(html, "company")).toBe("Acme");
+    const replaces = tags(html, "button").filter((b) => b.text === "Replace");
+    expect(replaces).toHaveLength(2);
+  });
+});
+
+describe("POST /admin/chats/autofill", () => {
+  it("applies the rule in the edit form", async () => {
+    const { post } = await editAfterPick();
+    const replaced = await post({ replace: "jobDescriptionShort" });
+    expect(tags(replaced, "textarea")[0]?.text).toBe(SHORT_A);
+    expect(inputValue(replaced, "lastJobDescriptionShort")).toBe(SHORT_A);
+    expect(inputValue(replaced, "company")).toBe("Acme");
+    const company = await post({ replace: "company" });
+    expect(inputValue(company, "company")).toBe("Globex");
+    expect(tags(company, "textarea")[0]?.text).toBe("My own text");
   });
 });

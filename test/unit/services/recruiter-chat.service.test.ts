@@ -478,3 +478,128 @@ describe("recruiter chat service owner notes", () => {
     }
   });
 });
+
+describe("recruiter chat update", () => {
+  const RESUME = "00000000-0000-4000-8000-000000000099";
+  const edit = { recruiterName: "Janet", company: "Initech", jobDescriptionShort: "New JD" };
+
+  it("rejects max questions below used", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    const chat = await newChat({ maxQuestions: 5 });
+    const row = repo.rows.find((r) => r.id === chat.id);
+    if (row) row.used = 3;
+    const error = await recruiterChat
+      .update(chat.id, { ...edit, maxQuestions: 2 })
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).message).toBe(
+      "maxQuestions: must be at least the questions already used (3)",
+    );
+    expect(row).toMatchObject({ recruiterName: RECRUITER, maxQuestions: 5, used: 3 });
+  });
+
+  it("rejects each invalid field with the create message", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    repo.resumes.set(RESUME, { title: "T" });
+    const chat = await newChat();
+    const cases: [Record<string, unknown>, string][] = [
+      [{ recruiterName: " " }, "recruiterName: must not be empty"],
+      [{ jobDescriptionShort: "x".repeat(2001) }, "jobDescriptionShort: must be at most 2000"],
+      [{ maxQuestions: 0 }, "maxQuestions: must be an integer from 1 to 100"],
+      [{ maxQuestions: 101 }, "maxQuestions: must be an integer from 1 to 100"],
+      [
+        { expiresAt: new Date(Date.now() - 60_000).toISOString() },
+        "expiresAt: must be in the future",
+      ],
+      [{ tailoredResumeId: MISSING }, "tailoredResumeId: Tailored Resume not found"],
+    ];
+    for (const [patch, message] of cases) {
+      const error = await recruiterChat
+        .update(chat.id, { recruiterName: "A", maxQuestions: 5, ...patch })
+        .catch((e: unknown) => e);
+      expect(error, message).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).message).toContain(message);
+    }
+    expect(repo.rows[0]).toMatchObject({ recruiterName: RECRUITER, maxQuestions: 5 });
+  });
+
+  it("saves the six fields", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    repo.resumes.set(RESUME, { title: "T" });
+    const chat = await newChat();
+    const expiresAt = new Date(Date.now() + 3_600_000);
+    const saved = await recruiterChat.update(chat.id, {
+      ...edit,
+      maxQuestions: 9,
+      tailoredResumeId: RESUME,
+      expiresAt: expiresAt.toISOString(),
+    });
+    expect(saved).toMatchObject({
+      ...edit,
+      maxQuestions: 9,
+      tailoredResumeId: RESUME,
+      token: chat.token,
+      status: "active",
+    });
+    expect(saved.expiresAt?.getTime()).toBe(expiresAt.getTime());
+  });
+
+  it("clears the expiry", async () => {
+    const { recruiterChat, newChat } = await recruiterSetup();
+    const chat = await newChat({ expiresAt: new Date(Date.now() + 3_600_000).toISOString() });
+    expect(chat.expiresAt).not.toBeNull();
+    const saved = await recruiterChat.update(chat.id, { ...edit, expiresAt: "" });
+    expect(saved.expiresAt).toBeNull();
+  });
+
+  it("edits revoked and expired chats without changing status", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    const revoked = await newChat();
+    await recruiterChat.revoke(revoked.id);
+    const expired = await newChat();
+    const row = repo.rows.find((r) => r.id === expired.id);
+    if (row) row.expiresAt = new Date(Date.now() - 1000);
+    const a = await recruiterChat.update(revoked.id, edit);
+    expect(a).toMatchObject({ recruiterName: "Janet", status: "revoked" });
+    // A past expiry is invalid on save, so the Owner clears or moves it; the edit itself never sets status.
+    const future = new Date(Date.now() + 3_600_000).toISOString();
+    const b = await recruiterChat.update(expired.id, { ...edit, expiresAt: future });
+    expect(b).toMatchObject({ recruiterName: "Janet", status: "active" });
+    expect(repo.rows.find((r) => r.id === revoked.id)?.status).toBe("revoked");
+  });
+
+  it("saves an expired chat with its own stored expiry", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    const chat = await newChat();
+    const stored = new Date(Math.floor((Date.now() - 3_600_000) / 60_000) * 60_000 + 25_000);
+    const row = repo.rows.find((r) => r.id === chat.id);
+    if (row) row.expiresAt = stored;
+    const saved = await recruiterChat.update(chat.id, {
+      ...edit,
+      expiresAt: new Date(Math.floor(stored.getTime() / 60_000) * 60_000).toISOString(),
+    });
+    expect(saved).toMatchObject({ recruiterName: "Janet", status: "expired" });
+    const other = new Date(stored.getTime() - 120_000).toISOString();
+    await expect(recruiterChat.update(chat.id, { ...edit, expiresAt: other })).rejects.toThrow(
+      "expiresAt: must be in the future",
+    );
+  });
+
+  it("answers not found for a missing or malformed id", async () => {
+    const { recruiterChat } = await recruiterSetup();
+    for (const id of [MISSING, "nope"]) {
+      const error = await recruiterChat.update(id, edit).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(NotFoundError);
+      expect((error as NotFoundError).message).toBe("Recruiter Chat not found");
+    }
+  });
+
+  it("accepts max equal to used and the next ask hits the limit", async () => {
+    const { recruiterChat, newChat } = await recruiterSetup();
+    const chat = await newChat({ maxQuestions: 5 });
+    await readAll((await recruiterChat.ask(chat, messages)).stream);
+    const saved = await recruiterChat.update(chat.id, { ...edit, maxQuestions: 1 });
+    expect(saved).toMatchObject({ maxQuestions: 1, used: 1 });
+    await expect(recruiterChat.ask(saved, messages)).rejects.toBeInstanceOf(LimitReachedError);
+  });
+});

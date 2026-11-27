@@ -1,9 +1,20 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { Env } from "../../env.js";
-import { ValidationError } from "../../services/errors.js";
+import { NotFoundError, ValidationError } from "../../services/errors.js";
+import type { RecruiterChat, ResumeContext } from "../../services/recruiter-chat.service.js";
 import { CHATS_JS } from "../static/chats-js.generated.js";
-import { ChatRow, ChatsPage, Created, Rows } from "./view.js";
+import { decideAutofill } from "./autofill.js";
+import {
+  AutofillFragment,
+  ChatForm,
+  ChatRow,
+  ChatsPage,
+  Created,
+  type FieldNotice,
+  Rows,
+  Saved,
+} from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 
@@ -43,6 +54,72 @@ chatsRouter.post("/chats/test", async (c) => {
   });
 });
 
+/**
+ * Answers a Resume pick in the New chat form with the two fields, the values last autofilled and a
+ * notice under each, as out-of-band swaps. "Master CV" (no id) leaves the fields alone; "Replace"
+ * sends `replace=<field>` to overwrite the Owner's text in that field.
+ */
+chatsRouter.post("/chats/autofill", async (c) => {
+  const body = await c.req.parseBody();
+  const current = {
+    jobDescriptionShort: text(body.jobDescriptionShort),
+    company: text(body.company),
+  };
+  const last = {
+    jobDescriptionShort: text(body.lastJobDescriptionShort),
+    company: text(body.lastCompany),
+  };
+  const view = (
+    fields: typeof current,
+    lastFilled: typeof last,
+    notices: { jobDescriptionNotice: FieldNotice | null; companyNotice: FieldNotice | null },
+  ) =>
+    c.html(
+      AutofillFragment({
+        basePath: c.var.config.basePath,
+        jobDescriptionShort: fields.jobDescriptionShort,
+        company: fields.company,
+        lastJobDescriptionShort: lastFilled.jobDescriptionShort,
+        lastCompany: lastFilled.company,
+        ...notices,
+      }),
+    );
+  const none = { jobDescriptionNotice: null, companyNotice: null };
+
+  const id = text(body.tailoredResumeId).trim();
+  if (id === "") return view(current, last, none);
+  let context: ResumeContext;
+  try {
+    context = await c.var.services.recruiterChat.resumeContext(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return view(current, last, { ...none, jobDescriptionNotice: "not-found" });
+    }
+    throw error;
+  }
+
+  const replace = text(body.replace);
+  const jd = decideAutofill({
+    field: "jobDescriptionShort",
+    current: current.jobDescriptionShort,
+    lastFilled: last.jobDescriptionShort,
+    source: context.jobDescriptionShort,
+    replace: replace === "jobDescriptionShort",
+  });
+  const company = decideAutofill({
+    field: "company",
+    current: current.company,
+    lastFilled: last.company,
+    source: context.company,
+    replace: replace === "company",
+  });
+  return view(
+    { jobDescriptionShort: jd.value, company: company.value },
+    { jobDescriptionShort: jd.lastFilled, company: company.lastFilled },
+    { jobDescriptionNotice: jd.notice, companyNotice: company.notice },
+  );
+});
+
 chatsRouter.get("/chats/rows", async (c) =>
   c.html(
     Rows({
@@ -53,21 +130,50 @@ chatsRouter.get("/chats/rows", async (c) =>
   ),
 );
 
-chatsRouter.post("/chats", async (c) => {
+/** The form fields of a New chat or an Edit chat submit, as the service takes them. */
+async function chatInput(c: Context<Env>) {
   const body = await c.req.parseBody();
   const max = text(body.maxQuestions).trim();
-  const chat = await c.var.services.recruiterChat.create({
+  return {
     recruiterName: text(body.recruiterName),
     company: text(body.company),
     jobDescriptionShort: text(body.jobDescriptionShort),
     maxQuestions: max === "" ? undefined : Number(max),
     expiresAt: text(body.expiresAt),
     tailoredResumeId: text(body.tailoredResumeId),
+  };
+}
+
+/** The form block: the New chat form, or the Edit chat form for `chat`. */
+async function chatForm(c: Context<Env>, chat?: RecruiterChat) {
+  const { config, services } = c.var;
+  return ChatForm({
+    basePath: config.basePath,
+    resumes: await services.recruiterChat.resumeOptions(),
+    defaultMax: await services.settings.limit("recruiterQuestionsDefault"),
+    chat,
   });
+}
+
+chatsRouter.get("/chats/new", async (c) => c.html(await chatForm(c)));
+
+chatsRouter.get("/chats/:id/edit", async (c) =>
+  c.html(await chatForm(c, await c.var.services.recruiterChat.get(c.req.param("id")))),
+);
+
+chatsRouter.post("/chats", async (c) => {
+  const chat = await c.var.services.recruiterChat.create(await chatInput(c));
   c.header("HX-Trigger", "chats-changed");
   return c.html(
     Created({ basePath: c.var.config.basePath, origin: new URL(c.req.url).origin, chat }),
   );
+});
+
+/** Saves an edit: refreshes the table, says "Saved" and puts the New chat form back. */
+chatsRouter.put("/chats/:id", async (c) => {
+  await c.var.services.recruiterChat.update(c.req.param("id"), await chatInput(c));
+  c.header("HX-Trigger", "chats-changed");
+  return c.html(Saved({ form: await chatForm(c) }));
 });
 
 chatsRouter.patch("/chats/:id/revoke", async (c) => {

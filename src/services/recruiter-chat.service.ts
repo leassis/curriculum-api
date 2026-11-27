@@ -2,8 +2,10 @@ import { dataBlock, wrapUserMessages } from "../llm/data-block.js";
 import { redactPii } from "../llm/pii-guard.js";
 import type {
   ChatMessageRow,
+  RecruiterChatPatch,
   RecruiterChatRepo,
   RecruiterChatRow,
+  ResumeContext,
   ResumeOption,
 } from "../repositories/recruiter-chat.repository.js";
 import { appendSections, chatSections, renderCareerBody } from "./career/body.js";
@@ -22,8 +24,9 @@ import type { ContactItem, PersonalInfoService } from "./personal-info.service.j
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import { parseDocument } from "./tailor/document.js";
+import { SHORT_JD_MAX_CHARS } from "./tailor/short-description.js";
 
-export type { ChatMessageRow, ResumeOption };
+export type { ChatMessageRow, ResumeContext, ResumeOption };
 
 export type ChatStatus = "active" | "revoked" | "expired";
 
@@ -70,7 +73,7 @@ export interface RecruiterAnswer {
   remaining: number;
 }
 
-export const MAX_JOB_DESCRIPTION_CHARS = 2000;
+export const MAX_JOB_DESCRIPTION_CHARS = SHORT_JD_MAX_CHARS;
 const MAX_QUESTIONS_LIMIT = 100;
 const EMPTY_CV = "The Master CV is empty: tell the recruiter there is no career information yet.";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -118,7 +121,38 @@ export class RecruiterChatService {
     return this.chats.resumeOptions();
   }
 
+  /** The company and Short Job Description the New chat form copies from a Tailored Resume. */
+  async resumeContext(id: string): Promise<ResumeContext> {
+    const context = UUID.test(id) ? await this.chats.resumeContext(id) : null;
+    if (!context) throw new NotFoundError("Tailored Resume not found");
+    return context;
+  }
+
   async create(input: NewRecruiterChat): Promise<RecruiterChat> {
+    const values = await this.checkInput(input);
+    return toChat(await this.chats.insert({ token: newToken(), ...values }));
+  }
+
+  /**
+   * Changes the editable fields in place; token, questions used, status and messages stay. The
+   * `max_questions >= used` rule runs in the UPDATE itself, so a question counted meanwhile counts.
+   */
+  async update(id: string, input: NewRecruiterChat): Promise<RecruiterChat> {
+    const existing = UUID.test(id) ? await this.chats.findById(id) : null;
+    if (!existing) throw new NotFoundError("Recruiter Chat not found");
+    const values = await this.checkInput(input, existing.expiresAt);
+    const row = await this.chats.update(id, values);
+    if (row) return toChat(row);
+    const current = await this.chats.findById(id);
+    if (!current) throw new NotFoundError("Recruiter Chat not found");
+    invalid("maxQuestions", `must be at least the questions already used (${current.used})`);
+  }
+
+  /** The create rules, shared by `create` and `update` so both give the same field messages. */
+  private async checkInput(
+    input: NewRecruiterChat,
+    storedExpiry: Date | null = null,
+  ): Promise<RecruiterChatPatch> {
     const recruiterName = (input.recruiterName ?? "").trim();
     if (recruiterName === "") invalid("recruiterName", "must not be empty");
     const jd = (input.jobDescriptionShort ?? "").trim();
@@ -134,24 +168,35 @@ export class RecruiterChatService {
     if (input.expiresAt !== undefined && input.expiresAt.trim() !== "") {
       expiresAt = new Date(input.expiresAt);
       if (Number.isNaN(expiresAt.getTime())) invalid("expiresAt", "must be a valid date");
-      if (expiresAt.getTime() <= Date.now()) invalid("expiresAt", "must be in the future");
+      // The edit form carries the stored expiry back at minute precision; sending it unchanged is
+      // not a new past date, so an expired chat can be saved without touching its expiry.
+      const unchanged =
+        storedExpiry !== null &&
+        expiresAt.getTime() === Math.floor(storedExpiry.getTime() / 60_000) * 60_000;
+      if (expiresAt.getTime() <= Date.now() && !unchanged) {
+        invalid("expiresAt", "must be in the future");
+      }
     }
     const resumeId = (input.tailoredResumeId ?? "").trim();
     if (resumeId !== "" && !(UUID.test(resumeId) && (await this.chats.resumeExists(resumeId)))) {
       invalid("tailoredResumeId", "Tailored Resume not found");
     }
     const company = (input.company ?? "").trim();
-    return toChat(
-      await this.chats.insert({
-        token: newToken(),
-        recruiterName,
-        company: company === "" ? null : company,
-        jobDescriptionShort: jd === "" ? null : jd,
-        tailoredResumeId: resumeId === "" ? null : resumeId,
-        maxQuestions,
-        expiresAt,
-      }),
-    );
+    return {
+      recruiterName,
+      company: company === "" ? null : company,
+      jobDescriptionShort: jd === "" ? null : jd,
+      tailoredResumeId: resumeId === "" ? null : resumeId,
+      maxQuestions,
+      expiresAt,
+    };
+  }
+
+  /** One chat for the edit form; NotFound for an unknown or malformed id. */
+  async get(id: string): Promise<RecruiterChat> {
+    const row = UUID.test(id) ? await this.chats.findById(id) : null;
+    if (!row) throw new NotFoundError("Recruiter Chat not found");
+    return toChat(row);
   }
 
   async revoke(id: string): Promise<RecruiterChat> {

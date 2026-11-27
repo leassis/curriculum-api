@@ -56,6 +56,7 @@ describe("tailor output schema", () => {
       score_rationale: "r",
       missing_skills: [],
       omissions: [],
+      job_description_short: "- Role",
     };
     expect(TailorOutputSchema.safeParse(ok).success).toBe(true);
     expect(
@@ -63,6 +64,14 @@ describe("tailor output schema", () => {
     ).toBe(false);
     expect(TailorOutputSchema.safeParse({ ...ok, headline: undefined }).success).toBe(false);
     expect(TailorOutputSchema.safeParse({ ...ok, summary: undefined }).success).toBe(false);
+  });
+
+  it("requires and describes job_description_short", () => {
+    const field = (json.properties as Record<string, Node>).job_description_short as Node;
+    expect(json.required).toContain("job_description_short");
+    expect(field.type).toBe("string");
+    expect(field.description).toContain("recruiter chat");
+    expect(field.description).toContain("at most 2000 characters");
   });
 
   it("describes the id the model must return as the bracketed id after a title", () => {

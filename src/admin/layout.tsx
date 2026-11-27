@@ -64,6 +64,26 @@ const NavIcon: FC<{ name: Section }> = ({ name }) => (
   </svg>
 );
 
+/**
+ * The dialog behind every `hx-confirm`, rendered once per page. toast.js opens it, fills in the
+ * question and turns the confirm button red for danger triggers; closed, it shows nothing.
+ */
+export const ConfirmDialog = () => (
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-message">
+    <form method="dialog" class="confirm-body">
+      <p id="confirm-message" class="confirm-message" />
+      <div class="confirm-actions">
+        <button type="submit" value="cancel" class="btn-ghost" autofocus>
+          Cancel
+        </button>
+        <button type="submit" value="ok" class="btn confirm-ok">
+          Confirm
+        </button>
+      </div>
+    </form>
+  </dialog>
+);
+
 export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
   title,
   basePath,
@@ -132,6 +152,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
             <div class={bare ? "main-inner justify-center" : "main-inner"}>{children}</div>
           </main>
         </div>
+        <ConfirmDialog />
       </body>
     </html>
   );
