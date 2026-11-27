@@ -165,8 +165,8 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Edit form with a stored Job Description + resume pick → "Not filled…" with Replace; Replace fills it
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Edit form with a stored Job Description + resume pick → "Not filled…" with Replace; Replace fills it
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
