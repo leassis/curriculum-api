@@ -218,6 +218,26 @@
     @apply border-primary bg-primary-soft text-primary;
   }
 
+  /* ---------- Confirm dialog (replaces window.confirm behind hx-confirm) ---------- */
+  .confirm-dialog {
+    @apply m-auto w-[min(420px,calc(100vw-32px))] rounded-card border border-line bg-surface p-0 text-ink shadow-raised;
+  }
+  .confirm-dialog::backdrop {
+    @apply bg-ink/40;
+  }
+  .confirm-body {
+    @apply flex flex-col gap-6 p-6;
+  }
+  .confirm-message {
+    @apply m-0 text-[15px] leading-normal font-medium;
+  }
+  .confirm-actions {
+    @apply flex justify-end gap-2;
+  }
+  .confirm-ok-danger {
+    @apply bg-danger hover:bg-danger/90;
+  }
+
   /* ---------- Forms ---------- */
   .form {
     @apply flex flex-col gap-5;

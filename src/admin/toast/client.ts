@@ -5,6 +5,7 @@
  * Compiled by `pnpm build:js` into `src/admin/static/toast-js.generated.ts`.
  */
 import { Notyf } from "notyf";
+import { installConfirm } from "./confirm";
 
 type Kind = "success" | "error";
 
@@ -43,6 +44,7 @@ function scan(root: ParentNode): void {
   }
 }
 
+installConfirm();
 document.documentElement.classList.add("toast-ready");
 scan(document);
 
