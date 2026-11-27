@@ -136,6 +136,19 @@ describe("finish", () => {
     });
   });
 
+  it("returns ok with a truncated short job description", () => {
+    const library = [item("experience")];
+    const long = `${"a".repeat(1500)}. ${"b".repeat(600)}`;
+    const result = ok(run(library, keep(library), { job_description_short: long }));
+    expect(result.jobDescriptionShort).toBe(`${"a".repeat(1500)}.`);
+  });
+
+  it("returns ok with null for a blank short job description", () => {
+    const library = [item("experience")];
+    const result = ok(run(library, keep(library), { job_description_short: " \n " }));
+    expect(result.jobDescriptionShort).toBeNull();
+  });
+
   it("passes an assemble failure through", () => {
     const library = [item("experience")];
     const result = run(library, [{ source_id: "c99", text: "", bullets: [] }]);

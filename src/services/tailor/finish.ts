@@ -9,9 +9,17 @@ import {
 } from "./assessment.js";
 import { cleanLine, type ResumeDocument } from "./document.js";
 import type { TailorOutput } from "./output.js";
+import { shortJobDescription } from "./short-description.js";
 
 export type FinishResult =
-  | { ok: true; doc: ResumeDocument; assessment: Assessment; restored: number; collapsed: number }
+  | {
+      ok: true;
+      doc: ResumeDocument;
+      assessment: Assessment;
+      jobDescriptionShort: string | null;
+      restored: number;
+      collapsed: number;
+    }
   | { ok: false; reason: AssembleFailure | "assessment" };
 
 /**
@@ -52,6 +60,7 @@ export function finish(
         ...collapseNotes,
       ],
     },
+    jobDescriptionShort: shortJobDescription(out.job_description_short),
     restored: restoreNotes.length,
     collapsed: collapseNotes.length,
   };
