@@ -157,8 +157,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Long value comes back truncated with `ok: true`; blank comes back `null` with `ok: true`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Long value comes back truncated with `ok: true`; blank comes back `null` with `ok: true`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
