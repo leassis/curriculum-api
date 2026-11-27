@@ -56,6 +56,9 @@ export class FakeResumeRepo implements ResumeRepo {
     if (patch.score !== undefined) next.score = patch.score;
     if (patch.scoreRationale !== undefined) next.scoreRationale = patch.scoreRationale;
     if (patch.missingSkills !== undefined) next.missingSkills = [...patch.missingSkills];
+    if (patch.jobDescriptionShort !== undefined) {
+      next.jobDescriptionShort = patch.jobDescriptionShort;
+    }
     if (patch.omissions !== undefined) next.omissions = structuredClone(patch.omissions);
     next.updatedAt = new Date();
     this.rows[index] = next;

@@ -41,6 +41,7 @@ import {
 import { type FinishResult, finish } from "./tailor/finish.js";
 import { annotate, TailorOutputSchema } from "./tailor/output.js";
 import { TAILOR_ASSESSMENT_RULES } from "./tailor/rubric.js";
+import { SHORT_JD_RULES } from "./tailor/short-description.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
 export type Resume = Omit<
@@ -304,7 +305,7 @@ export class ResumeService {
     const ids = annotate(items);
     const request = {
       area: "tailor" as const,
-      system: `${profile.tailorSystemPrompt}\n\n${TAILOR_ASSESSMENT_RULES}`,
+      system: `${profile.tailorSystemPrompt}\n\n${TAILOR_ASSESSMENT_RULES}\n\n${SHORT_JD_RULES}`,
       body: appendSections(renderCareerBody(profile, items, { ids }), [
         { heading: PROFILE_SECTIONS.additionalInformation, text: profile.additionalInformation },
       ]),
@@ -337,6 +338,7 @@ export class ResumeService {
             scoreRationale: assessment.rationale,
             missingSkills: assessment.missingSkills,
             omissions: assessment.omissions,
+            jobDescriptionShort: finished.jobDescriptionShort,
           });
         }
         reason = finished.reason;
