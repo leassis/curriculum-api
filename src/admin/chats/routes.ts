@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import type { Env } from "../../env.js";
-import type { ResumeContext } from "../../repositories/recruiter-chat.repository.js";
 import { NotFoundError, ValidationError } from "../../services/errors.js";
+import type { ResumeContext } from "../../services/recruiter-chat.service.js";
 import { CHATS_JS } from "../static/chats-js.generated.js";
 import { decideAutofill } from "./autofill.js";
 import { AutofillFragment, ChatRow, ChatsPage, Created, type FieldNotice, Rows } from "./view.js";
