@@ -81,9 +81,9 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Saves the six fields and returns the row; token, used, status unchanged
-- [ ] Returns null when `used` > new max, and for a missing id
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Saves the six fields and returns the row; token, used, status unchanged
+- [x] Returns null when `used` > new max, and for a missing id
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full
