@@ -443,11 +443,14 @@ export const ChatForm = ({
   </div>
 );
 
-/** The Saved notice, swapped into the status line out of band. */
-export const SavedStatus = () => (
-  <p id="chat-status" class="status" role="status" hx-swap-oob="true">
-    <span data-toast="success">Saved</span>
-  </p>
+/** A saved edit's answer: the New chat form, and "Saved" swapped into the status line out of band. */
+export const Saved = ({ form }: { form: unknown }) => (
+  <>
+    {form}
+    <p id="chat-status" class="status" role="status" hx-swap-oob="true">
+      <span data-toast="success">Saved</span>
+    </p>
+  </>
 );
 
 export const ChatsPage = ({

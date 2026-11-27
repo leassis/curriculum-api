@@ -1,11 +1,20 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { Env } from "../../env.js";
 import { NotFoundError, ValidationError } from "../../services/errors.js";
-import type { ResumeContext } from "../../services/recruiter-chat.service.js";
+import type { RecruiterChat, ResumeContext } from "../../services/recruiter-chat.service.js";
 import { CHATS_JS } from "../static/chats-js.generated.js";
 import { decideAutofill } from "./autofill.js";
-import { AutofillFragment, ChatRow, ChatsPage, Created, type FieldNotice, Rows } from "./view.js";
+import {
+  AutofillFragment,
+  ChatForm,
+  ChatRow,
+  ChatsPage,
+  Created,
+  type FieldNotice,
+  Rows,
+  Saved,
+} from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 
@@ -121,21 +130,50 @@ chatsRouter.get("/chats/rows", async (c) =>
   ),
 );
 
-chatsRouter.post("/chats", async (c) => {
+/** The form fields of a New chat or an Edit chat submit, as the service takes them. */
+async function chatInput(c: Context<Env>) {
   const body = await c.req.parseBody();
   const max = text(body.maxQuestions).trim();
-  const chat = await c.var.services.recruiterChat.create({
+  return {
     recruiterName: text(body.recruiterName),
     company: text(body.company),
     jobDescriptionShort: text(body.jobDescriptionShort),
     maxQuestions: max === "" ? undefined : Number(max),
     expiresAt: text(body.expiresAt),
     tailoredResumeId: text(body.tailoredResumeId),
+  };
+}
+
+/** The form block: the New chat form, or the Edit chat form for `chat`. */
+async function chatForm(c: Context<Env>, chat?: RecruiterChat) {
+  const { config, services } = c.var;
+  return ChatForm({
+    basePath: config.basePath,
+    resumes: await services.recruiterChat.resumeOptions(),
+    defaultMax: await services.settings.limit("recruiterQuestionsDefault"),
+    chat,
   });
+}
+
+chatsRouter.get("/chats/new", async (c) => c.html(await chatForm(c)));
+
+chatsRouter.get("/chats/:id/edit", async (c) =>
+  c.html(await chatForm(c, await c.var.services.recruiterChat.get(c.req.param("id")))),
+);
+
+chatsRouter.post("/chats", async (c) => {
+  const chat = await c.var.services.recruiterChat.create(await chatInput(c));
   c.header("HX-Trigger", "chats-changed");
   return c.html(
     Created({ basePath: c.var.config.basePath, origin: new URL(c.req.url).origin, chat }),
   );
+});
+
+/** Saves an edit: refreshes the table, says "Saved" and puts the New chat form back. */
+chatsRouter.put("/chats/:id", async (c) => {
+  await c.var.services.recruiterChat.update(c.req.param("id"), await chatInput(c));
+  c.header("HX-Trigger", "chats-changed");
+  return c.html(Saved({ form: await chatForm(c) }));
 });
 
 chatsRouter.patch("/chats/:id/revoke", async (c) => {
