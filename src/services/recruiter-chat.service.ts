@@ -4,6 +4,7 @@ import type {
   ChatMessageRow,
   RecruiterChatRepo,
   RecruiterChatRow,
+  ResumeContext,
   ResumeOption,
 } from "../repositories/recruiter-chat.repository.js";
 import { appendSections, chatSections, renderCareerBody } from "./career/body.js";
@@ -24,7 +25,7 @@ import type { SettingsService } from "./settings.service.js";
 import { parseDocument } from "./tailor/document.js";
 import { SHORT_JD_MAX_CHARS } from "./tailor/short-description.js";
 
-export type { ChatMessageRow, ResumeOption };
+export type { ChatMessageRow, ResumeContext, ResumeOption };
 
 export type ChatStatus = "active" | "revoked" | "expired";
 
@@ -117,6 +118,13 @@ export class RecruiterChatService {
 
   resumeOptions(): Promise<ResumeOption[]> {
     return this.chats.resumeOptions();
+  }
+
+  /** The company and Short Job Description the New chat form copies from a Tailored Resume. */
+  async resumeContext(id: string): Promise<ResumeContext> {
+    const context = UUID.test(id) ? await this.chats.resumeContext(id) : null;
+    if (!context) throw new NotFoundError("Tailored Resume not found");
+    return context;
   }
 
   async create(input: NewRecruiterChat): Promise<RecruiterChat> {
