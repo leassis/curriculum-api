@@ -209,3 +209,70 @@ describe("recruiter chat repository", () => {
     }
   });
 });
+
+describe("recruiter chat repository update", () => {
+  beforeEach(async () => {
+    await resetDb(db);
+  });
+
+  const patch = (over: Partial<Parameters<RecruiterChatRepository["update"]>[1]> = {}) => ({
+    recruiterName: "Janet",
+    company: "Acme",
+    jobDescriptionShort: "New JD",
+    tailoredResumeId: null,
+    maxQuestions: 5,
+    expiresAt: null,
+    ...over,
+  });
+
+  it("saves the six fields", async () => {
+    const resumeId = (
+      await resumes.insert({
+        title: "R",
+        company: null,
+        jobDescription: "jd",
+        customInstructions: "",
+      })
+    ).id;
+    const chat = await repo.insert(input());
+    const expiresAt = new Date(Date.now() + 3_600_000);
+    const row = await repo.update(
+      chat.id,
+      patch({ tailoredResumeId: resumeId, expiresAt, maxQuestions: 7 }),
+    );
+    expect(row).toMatchObject({
+      recruiterName: "Janet",
+      company: "Acme",
+      jobDescriptionShort: "New JD",
+      tailoredResumeId: resumeId,
+      maxQuestions: 7,
+    });
+    expect(row?.expiresAt?.getTime()).toBe(expiresAt.getTime());
+    expect((await repo.findById(chat.id))?.recruiterName).toBe("Janet");
+  });
+
+  it("keeps token, used and status", async () => {
+    const chat = await repo.insert(input({ maxQuestions: 3 }));
+    await repo.acquire(chat.id);
+    await repo.acquire(chat.id);
+    await repo.revoke(chat.id);
+    const row = await repo.update(chat.id, patch({ maxQuestions: 2 }));
+    expect(row).toMatchObject({ token: chat.token, used: 2, status: "revoked", maxQuestions: 2 });
+  });
+
+  it("refuses a max below the current used", async () => {
+    const chat = await repo.insert(input({ maxQuestions: 3 }));
+    await repo.acquire(chat.id);
+    await repo.acquire(chat.id);
+    expect(await repo.update(chat.id, patch({ maxQuestions: 1 }))).toBeNull();
+    expect(await repo.findById(chat.id)).toMatchObject({
+      recruiterName: "Jane",
+      maxQuestions: 3,
+      used: 2,
+    });
+  });
+
+  it("returns null for a missing id", async () => {
+    expect(await repo.update("00000000-0000-4000-8000-00000000ffff", patch())).toBeNull();
+  });
+});

@@ -2,6 +2,7 @@ import type {
   ChatMessageInsert,
   ChatMessageRow,
   RecruiterChatInsert,
+  RecruiterChatPatch,
   RecruiterChatRepo,
   RecruiterChatRow,
   ResumeContext,
@@ -64,6 +65,13 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
       expired: false,
     };
     this.rows.push(row);
+    return this.view(row);
+  }
+
+  async update(id: string, patch: RecruiterChatPatch): Promise<RecruiterChatRow | null> {
+    const row = this.at(id);
+    if (!row || row.used > patch.maxQuestions) return null;
+    Object.assign(row, patch);
     return this.view(row);
   }
 
