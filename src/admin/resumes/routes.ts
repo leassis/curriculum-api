@@ -154,6 +154,7 @@ resumesRouter.put("/resumes/:id", async (c) => {
       jobLink: optionalText(body.jobLink),
       recruiterName: optionalText(body.recruiterName),
       notes: optionalText(body.notes),
+      jobDescriptionShort: optionalText(body.jobDescriptionShort),
     },
   );
   return c.html("Saved");

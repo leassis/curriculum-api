@@ -238,9 +238,9 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Saved value shows on reload; 2001 characters answers 400 with the limit message
-- [ ] Print page and `.md` download of a resume with a short do not contain it
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Saved value shows on reload; 2001 characters answers 400 with the limit message
+- [x] Print page and `.md` download of a resume with a short do not contain it
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

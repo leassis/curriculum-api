@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decode, formFields, tags } from "../../support/html";
+import { button, decode, formFields, gesture, tags } from "../../support/html";
 import { resumeApp } from "../../support/resumes";
 
 const newResume = { title: "Backend at Acme", company: "Acme", jobDescription: "Build things" };
@@ -35,5 +35,57 @@ describe("resume editor", () => {
     const textarea = filled.indexOf('name="jobDescriptionShort"');
     expect(disclosure).toBeGreaterThan(-1);
     expect(textarea).toBeGreaterThan(disclosure);
+  });
+});
+
+describe("PUT /admin/resumes/:id", () => {
+  it("saves the short job description", async () => {
+    const { get, put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const form = resumeForm(html);
+    const save = gesture(button(html, "Save options"));
+
+    const res = await put(save.path, {
+      ...formFields(form.html),
+      jobDescriptionShort: `  ${SHORT}  `,
+    });
+    expect(res.status).toBe(200);
+    expect(repo.rows[0]?.jobDescriptionShort).toBe(SHORT);
+
+    const reloaded = await (await get(`/admin/resumes/${id}`)).text();
+    expect(formFields(resumeForm(reloaded).html).jobDescriptionShort).toBe(SHORT);
+
+    await put(save.path, { ...formFields(form.html), jobDescriptionShort: "   " });
+    expect(repo.rows[0]?.jobDescriptionShort).toBeNull();
+  });
+
+  it("rejects a short job description over 2000 characters", async () => {
+    const { put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await resumes.updateOptions(id, [], undefined, { jobDescriptionShort: SHORT });
+
+    const ok = await put(`/admin/resumes/${id}`, { jobDescriptionShort: "x".repeat(2000) });
+    expect(ok.status).toBe(200);
+
+    const res = await put(`/admin/resumes/${id}`, { jobDescriptionShort: "y".repeat(2001) });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toContain("2000");
+    expect(repo.rows[0]?.jobDescriptionShort).toBe("x".repeat(2000));
+  });
+});
+
+describe("resume print and download", () => {
+  it("leave out the short job description", async () => {
+    const { get, resumes } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    await resumes.generate(id);
+    await resumes.updateOptions(id, [], undefined, { jobDescriptionShort: "- Marker-line-7731" });
+
+    const print = await (await get(`/admin/resumes/${id}/print`)).text();
+    const download = await get(`/admin/resumes/${id}/download.md`);
+    expect(download.status).toBe(200);
+    expect(print).not.toContain("Marker-line-7731");
+    expect(await download.text()).not.toContain("Marker-line-7731");
   });
 });
