@@ -145,6 +145,7 @@ export function sampleReplyV2(library: CareerItem[] = sampleLibrary().items): Ta
     score_rationale: "Covers the core requirements.",
     missing_skills: [],
     omissions: [],
+    job_description_short: "- Backend engineer\n- Five years of TypeScript",
   };
 }
 

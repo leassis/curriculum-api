@@ -68,6 +68,11 @@ export const TailorOutputSchema = z.object({
     .describe(
       "Every cut you made inside a kept item, and every project, publication or honour you left out, each with its reason; empty when nothing was cut",
     ),
+  job_description_short: z
+    .string()
+    .describe(
+      "The job description cut to what a recruiter chat needs: role, company, location, required qualifications and nice-to-haves, as plain text with '- ' bullets, in the job description's language, at most 2000 characters",
+    ),
 });
 
 export type TailorOutput = z.infer<typeof TailorOutputSchema>;
