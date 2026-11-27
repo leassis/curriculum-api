@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import type { Env } from "../../env.js";
-import { ValidationError } from "../../services/errors.js";
+import type { ResumeContext } from "../../repositories/recruiter-chat.repository.js";
+import { NotFoundError, ValidationError } from "../../services/errors.js";
 import { CHATS_JS } from "../static/chats-js.generated.js";
-import { ChatRow, ChatsPage, Created, Rows } from "./view.js";
+import { decideAutofill } from "./autofill.js";
+import { AutofillFragment, ChatRow, ChatsPage, Created, type FieldNotice, Rows } from "./view.js";
 
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 
@@ -41,6 +43,72 @@ chatsRouter.post("/chats/test", async (c) => {
   return new Response(stream.pipeThrough(new TextEncoderStream()), {
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
   });
+});
+
+/**
+ * Answers a Resume pick in the New chat form with the two fields, the values last autofilled and a
+ * notice under each, as out-of-band swaps. "Master CV" (no id) leaves the fields alone; "Replace"
+ * sends `replace=<field>` to overwrite the Owner's text in that field.
+ */
+chatsRouter.post("/chats/autofill", async (c) => {
+  const body = await c.req.parseBody();
+  const current = {
+    jobDescriptionShort: text(body.jobDescriptionShort),
+    company: text(body.company),
+  };
+  const last = {
+    jobDescriptionShort: text(body.lastJobDescriptionShort),
+    company: text(body.lastCompany),
+  };
+  const view = (
+    fields: typeof current,
+    lastFilled: typeof last,
+    notices: { jobDescriptionNotice: FieldNotice | null; companyNotice: FieldNotice | null },
+  ) =>
+    c.html(
+      AutofillFragment({
+        basePath: c.var.config.basePath,
+        jobDescriptionShort: fields.jobDescriptionShort,
+        company: fields.company,
+        lastJobDescriptionShort: lastFilled.jobDescriptionShort,
+        lastCompany: lastFilled.company,
+        ...notices,
+      }),
+    );
+  const none = { jobDescriptionNotice: null, companyNotice: null };
+
+  const id = text(body.tailoredResumeId).trim();
+  if (id === "") return view(current, last, none);
+  let context: ResumeContext;
+  try {
+    context = await c.var.services.recruiterChat.resumeContext(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return view(current, last, { ...none, jobDescriptionNotice: "not-found" });
+    }
+    throw error;
+  }
+
+  const replace = text(body.replace);
+  const jd = decideAutofill({
+    field: "jobDescriptionShort",
+    current: current.jobDescriptionShort,
+    lastFilled: last.jobDescriptionShort,
+    source: context.jobDescriptionShort,
+    replace: replace === "jobDescriptionShort",
+  });
+  const company = decideAutofill({
+    field: "company",
+    current: current.company,
+    lastFilled: last.company,
+    source: context.company,
+    replace: replace === "company",
+  });
+  return view(
+    { jobDescriptionShort: jd.value, company: company.value },
+    { jobDescriptionShort: jd.lastFilled, company: company.lastFilled },
+    { jobDescriptionNotice: jd.notice, companyNotice: company.notice },
+  );
 });
 
 chatsRouter.get("/chats/rows", async (c) =>

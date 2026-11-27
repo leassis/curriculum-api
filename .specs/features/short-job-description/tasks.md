@@ -339,9 +339,9 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Every spec criterion of the chat-form story and its edge cases has a route test
-- [ ] Creating a chat after autofill stores the field text; changing the resume's short afterwards leaves the chat's value unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Every spec criterion of the chat-form story and its edge cases has a route test
+- [x] Creating a chat after autofill stores the field text; changing the resume's short afterwards leaves the chat's value unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
