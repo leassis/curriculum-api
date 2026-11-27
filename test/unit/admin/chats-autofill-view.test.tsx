@@ -94,4 +94,13 @@ describe("chat autofill fragment", () => {
       ["lastCompany", ""],
     ]);
   });
+
+  it("puts the Resume select first in the chat form", () => {
+    const form = page().split('id="chat-form"')[1] ?? "";
+    const names = [...form.matchAll(/<(?:input|select|textarea)[^>]*\bname="([^"]+)"/g)]
+      .map((m) => m[1])
+      .filter((n) => !n?.startsWith("last"));
+    expect(names[0]).toBe("tailoredResumeId");
+    expect(names.slice(1, 3)).toEqual(["recruiterName", "company"]);
+  });
 });
