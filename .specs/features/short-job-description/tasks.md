@@ -115,9 +115,9 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Rules text names every kept and dropped item of SJD-02/03, `- ` bullets, the Job Description's language and the 2000-character cap
-- [ ] Truncation cuts at the last line break or sentence end at or before code point 2000, else at 2000; exactly 2000 stays whole; blank → null
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Rules text names every kept and dropped item of SJD-02/03, `- ` bullets, the Job Description's language and the 2000-character cap
+- [x] Truncation cuts at the last line break or sentence end at or before code point 2000, else at 2000; exactly 2000 stays whole; blank → null
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
