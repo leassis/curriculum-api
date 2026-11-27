@@ -23,11 +23,11 @@ describe("short-jd migration", () => {
       .returning();
     expect(withValue?.jobDescriptionShort).toBe("- Requirement");
 
-    const columns = await db.execute(
+    const columns = (await db.execute(
       sql`select data_type, is_nullable, column_default from information_schema.columns
           where table_schema = 'curriculum_api' and table_name = 'tailored_resumes'
           and column_name = 'job_description_short'`,
-    );
+    )) as { rows: Record<string, unknown>[] };
     expect(columns.rows[0]).toMatchObject({
       data_type: "text",
       is_nullable: "YES",

@@ -182,6 +182,7 @@ describe("llm service generate object", () => {
     score_rationale: "Covers the core requirements.",
     missing_skills: ["Kubernetes"],
     omissions: [{ what: "A bullet", reason: "Off topic" }],
+    job_description_short: "- Engineer",
   };
 
   it("returns the parsed object and the model through a structured model", async () => {
@@ -220,6 +221,7 @@ describe("llm service generate object", () => {
       "omissions",
       "omissions[].what",
       "omissions[].reason",
+      "job_description_short",
     ]);
     for (const { path, node } of props) {
       expect(typeof node.description, path).toBe("string");

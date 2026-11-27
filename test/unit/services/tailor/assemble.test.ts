@@ -16,6 +16,7 @@ function reply(items: TailorOutput["items"], overrides: Partial<TailorOutput> = 
     score_rationale: "Covers the core requirements.",
     missing_skills: [],
     omissions: [],
+    job_description_short: "- Backend engineer",
     ...overrides,
   };
 }

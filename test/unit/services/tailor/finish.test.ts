@@ -25,6 +25,7 @@ function run(
     score_rationale: "Covers the core requirements.",
     missing_skills: [],
     omissions: [],
+    job_description_short: "- Backend engineer",
     ...overrides,
   };
   return finish(library, annotate(library), out, TODAY);

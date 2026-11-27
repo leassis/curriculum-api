@@ -136,9 +136,9 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Field is required; its description says it is the Job Description cut to what a recruiter chat needs, at most 2000 characters
-- [ ] `test/support/resumes.ts` tailor-output helper returns a default value for it
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Field is required; its description says it is the Job Description cut to what a recruiter chat needs, at most 2000 characters
+- [x] `test/support/resumes.ts` tailor-output helper returns a default value for it
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

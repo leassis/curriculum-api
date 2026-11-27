@@ -19,6 +19,7 @@ function output(overrides: Partial<TailorOutput> = {}): TailorOutput {
     score_rationale: "Covers the core requirements.",
     missing_skills: [],
     omissions: [],
+    job_description_short: "- Backend engineer",
     ...overrides,
   };
 }
