@@ -102,9 +102,9 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Every create validation answers the same message on update; below-used names N; revoked and expired chats save with status kept
-- [ ] Existing create tests still pass unchanged
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Every create validation answers the same message on update; below-used names N; revoked and expired chats save with status kept
+- [x] Existing create tests still pass unchanged
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

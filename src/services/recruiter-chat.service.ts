@@ -2,6 +2,7 @@ import { dataBlock, wrapUserMessages } from "../llm/data-block.js";
 import { redactPii } from "../llm/pii-guard.js";
 import type {
   ChatMessageRow,
+  RecruiterChatPatch,
   RecruiterChatRepo,
   RecruiterChatRow,
   ResumeContext,
@@ -128,6 +129,25 @@ export class RecruiterChatService {
   }
 
   async create(input: NewRecruiterChat): Promise<RecruiterChat> {
+    const values = await this.checkInput(input);
+    return toChat(await this.chats.insert({ token: newToken(), ...values }));
+  }
+
+  /**
+   * Changes the editable fields in place; token, questions used, status and messages stay. The
+   * `max_questions >= used` rule runs in the UPDATE itself, so a question counted meanwhile counts.
+   */
+  async update(id: string, input: NewRecruiterChat): Promise<RecruiterChat> {
+    const values = await this.checkInput(input);
+    const row = UUID.test(id) ? await this.chats.update(id, values) : null;
+    if (row) return toChat(row);
+    const current = UUID.test(id) ? await this.chats.findById(id) : null;
+    if (!current) throw new NotFoundError("Recruiter Chat not found");
+    invalid("maxQuestions", `must be at least the questions already used (${current.used})`);
+  }
+
+  /** The create rules, shared by `create` and `update` so both give the same field messages. */
+  private async checkInput(input: NewRecruiterChat): Promise<RecruiterChatPatch> {
     const recruiterName = (input.recruiterName ?? "").trim();
     if (recruiterName === "") invalid("recruiterName", "must not be empty");
     const jd = (input.jobDescriptionShort ?? "").trim();
@@ -150,17 +170,14 @@ export class RecruiterChatService {
       invalid("tailoredResumeId", "Tailored Resume not found");
     }
     const company = (input.company ?? "").trim();
-    return toChat(
-      await this.chats.insert({
-        token: newToken(),
-        recruiterName,
-        company: company === "" ? null : company,
-        jobDescriptionShort: jd === "" ? null : jd,
-        tailoredResumeId: resumeId === "" ? null : resumeId,
-        maxQuestions,
-        expiresAt,
-      }),
-    );
+    return {
+      recruiterName,
+      company: company === "" ? null : company,
+      jobDescriptionShort: jd === "" ? null : jd,
+      tailoredResumeId: resumeId === "" ? null : resumeId,
+      maxQuestions,
+      expiresAt,
+    };
   }
 
   async revoke(id: string): Promise<RecruiterChat> {
