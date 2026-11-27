@@ -17,7 +17,7 @@ const USAGE = `Usage: curriculum-api <command>
 
 Commands:
   migrate         apply database migrations (uses DATABASE_URL_UNPOOLED, falling back to DATABASE_URL)
-  seed            create the profile row with default prompts (needs DATABASE_URL)
+  seed            upsert the profile row's default prompts (needs DATABASE_URL)
   hash-password   read a password from stdin and print its bcrypt hash
   cleanup         delete public_usage and admin_login_attempts rows older than 30 days (needs DATABASE_URL)`;
 
