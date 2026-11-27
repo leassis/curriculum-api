@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.5.0](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.4.0...curriculum-api-v0.5.0) (2026-11-27)
+
+
+### Features
+
+* **admin:** add the new chat autofill rule ([6406736](https://github.com/leassis/curriculum-api/commit/64067369d827164f305155357fe467d6c4c27027))
+* **admin:** autofill the edit chat form from the chosen resume ([3728b5e](https://github.com/leassis/curriculum-api/commit/3728b5e0c94cbb967279112f8dbb2f0cb5430ede))
+* **admin:** autofill the new chat form from the chosen resume ([b122396](https://github.com/leassis/curriculum-api/commit/b122396604bf6b84f2f8c9af622438a5b34323c1))
+* **admin:** confirm every destructive action with a red button for deletes ([fc10483](https://github.com/leassis/curriculum-api/commit/fc10483c56486b327ffa5459f3b947d4483e6a81))
+* **admin:** edit a recruiter chat from the chats page ([42708a8](https://github.com/leassis/curriculum-api/commit/42708a86b3812726df2036af6bdf771c2fbb8a4a))
+* **admin:** put the resume select first in the chat form ([6595115](https://github.com/leassis/curriculum-api/commit/659511595c40069333ee69236e5cf204fa38237f))
+* **admin:** render autofill fields and notices in the chat form ([2a93f87](https://github.com/leassis/curriculum-api/commit/2a93f87f99095bc3ff61aa7f474c6b95c9ef22d0))
+* **admin:** render the chat form in edit mode ([35eb88a](https://github.com/leassis/curriculum-api/commit/35eb88a5b04ee6598056328b797e4d4690ddd4fa))
+* **admin:** replace the browser confirm with a styled dialog ([b3f7024](https://github.com/leassis/curriculum-api/commit/b3f7024ba5bd740453104cd73010a2050fda1394))
+* **admin:** save the short job description from resume options ([4f86782](https://github.com/leassis/curriculum-api/commit/4f86782150dcbdf97ec11cf30daea53803d84ab1))
+* **admin:** show the short job description in the resume editor ([f78f0ff](https://github.com/leassis/curriculum-api/commit/f78f0ff23ef4ada6e777c7af8dc9f8fabdfcb809))
+* **chats:** add a guarded recruiter chat update to the repository ([285c29f](https://github.com/leassis/curriculum-api/commit/285c29f866c232c201361fa75b2df303ba6c014d))
+* **chats:** expose resume context to the admin ([f4a4d6a](https://github.com/leassis/curriculum-api/commit/f4a4d6ad64ed1b513a2173390ad7d19005dbc6ad))
+* **chats:** read a tailored resume's company and short job description ([87b62cf](https://github.com/leassis/curriculum-api/commit/87b62cf0884a45ade8d6498d87b01cb968019e62))
+* **chats:** update a recruiter chat in place ([85c8b23](https://github.com/leassis/curriculum-api/commit/85c8b23000bee6ca1440138750c1f095811c7965))
+* **db:** add tailored_resumes.job_description_short ([4751150](https://github.com/leassis/curriculum-api/commit/4751150c53ca154172f8af207f46ecca5eb26432))
+* **db:** make seed upsert the default prompts ([060df1e](https://github.com/leassis/curriculum-api/commit/060df1ef2b2e02978a05f31cffa131795ff0e318))
+* **llm:** have the recruiter assistant lead with matches, not gaps ([8f4d1c6](https://github.com/leassis/curriculum-api/commit/8f4d1c620455eab3ba4f4dcf54c7de6cf6956aab))
+* **resumes:** let the owner edit the company in resume options ([86a8246](https://github.com/leassis/curriculum-api/commit/86a8246d2a0f9404b9ad03f0776b36a606c14db0))
+* **resumes:** let the owner edit the short job description ([282188b](https://github.com/leassis/curriculum-api/commit/282188bd046464063376d10b543ca2c1721a6e43))
+* **resumes:** store the short job description on generation ([9b54e48](https://github.com/leassis/curriculum-api/commit/9b54e488ac1f0df9d16862d74fcea19a77a2cdb8))
+* **tailor:** add short job description rules and normaliser ([f48f48f](https://github.com/leassis/curriculum-api/commit/f48f48f24f9de479fa1e9c9800ff59831db1ff18))
+* **tailor:** carry the short job description through finish ([aa65c94](https://github.com/leassis/curriculum-api/commit/aa65c9434f3fa5904746f742efb4c04521d02685))
+* **tailor:** request a short job description in the tailor output ([dc44992](https://github.com/leassis/curriculum-api/commit/dc44992e19e288750a843826f99398d563c1ce3f))
+
+
+### Bug Fixes
+
+* **admin:** import the resume context type from the service ([aa7a7e9](https://github.com/leassis/curriculum-api/commit/aa7a7e94d531c65368def9fa27e77b6fc0f0ebd4))
+* **chats:** save an expired chat with its stored expiry ([c4453cc](https://github.com/leassis/curriculum-api/commit/c4453cc93c7c30cd7dc8247edd028a794abf4dd1))
+* **llm:** answer recruiter fit questions instead of refusing them ([2bb1bd9](https://github.com/leassis/curriculum-api/commit/2bb1bd94939a64f8336d7cec3a1fc3eda1a827b1))
+* **tailor:** pin the sentence end rule and prove the chat snapshot ([462a8c8](https://github.com/leassis/curriculum-api/commit/462a8c8f07fba7ea842050f097aab6cbe2baa676))
+
 ## [0.4.0](https://github.com/leassis/curriculum-api/compare/curriculum-api-v0.3.1...curriculum-api-v0.4.0) (2026-11-26)
 
 
