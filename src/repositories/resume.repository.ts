@@ -19,6 +19,7 @@ export interface ResumePatch {
   /** The Resume Document, already validated by the service; stored as jsonb. */
   structured?: unknown;
   customInstructions?: string;
+  company?: string | null;
   jobLink?: string;
   recruiterName?: string;
   notes?: string;

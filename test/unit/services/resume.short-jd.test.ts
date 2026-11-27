@@ -69,6 +69,20 @@ describe("resume updateOptions", () => {
     expect(repo.rows[0]?.jobDescriptionShort).toBeNull();
   });
 
+  it("stores the trimmed company, null when blank, and keeps it when not given", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+
+    const saved = await resumes.updateOptions(id, [], undefined, { company: "  Acme Corp  " });
+    expect(saved.company).toBe("Acme Corp");
+
+    await resumes.updateOptions(id, [], undefined, { notes: "untouched field" });
+    expect(repo.rows[0]?.company).toBe("Acme Corp");
+
+    await resumes.updateOptions(id, [], undefined, { company: "   " });
+    expect(repo.rows[0]?.company).toBeNull();
+  });
+
   it("accepts 2000 and rejects 2001 characters keeping the stored value", async () => {
     const { resumes, repo } = await resumeSetup();
     const { id } = await resumes.create(draft);

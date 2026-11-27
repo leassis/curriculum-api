@@ -351,12 +351,12 @@ export class ResumeService {
     throw new LlmUnavailableError();
   }
 
-  /** Stores the header fields to print and, when given, the Custom Instructions. */
+  /** Stores the header fields to print and, when given, the Custom Instructions, company and tracking fields. */
   async updateOptions(
     id: string,
     headerKeys: string[],
     customInstructions?: string,
-    tracking: Partial<Tracking> & { jobDescriptionShort?: string } = {},
+    tracking: Partial<Tracking> & { jobDescriptionShort?: string; company?: string } = {},
   ): Promise<Resume> {
     await this.get(id);
     const fields = await this.personalInfo.allValues();
@@ -366,9 +366,11 @@ export class ResumeService {
         : this.checkInstructions(customInstructions, fields);
     const checked = this.checkTracking(tracking);
     const jobDescriptionShort = this.checkShortJobDescription(tracking.jobDescriptionShort);
+    const company = tracking.company === undefined ? undefined : tracking.company.trim() || null;
     return this.update(id, {
       ...checked,
       ...(jobDescriptionShort === undefined ? {} : { jobDescriptionShort }),
+      ...(company === undefined ? {} : { company }),
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),

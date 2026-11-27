@@ -409,6 +409,18 @@ export const Editor = ({
         </details>
         <form id="resume-form" class="card-pad">
           <div class="field">
+            <label class="field-label" for="resume-company">
+              Company
+            </label>
+            <input
+              class="input"
+              id="resume-company"
+              type="text"
+              name="company"
+              value={resume.company ?? ""}
+            />
+          </div>
+          <div class="field">
             <label class="field-label" for="job-description-short">
               Short Job Description (max 2000 characters)
             </label>

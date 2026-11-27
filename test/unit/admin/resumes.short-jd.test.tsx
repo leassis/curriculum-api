@@ -60,6 +60,21 @@ describe("PUT /admin/resumes/:id", () => {
     expect(repo.rows[0]?.jobDescriptionShort).toBeNull();
   });
 
+  it("saves the company", async () => {
+    const { get, put, resumes, repo } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = await (await get(`/admin/resumes/${id}`)).text();
+    const form = resumeForm(html);
+    const save = gesture(button(html, "Save options"));
+
+    const res = await put(save.path, { ...formFields(form.html), company: "  Globex  " });
+    expect(res.status).toBe(200);
+    expect(repo.rows[0]?.company).toBe("Globex");
+
+    const reloaded = await (await get(`/admin/resumes/${id}`)).text();
+    expect(formFields(resumeForm(reloaded).html).company).toBe("Globex");
+  });
+
   it("rejects a short job description over 2000 characters", async () => {
     const { put, resumes, repo } = await resumeApp();
     const { id } = await resumes.create(newResume);
