@@ -185,8 +185,8 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Second recorded model call carries the new Job Description data block; the same token works; earlier messages unchanged
-- [ ] Build gate passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Second recorded model call carries the new Job Description data block; the same token works; earlier messages unchanged
+- [x] Build gate passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: integration
 **Gate**: build
