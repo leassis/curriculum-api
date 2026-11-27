@@ -466,3 +466,57 @@ describe("PUT /admin/chats/:id", () => {
     expect(s.repo.rows[0]).toMatchObject({ maxQuestions: 5, used: 2, recruiterName: "Jane Roe" });
   });
 });
+
+const SHORT_A = "- Short of A";
+
+/** What the browser would send for the edit form after the Owner picks another resume. */
+async function editAfterPick() {
+  const s = await adminChats();
+  s.repo.resumes.set(RESUME, {
+    title: "A",
+    company: "Globex",
+    jobDescriptionShort: SHORT_A,
+  });
+  const chat = await s.newChat({
+    recruiterName: "Jane",
+    company: "Acme",
+    jobDescriptionShort: "My own text",
+  });
+  const html = await (await s.get(`/admin/chats/${chat.id}/edit`)).text();
+  const inputs = voidTags(html, "input");
+  const fields: Record<string, string> = {};
+  for (const i of inputs) fields[i.attrs.name ?? ""] = i.attrs.value ?? "";
+  fields.jobDescriptionShort = tags(html, "textarea")[0]?.text ?? "";
+  fields.tailoredResumeId = RESUME;
+  const post = async (extra: Record<string, string> = {}) =>
+    decode(await (await s.send("POST", "/admin/chats/autofill", { ...fields, ...extra })).text());
+  return { post };
+}
+
+const inputValue = (html: string, name: string) =>
+  voidTags(html, "input").find((i) => i.attrs.name === name)?.attrs.value;
+
+describe("edit chat form", () => {
+  it("treats stored values as owner text", async () => {
+    const { post } = await editAfterPick();
+    const html = await post();
+    expect(html).toContain("Not filled: the field has your own text.");
+    expect(tags(html, "textarea")[0]?.text).toBe("My own text");
+    expect(inputValue(html, "company")).toBe("Acme");
+    const replaces = tags(html, "button").filter((b) => b.text === "Replace");
+    expect(replaces).toHaveLength(2);
+  });
+});
+
+describe("POST /admin/chats/autofill", () => {
+  it("applies the rule in the edit form", async () => {
+    const { post } = await editAfterPick();
+    const replaced = await post({ replace: "jobDescriptionShort" });
+    expect(tags(replaced, "textarea")[0]?.text).toBe(SHORT_A);
+    expect(inputValue(replaced, "lastJobDescriptionShort")).toBe(SHORT_A);
+    expect(inputValue(replaced, "company")).toBe("Acme");
+    const company = await post({ replace: "company" });
+    expect(inputValue(company, "company")).toBe("Globex");
+    expect(tags(company, "textarea")[0]?.text).toBe("My own text");
+  });
+});
