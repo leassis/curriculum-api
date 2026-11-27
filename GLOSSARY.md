@@ -91,8 +91,12 @@ Owner-written steering text of one Tailored Resume, sent to the tailor model; ne
 _Avoid_: Prompt, custom prompt
 
 **Job Description**:
-Text pasted by the Owner describing a role; input to tailoring and optional context of a Recruiter Chat.
+Text pasted by the Owner describing a role; the full input to tailoring. A Recruiter Chat gets its Short Job Description instead.
 _Avoid_: JD (in UI), vacancy
+
+**Short Job Description**:
+The Job Description cut to what a Recruiter Chat needs (role, company, location, required qualifications and nice-to-haves), at most 2000 characters, made by the tailor model in the same call as the resume and stored with the Tailored Resume (`job_description_short`). The Owner can edit it in the resume editor; the next successful generation replaces it. Picking a Tailored Resume in the New chat form copies it into the chat's Job Description field unless that field holds the Owner's own text; the chat keeps its own copy. Shown only in the admin; never printed or downloaded.
+_Avoid_: Summary, short JD, JD short
 
 **Job Link**:
 The http(s) address of the job ad behind one Tailored Resume, set by the Owner for their own tracking. Shown only in the admin; never sent to an LLM, printed, downloaded or given to a Recruiter Chat.
