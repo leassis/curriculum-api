@@ -336,6 +336,28 @@ export const ChatForm = ({
     >
       <h2 class="section-title">{chat ? "Edit chat" : "New chat"}</h2>
       <div id="created" />
+      <div class="field">
+        <label class="field-label" for="tailoredResumeId">
+          Resume
+        </label>
+        <select
+          class="input"
+          id="tailoredResumeId"
+          name="tailoredResumeId"
+          hx-post={`${basePath}/admin/chats/autofill`}
+          hx-trigger="change"
+          hx-swap="none"
+        >
+          <option value="" selected={!chat?.tailoredResumeId}>
+            Master CV
+          </option>
+          {resumes.map((r) => (
+            <option value={r.id} selected={r.id === chat?.tailoredResumeId}>
+              {r.title}
+            </option>
+          ))}
+        </select>
+      </div>
       <div class="form-grid">
         <div class="field">
           <label class="field-label" for="recruiterName">
@@ -393,28 +415,6 @@ export const ChatForm = ({
             name="expiresAt"
             value={localInput(chat?.expiresAt ?? null)}
           />
-        </div>
-        <div class="field">
-          <label class="field-label" for="tailoredResumeId">
-            Resume
-          </label>
-          <select
-            class="input"
-            id="tailoredResumeId"
-            name="tailoredResumeId"
-            hx-post={`${basePath}/admin/chats/autofill`}
-            hx-trigger="change"
-            hx-swap="none"
-          >
-            <option value="" selected={!chat?.tailoredResumeId}>
-              Master CV
-            </option>
-            {resumes.map((r) => (
-              <option value={r.id} selected={r.id === chat?.tailoredResumeId}>
-                {r.title}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
       <div class="actions">
