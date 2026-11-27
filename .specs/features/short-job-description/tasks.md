@@ -177,9 +177,9 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Recorded system prompt ends with the rules after the assessment rules; stored `tailorSystemPrompt` unchanged
-- [ ] Success overwrites an earlier value; a failed generation (all attempts rejected) leaves it as it was
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Recorded system prompt ends with the rules after the assessment rules; stored `tailorSystemPrompt` unchanged
+- [x] Success overwrites an earlier value; a failed generation (all attempts rejected) leaves it as it was
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

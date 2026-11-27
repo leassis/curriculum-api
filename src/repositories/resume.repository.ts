@@ -29,6 +29,8 @@ export interface ResumePatch {
   missingSkills?: string[];
   /** Array of `{ what, reason }`, already validated by the service; stored as jsonb. */
   omissions?: unknown;
+  /** The Short Job Description, already trimmed and bounded by the service; `null` clears it. */
+  jobDescriptionShort?: string | null;
 }
 
 export interface ResumeRepo {
