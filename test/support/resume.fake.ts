@@ -50,6 +50,7 @@ export class FakeResumeRepo implements ResumeRepo {
     if (patch.structured !== undefined) next.structured = structuredClone(patch.structured);
     if (patch.customInstructions !== undefined) next.customInstructions = patch.customInstructions;
     if (patch.headerFields !== undefined) next.headerFields = patch.headerFields;
+    if (patch.company !== undefined) next.company = patch.company;
     if (patch.jobLink !== undefined) next.jobLink = patch.jobLink;
     if (patch.recruiterName !== undefined) next.recruiterName = patch.recruiterName;
     if (patch.notes !== undefined) next.notes = patch.notes;
