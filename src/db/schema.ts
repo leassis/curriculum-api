@@ -85,6 +85,8 @@ export const tailoredResumes = curriculum.table(
     missingSkills: text().array().notNull().default(sql`'{}'::text[]`),
     /** Array of `{ what, reason }`, parsed by the service. */
     omissions: jsonb().notNull().default(sql`'[]'::jsonb`),
+    /** Job Description cut to what a Recruiter Chat needs, at most 2000 characters; NULL until the first successful generation. */
+    jobDescriptionShort: text(),
   },
   (t) => [check("tailored_resumes_score", sql`${t.score} between 0 and 100`)],
 );

@@ -247,9 +247,10 @@ describe("repo layout", () => {
       "0006_drop_master_cv.sql",
       "0007_graceful_karma.sql",
       "0008_lazy_ben_urich.sql",
+      "0009_ordinary_justin_hammer.sql",
     ]);
     const journal = JSON.parse(read("drizzle/meta/_journal.json"));
-    expect(journal.entries).toHaveLength(9);
+    expect(journal.entries).toHaveLength(10);
     expect(JSON.parse(read("package.json")).files).toContain("drizzle");
   });
 

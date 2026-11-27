@@ -1,0 +1,1 @@
+ALTER TABLE "curriculum_api"."tailored_resumes" ADD COLUMN "job_description_short" text;
