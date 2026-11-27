@@ -93,10 +93,10 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Column is `text`, nullable, no default; a new row reads NULL
-- [ ] `drizzle/0009_*.sql` and journal committed
-- [ ] Integration test `short-jd migration > adds a nullable job_description_short that starts NULL` passes
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Column is `text`, nullable, no default; a new row reads NULL
+- [x] `drizzle/0009_*.sql` and journal committed
+- [x] Integration test `short-jd migration > adds a nullable job_description_short that starts NULL` passes
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full
