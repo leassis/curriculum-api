@@ -4,6 +4,7 @@ import type {
   RecruiterChatInsert,
   RecruiterChatRepo,
   RecruiterChatRow,
+  ResumeContext,
   ResumeOption,
 } from "../../src/repositories/recruiter-chat.repository";
 
@@ -15,6 +16,8 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
     string,
     {
       title: string;
+      company?: string | null;
+      jobDescriptionShort?: string | null;
       structured?: unknown;
       jobLink?: string;
       recruiterName?: string;
@@ -110,6 +113,15 @@ export class FakeRecruiterChatRepo implements RecruiterChatRepo {
 
   async resumeExists(id: string): Promise<boolean> {
     return this.resumes.has(id);
+  }
+
+  async resumeContext(id: string): Promise<ResumeContext | null> {
+    const resume = this.resumes.get(id);
+    if (!resume) return null;
+    return {
+      company: resume.company ?? null,
+      jobDescriptionShort: resume.jobDescriptionShort ?? null,
+    };
   }
 
   async resumeOptions(): Promise<ResumeOption[]> {

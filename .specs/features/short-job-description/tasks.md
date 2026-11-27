@@ -259,8 +259,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Returns both values for a resume, NULLs as null, null for a missing id
-- [ ] Gate check passes: `pnpm test:unit && pnpm test:int`
+- [x] Returns both values for a resume, NULLs as null, null for a missing id
+- [x] Gate check passes: `pnpm test:unit && pnpm test:int`
 
 **Tests**: integration
 **Gate**: full

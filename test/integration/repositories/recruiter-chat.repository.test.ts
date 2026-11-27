@@ -146,6 +146,31 @@ describe("recruiter chat repository", () => {
     expect((await repo.findById(chat.id))?.tailoredResumeId).toBeNull();
   });
 
+  it("reads a resume's company and short job description", async () => {
+    const full = await resumes.insert({
+      title: "Full",
+      company: "Acme",
+      jobDescription: "jd",
+      customInstructions: "",
+    });
+    await resumes.update(full.id, { jobDescriptionShort: "- Postgres" });
+    const bare = await resumes.insert({
+      title: "Bare",
+      company: null,
+      jobDescription: "jd",
+      customInstructions: "",
+    });
+    expect(await repo.resumeContext(full.id)).toEqual({
+      company: "Acme",
+      jobDescriptionShort: "- Postgres",
+    });
+    expect(await repo.resumeContext(bare.id)).toEqual({
+      company: null,
+      jobDescriptionShort: null,
+    });
+    expect(await repo.resumeContext("00000000-0000-4000-8000-00000000ffff")).toBeNull();
+  });
+
   it("reads the linked resume document and null without one", async () => {
     const linked = await resumes.insert({
       title: "Linked",
