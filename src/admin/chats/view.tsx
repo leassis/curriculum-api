@@ -21,6 +21,15 @@ export interface ResumeChoice {
 
 const stamp = (d: Date | null) => (d ? d.toISOString().slice(0, 16).replace("T", " ") : "");
 
+export type FieldNotice = "kept" | "no-source" | "not-found";
+
+/** The notices exactly as the Owner reads them. */
+export const NOTICE_TEXT: Record<FieldNotice, string> = {
+  kept: "Not filled: the field has your own text.",
+  "no-source": "This resume has no short description yet. Regenerate it to get one.",
+  "not-found": "Tailored Resume not found",
+};
+
 /** The Recruiter Link: the site and the API share one origin, so it is `<origin>/r/<token>`. */
 const linkFor = (origin: string, chat: ChatView) => `${origin}/r/${chat.token}`;
 
@@ -170,6 +179,100 @@ export const TestPanel = ({ basePath }: { basePath: string }) => (
   </aside>
 );
 
+const JobDescriptionField = ({ value, oob }: { value: string; oob?: boolean }) => (
+  <textarea
+    class="input"
+    id="jobDescriptionShort"
+    name="jobDescriptionShort"
+    rows={6}
+    hx-swap-oob={oob ? "true" : undefined}
+  >
+    {value}
+  </textarea>
+);
+
+const CompanyField = ({ value, oob }: { value: string; oob?: boolean }) => (
+  <input
+    class="input"
+    id="company"
+    type="text"
+    name="company"
+    value={value}
+    hx-swap-oob={oob ? "true" : undefined}
+  />
+);
+
+const LastFilled = ({ name, value, oob }: { name: string; value: string; oob?: boolean }) => (
+  <input type="hidden" id={name} name={name} value={value} hx-swap-oob={oob ? "true" : undefined} />
+);
+
+const Notice = ({
+  basePath,
+  field,
+  notice,
+}: {
+  basePath: string;
+  field: "jobDescriptionShort" | "company";
+  notice: FieldNotice;
+}) => (
+  <p class="muted">
+    {NOTICE_TEXT[notice]}
+    {notice === "kept" ? (
+      <>
+        {" "}
+        <button
+          type="button"
+          class="btn-ghost btn-sm"
+          hx-post={`${basePath}/admin/chats/autofill`}
+          hx-include="closest form"
+          hx-vals={JSON.stringify({ replace: field })}
+          hx-swap="none"
+        >
+          Replace
+        </button>
+      </>
+    ) : null}
+  </p>
+);
+
+/**
+ * The answer to an autofill request: the two fields, the values the autofill last put in them, and
+ * a notice under each, all swapped out of band into the New chat form. The notices go into regions
+ * that are already on the page, so a screen reader announces them.
+ */
+export const AutofillFragment = ({
+  basePath,
+  jobDescriptionShort,
+  company,
+  lastJobDescriptionShort,
+  lastCompany,
+  jobDescriptionNotice,
+  companyNotice,
+}: {
+  basePath: string;
+  jobDescriptionShort: string;
+  company: string;
+  lastJobDescriptionShort: string;
+  lastCompany: string;
+  jobDescriptionNotice: FieldNotice | null;
+  companyNotice: FieldNotice | null;
+}) => (
+  <>
+    <JobDescriptionField value={jobDescriptionShort} oob />
+    <CompanyField value={company} oob />
+    <LastFilled name="lastJobDescriptionShort" value={lastJobDescriptionShort} oob />
+    <LastFilled name="lastCompany" value={lastCompany} oob />
+    <div hx-swap-oob="innerHTML:#jd-notice">
+      {jobDescriptionNotice ? (
+        <Notice basePath={basePath} field="jobDescriptionShort" notice={jobDescriptionNotice} />
+      ) : null}
+    </div>
+    <div hx-swap-oob="innerHTML:#company-notice">
+      {companyNotice ? <Notice basePath={basePath} field="company" notice={companyNotice} /> : null}
+    </div>
+  </>
+);
+
 export const ChatsPage = ({
   basePath,
   faviconUrl,
@@ -241,14 +344,18 @@ export const ChatsPage = ({
               <label class="field-label" for="company">
                 Company
               </label>
-              <input class="input" id="company" type="text" name="company" />
+              <CompanyField value="" />
+              <div id="company-notice" aria-live="polite" />
             </div>
           </div>
           <div class="field">
             <label class="field-label" for="jobDescriptionShort">
               Job Description (max 2000 characters)
             </label>
-            <textarea class="input" id="jobDescriptionShort" name="jobDescriptionShort" rows={6} />
+            <JobDescriptionField value="" />
+            <div id="jd-notice" aria-live="polite" />
+            <LastFilled name="lastJobDescriptionShort" value="" />
+            <LastFilled name="lastCompany" value="" />
           </div>
           <div class="form-grid">
             <div class="field">
@@ -275,7 +382,14 @@ export const ChatsPage = ({
               <label class="field-label" for="tailoredResumeId">
                 Resume
               </label>
-              <select class="input" id="tailoredResumeId" name="tailoredResumeId">
+              <select
+                class="input"
+                id="tailoredResumeId"
+                name="tailoredResumeId"
+                hx-post={`${basePath}/admin/chats/autofill`}
+                hx-trigger="change"
+                hx-swap="none"
+              >
                 <option value="" selected>
                   Master CV
                 </option>

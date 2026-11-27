@@ -319,8 +319,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Notice texts match the spec character for character; Replace buttons post `replace=<field>`; notice region is `aria-live="polite"`
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Notice texts match the spec character for character; Replace buttons post `replace=<field>`; notice region is `aria-live="polite"`
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
