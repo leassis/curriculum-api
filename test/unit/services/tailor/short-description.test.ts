@@ -77,6 +77,13 @@ describe("shortJobDescription", () => {
     expect(shortJobDescription(lineEndsAtCap)).toBe("j".repeat(2000));
   });
 
+  it("does not end a sentence inside a number and ends it before a closing quote", () => {
+    const decimal = `A one. ${"b".repeat(1000)}3.5${"c".repeat(1200)}`;
+    expect(shortJobDescription(decimal)).toBe("A one.");
+    const quoted = `${"a".repeat(1500)}." ${"b".repeat(600)}`;
+    expect(shortJobDescription(quoted)).toBe(`${"a".repeat(1500)}."`);
+  });
+
   it("trims the text and turns a blank into null", () => {
     expect(shortJobDescription("  - One\n- Two \n")).toBe("- One\n- Two");
     expect(shortJobDescription("")).toBeNull();
