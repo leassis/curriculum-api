@@ -50,3 +50,34 @@ describe("resume generate", () => {
     expect((await resumes.get(id)).jobDescriptionShort).toBe("- Kept requirement");
   });
 });
+
+describe("resume updateOptions", () => {
+  it("stores the trimmed short job description and null when blank", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+
+    const saved = await resumes.updateOptions(id, [], undefined, {
+      jobDescriptionShort: "  - Postgres\n- Remote  ",
+    });
+    expect(saved.jobDescriptionShort).toBe("- Postgres\n- Remote");
+    expect(repo.rows[0]?.jobDescriptionShort).toBe("- Postgres\n- Remote");
+
+    await resumes.updateOptions(id, [], undefined, { notes: "untouched field" });
+    expect(repo.rows[0]?.jobDescriptionShort).toBe("- Postgres\n- Remote");
+
+    await resumes.updateOptions(id, [], undefined, { jobDescriptionShort: " \n " });
+    expect(repo.rows[0]?.jobDescriptionShort).toBeNull();
+  });
+
+  it("accepts 2000 and rejects 2001 characters keeping the stored value", async () => {
+    const { resumes, repo } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    await resumes.updateOptions(id, [], undefined, { jobDescriptionShort: "😀".repeat(2000) });
+    expect(Array.from(repo.rows[0]?.jobDescriptionShort ?? "")).toHaveLength(2000);
+
+    await expect(
+      resumes.updateOptions(id, [], undefined, { jobDescriptionShort: "😀".repeat(2001) }),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("2000") });
+    expect(repo.rows[0]?.jobDescriptionShort).toBe("😀".repeat(2000));
+  });
+});

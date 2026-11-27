@@ -41,7 +41,7 @@ import {
 import { type FinishResult, finish } from "./tailor/finish.js";
 import { annotate, TailorOutputSchema } from "./tailor/output.js";
 import { TAILOR_ASSESSMENT_RULES } from "./tailor/rubric.js";
-import { SHORT_JD_RULES } from "./tailor/short-description.js";
+import { SHORT_JD_MAX_CHARS, SHORT_JD_RULES } from "./tailor/short-description.js";
 
 /** A stored resume with its Resume Document parsed; the raw jsonb never leaves the service. */
 export type Resume = Omit<
@@ -356,7 +356,7 @@ export class ResumeService {
     id: string,
     headerKeys: string[],
     customInstructions?: string,
-    tracking: Partial<Tracking> = {},
+    tracking: Partial<Tracking> & { jobDescriptionShort?: string } = {},
   ): Promise<Resume> {
     await this.get(id);
     const fields = await this.personalInfo.allValues();
@@ -365,8 +365,10 @@ export class ResumeService {
         ? undefined
         : this.checkInstructions(customInstructions, fields);
     const checked = this.checkTracking(tracking);
+    const jobDescriptionShort = this.checkShortJobDescription(tracking.jobDescriptionShort);
     return this.update(id, {
       ...checked,
+      ...(jobDescriptionShort === undefined ? {} : { jobDescriptionShort }),
       headerFields: headerFieldsFor(
         headerKeys,
         fields.map((f) => f.key),
@@ -516,6 +518,19 @@ export class ResumeService {
       );
     }
     return trimmed;
+  }
+
+  /** `undefined` leaves the stored value; blank becomes `null`; over the cap is rejected. */
+  private checkShortJobDescription(value: string | undefined): string | null | undefined {
+    if (value === undefined) return undefined;
+    const trimmed = value.trim();
+    if ([...trimmed].length > SHORT_JD_MAX_CHARS) {
+      throw new ValidationError(
+        `Short Job Description is limited to ${SHORT_JD_MAX_CHARS} characters`,
+        { jobDescriptionShort: "is too long" },
+      );
+    }
+    return trimmed === "" ? null : trimmed;
   }
 
   private checkTracking(input: Partial<Tracking>): Partial<Tracking> {
