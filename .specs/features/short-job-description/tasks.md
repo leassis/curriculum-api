@@ -467,7 +467,7 @@ Proof: walk - stop the dev server's DB, pick a resume, see the error in the stat
 
 **Settled mid-build:** 2026-11-27 - user: "nao implementa ainda" (specs and tasks approved; Execute not started)
 **Dispatched:** none
-**Walked:** none
+**Walked:** 2026-11-27, dev server on a throwaway postgres:18-alpine container (migrated + seeded, three resumes inserted by SQL, admin sign-in with a generated test password). New chat form at `/admin/chats`, picking each Resume option in the select: Resume A filled Job Description and Company; Resume B replaced both (last autofilled values); typing own text then Resume A kept both fields and showed "Not filled: the field has your own text." with "Replace"; "Replace" on the Job Description filled it and cleared its notice; "Resume None" kept the field and showed "This resume has no short description yet. Regenerate it to get one."; "Master CV" kept both fields and cleared notices; notices sit in `aria-live="polite"` regions. C30: stopped the database, picked a resume, the standard failure toast ("Something went wrong") appeared and both fields stayed as typed. No captures bind this feature, so no pictures.
 
 ---
 
