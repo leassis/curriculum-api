@@ -138,16 +138,21 @@ export class RecruiterChatService {
    * `max_questions >= used` rule runs in the UPDATE itself, so a question counted meanwhile counts.
    */
   async update(id: string, input: NewRecruiterChat): Promise<RecruiterChat> {
-    const values = await this.checkInput(input);
-    const row = UUID.test(id) ? await this.chats.update(id, values) : null;
+    const existing = UUID.test(id) ? await this.chats.findById(id) : null;
+    if (!existing) throw new NotFoundError("Recruiter Chat not found");
+    const values = await this.checkInput(input, existing.expiresAt);
+    const row = await this.chats.update(id, values);
     if (row) return toChat(row);
-    const current = UUID.test(id) ? await this.chats.findById(id) : null;
+    const current = await this.chats.findById(id);
     if (!current) throw new NotFoundError("Recruiter Chat not found");
     invalid("maxQuestions", `must be at least the questions already used (${current.used})`);
   }
 
   /** The create rules, shared by `create` and `update` so both give the same field messages. */
-  private async checkInput(input: NewRecruiterChat): Promise<RecruiterChatPatch> {
+  private async checkInput(
+    input: NewRecruiterChat,
+    storedExpiry: Date | null = null,
+  ): Promise<RecruiterChatPatch> {
     const recruiterName = (input.recruiterName ?? "").trim();
     if (recruiterName === "") invalid("recruiterName", "must not be empty");
     const jd = (input.jobDescriptionShort ?? "").trim();
@@ -163,7 +168,14 @@ export class RecruiterChatService {
     if (input.expiresAt !== undefined && input.expiresAt.trim() !== "") {
       expiresAt = new Date(input.expiresAt);
       if (Number.isNaN(expiresAt.getTime())) invalid("expiresAt", "must be a valid date");
-      if (expiresAt.getTime() <= Date.now()) invalid("expiresAt", "must be in the future");
+      // The edit form carries the stored expiry back at minute precision; sending it unchanged is
+      // not a new past date, so an expired chat can be saved without touching its expiry.
+      const unchanged =
+        storedExpiry !== null &&
+        expiresAt.getTime() === Math.floor(storedExpiry.getTime() / 60_000) * 60_000;
+      if (expiresAt.getTime() <= Date.now() && !unchanged) {
+        invalid("expiresAt", "must be in the future");
+      }
     }
     const resumeId = (input.tailoredResumeId ?? "").trim();
     if (resumeId !== "" && !(UUID.test(resumeId) && (await this.chats.resumeExists(resumeId)))) {
