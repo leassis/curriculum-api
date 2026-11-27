@@ -279,8 +279,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Found, missing and malformed ids covered
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Found, missing and malformed ids covered
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
