@@ -234,6 +234,10 @@
   .confirm-actions {
     @apply flex justify-end gap-2;
   }
+  /* No fade: the button is reused, so a fade would flash the previous question's color. */
+  .confirm-ok {
+    @apply transition-none;
+  }
   .confirm-ok-danger {
     @apply bg-danger hover:bg-danger/90;
   }

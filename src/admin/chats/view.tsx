@@ -89,6 +89,9 @@ export const ChatRow = ({
             aria-label={`Revoke chat for ${chat.recruiterName}`}
             title="Revoke"
             hx-patch={`${url}/revoke`}
+            hx-confirm={`Revoke chat for ${chat.recruiterName}? The link stops working for good.`}
+            data-confirm-ok="Revoke"
+            data-confirm-danger
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
@@ -100,6 +103,8 @@ export const ChatRow = ({
             aria-label={`Reset chat for ${chat.recruiterName}`}
             title="Reset"
             hx-patch={`${url}/reset`}
+            hx-confirm={`Reset the question count for ${chat.recruiterName}?`}
+            data-confirm-ok="Reset"
             hx-target="closest tr"
             hx-swap="outerHTML"
           >
