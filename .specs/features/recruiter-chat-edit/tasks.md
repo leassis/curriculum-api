@@ -123,9 +123,9 @@ T5 → T6
 
 **Done when**:
 
-- [ ] Edit mode holds the chat's six values, the resume selected, the expiry in `datetime-local` format, empty hidden last-autofilled inputs
-- [ ] New chat mode renders as before
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Edit mode holds the chat's six values, the resume selected, the expiry in `datetime-local` format, empty hidden last-autofilled inputs
+- [x] New chat mode renders as before
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

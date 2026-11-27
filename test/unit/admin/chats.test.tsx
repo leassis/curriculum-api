@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { ChatForm, Rows } from "../../../src/admin/chats/view";
 import { signSession } from "../../../src/security/session";
+import { button, tags, voidTags } from "../../support/html";
 import { EMAIL, RECRUITER_PROMPT, recruiterApp } from "../../support/recruiter-chat";
 
 const MISSING = "00000000-0000-4000-8000-00000000ffff";
@@ -219,5 +221,102 @@ describe("admin chats", () => {
     expect(side).toContain('<dd id="public-questions">7</dd>');
     expect(side).toContain('<dd id="active-chats">3</dd>');
     expect(side).not.toContain("Tailored resumes");
+  });
+});
+
+const R1 = "00000000-0000-4000-8000-0000000000a1";
+const R2 = "00000000-0000-4000-8000-0000000000b2";
+const CHAT_ID = "00000000-0000-4000-8000-0000000000c1";
+const resumeChoices = [
+  { id: R1, title: "Backend" },
+  { id: R2, title: "Platform" },
+];
+
+describe("chat form view", () => {
+  const edit = (expiresAt: Date | null = new Date(2031, 4, 6, 14, 30)) =>
+    String(
+      <ChatForm
+        basePath=""
+        resumes={resumeChoices}
+        defaultMax={10}
+        chat={{
+          id: CHAT_ID,
+          recruiterName: "Jane <Roe>",
+          company: "Acme",
+          jobDescriptionShort: "Senior Postgres",
+          tailoredResumeId: R2,
+          maxQuestions: 7,
+          expiresAt,
+        }}
+      />,
+    );
+
+  it("holds the six values of the chat in edit mode with Save and Cancel", () => {
+    const html = edit();
+    expect(html).toContain("Edit chat");
+    expect(html).not.toContain("New chat");
+    const form = tags(html, "form")[0];
+    expect(form?.attrs["hx-put"]).toBe(`/admin/chats/${CHAT_ID}`);
+    const inputs = voidTags(html, "input");
+    const value = (name: string) => inputs.find((i) => i.attrs.name === name)?.attrs.value;
+    expect(value("recruiterName")).toBe("Jane <Roe>");
+    expect(value("company")).toBe("Acme");
+    expect(value("maxQuestions")).toBe("7");
+    expect(value("expiresAt")).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(new Date(value("expiresAt") ?? "").getTime()).toBe(
+      new Date(2031, 4, 6, 14, 30).getTime(),
+    );
+    expect(tags(html, "textarea")[0]?.text).toBe("Senior Postgres");
+    const selected = tags(html, "option").filter((o) => "selected" in o.attrs);
+    expect(selected.map((o) => o.attrs.value)).toEqual([R2]);
+    expect(button(html, "Save")).toBeDefined();
+    const cancel = tags(html, "button").find((b) => b.text === "Cancel");
+    expect(cancel?.attrs["hx-get"]).toBe("/admin/chats/new");
+  });
+
+  it("starts edit mode with empty last-autofilled inputs and no expiry value when none", () => {
+    const html = edit(null);
+    const inputs = voidTags(html, "input");
+    const value = (name: string) => inputs.find((i) => i.attrs.name === name)?.attrs.value;
+    expect(value("lastJobDescriptionShort")).toBe("");
+    expect(value("lastCompany")).toBe("");
+    expect(value("expiresAt")).toBe("");
+  });
+
+  it("renders the New chat form as before when no chat is given", () => {
+    const html = String(<ChatForm basePath="" resumes={resumeChoices} defaultMax={10} />);
+    expect(html).toContain("New chat");
+    expect(tags(html, "form")[0]?.attrs["hx-post"]).toBe("/admin/chats");
+    const inputs = voidTags(html, "input");
+    expect(inputs.find((i) => i.attrs.name === "maxQuestions")?.attrs.value).toBe("10");
+    expect(inputs.find((i) => i.attrs.name === "recruiterName")?.attrs.value).toBe("");
+    expect(tags(html, "button").map((b) => b.text)).toEqual(["Create"]);
+    expect(tags(html, "option").filter((o) => "selected" in o.attrs)).toHaveLength(1);
+  });
+
+  it("offers an Edit action on each table row", () => {
+    const html = String(
+      <Rows
+        basePath=""
+        origin="http://localhost"
+        chats={[
+          {
+            id: CHAT_ID,
+            token: "t",
+            recruiterName: "Jane",
+            company: null,
+            maxQuestions: 5,
+            used: 0,
+            status: "active",
+            expiresAt: null,
+            lastUsedAt: null,
+          },
+        ]}
+      />,
+    );
+    const edit = tags(html, "button").find((b) => b.attrs.title === "Edit");
+    expect(edit?.attrs["hx-get"]).toBe(`/admin/chats/${CHAT_ID}/edit`);
+    expect(edit?.attrs["hx-target"]).toBe("#chat-form");
+    expect(edit?.attrs["aria-label"]).toBe("Edit chat for Jane");
   });
 });
