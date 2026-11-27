@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gt, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import { recruiterChatMessages, recruiterChats, tailoredResumes } from "../db/schema.js";
 
@@ -14,6 +14,9 @@ export interface RecruiterChatInsert {
   maxQuestions: number;
   expiresAt: Date | null;
 }
+
+/** The fields an edit may change; token, used and status are never part of it. */
+export type RecruiterChatPatch = Omit<RecruiterChatInsert, "token">;
 
 export interface ResumeOption {
   id: string;
@@ -45,6 +48,8 @@ export interface RecruiterChatRepo {
   findByToken(token: string): Promise<RecruiterChatRow | null>;
   findById(id: string): Promise<RecruiterChatRow | null>;
   insert(input: RecruiterChatInsert): Promise<RecruiterChatRow>;
+  /** Saves the editable fields only while `used <= maxQuestions`; null when the id is gone or `used` is higher. */
+  update(id: string, patch: RecruiterChatPatch): Promise<RecruiterChatRow | null>;
   revoke(id: string): Promise<RecruiterChatRow | null>;
   reset(id: string): Promise<RecruiterChatRow | null>;
   delete(id: string): Promise<boolean>;
@@ -97,6 +102,15 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
   async insert(input: RecruiterChatInsert): Promise<RecruiterChatRow> {
     const [row] = await this.db.insert(recruiterChats).values(input).returning(columns);
     return row as RecruiterChatRow;
+  }
+
+  async update(id: string, patch: RecruiterChatPatch): Promise<RecruiterChatRow | null> {
+    const [row] = await this.db
+      .update(recruiterChats)
+      .set(patch)
+      .where(and(eq(recruiterChats.id, id), lte(recruiterChats.used, patch.maxQuestions)))
+      .returning(columns);
+    return row ?? null;
   }
 
   async revoke(id: string): Promise<RecruiterChatRow | null> {
