@@ -27,6 +27,19 @@ Drop:
 Format: plain text in short sections with "- " bullets, no markdown headings. Write it in the same language as the job description. Aim for 1500 to 2000 characters and never exceed ${SHORT_JD_MAX_CHARS} characters.`;
 
 const SENTENCE_END = /[.!?]/;
+const CLOSER = /["')\]”’»]/;
+
+/**
+ * True when the text up to `end` ends a sentence: a ".", "!" or "?" with optional closing quotes or
+ * brackets after it, followed by whitespace or the end of the text. So "3.5" is not a boundary.
+ */
+function endsSentence(points: string[], end: number): boolean {
+  const after = points[end];
+  if (after !== undefined && !/\s/.test(after)) return false;
+  let i = end - 1;
+  while (i >= 0 && CLOSER.test(points[i] as string)) i--;
+  return i >= 0 && SENTENCE_END.test(points[i] as string);
+}
 
 /**
  * Normalises the model's short: trims it, turns a blank into null and cuts one over the cap at the
@@ -40,11 +53,7 @@ export function shortJobDescription(raw: string): string | null {
 
   let cut = SHORT_JD_MAX_CHARS;
   for (let end = SHORT_JD_MAX_CHARS; end > 0; end--) {
-    const before = points[end - 1] as string;
-    const after = points[end];
-    const lineBreak = after === "\n";
-    const sentenceEnd = SENTENCE_END.test(before) && (after === undefined || /\s/.test(after));
-    if (lineBreak || sentenceEnd) {
+    if (points[end] === "\n" || endsSentence(points, end)) {
       cut = end;
       break;
     }

@@ -213,6 +213,15 @@ describe("POST /admin/chats", () => {
     expect(res.status).toBe(200);
     expect(repo.rows[0]).toMatchObject({ jobDescriptionShort: "- Short of A", company: "Acme" });
 
+    const edited = await post("/admin/chats", {
+      recruiterName: "Edited Owner",
+      jobDescriptionShort: "Owner-edited text",
+      maxQuestions: "10",
+      tailoredResumeId: A,
+    });
+    expect(edited.status).toBe(200);
+    expect(repo.rows[1]).toMatchObject({ jobDescriptionShort: "Owner-edited text" });
+
     repo.resumes.set(A, { title: "A", company: "Changed", jobDescriptionShort: "- Rewritten" });
     expect(repo.rows[0]).toMatchObject({ jobDescriptionShort: "- Short of A", company: "Acme" });
     const again = await pick({ tailoredResumeId: A, jobDescriptionShort: "", company: "" });
