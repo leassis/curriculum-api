@@ -253,7 +253,7 @@ Proof: run unit | ✓ recruiter chat update > saves an expired chat with its own
 ## Handoff
 
 **Settled mid-build:** 2026-11-27 - user: "nao implementa ainda" (specs and tasks approved; Execute not started)
-**Dispatched:** Verifier (fresh sub-agent) at HEAD 06ef89e - returned: no
+**Dispatched:** Verifier (fresh sub-agent) at HEAD 06ef89e - returned: yes (findings fixed in 37c782a)
 **Walked:** none
 
 ---
