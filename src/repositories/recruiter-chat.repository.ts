@@ -20,6 +20,12 @@ export interface ResumeOption {
   title: string;
 }
 
+/** What the New chat form copies from a Tailored Resume. */
+export interface ResumeContext {
+  company: string | null;
+  jobDescriptionShort: string | null;
+}
+
 export type MessageRole = "user" | "assistant";
 
 export interface ChatMessageInsert {
@@ -50,6 +56,8 @@ export interface RecruiterChatRepo {
   /** Raw stored Resume Document of a Tailored Resume; null when the id or the document is null or the resume is gone. */
   resumeDocument(id: string | null): Promise<unknown>;
   resumeExists(id: string): Promise<boolean>;
+  /** A Tailored Resume's company and Short Job Description; null when the resume is gone. */
+  resumeContext(id: string): Promise<ResumeContext | null>;
   resumeOptions(): Promise<ResumeOption[]>;
   /** Stores messages in one statement, in array order; the chat's messages go with the chat. */
   addMessages(chatId: string, messages: ChatMessageInsert[]): Promise<void>;
@@ -162,6 +170,17 @@ export class RecruiterChatRepository implements RecruiterChatRepo {
       .from(tailoredResumes)
       .where(eq(tailoredResumes.id, id));
     return rows.length > 0;
+  }
+
+  async resumeContext(id: string): Promise<ResumeContext | null> {
+    const [row] = await this.db
+      .select({
+        company: tailoredResumes.company,
+        jobDescriptionShort: tailoredResumes.jobDescriptionShort,
+      })
+      .from(tailoredResumes)
+      .where(eq(tailoredResumes.id, id));
+    return row ?? null;
   }
 
   resumeOptions(): Promise<ResumeOption[]> {
