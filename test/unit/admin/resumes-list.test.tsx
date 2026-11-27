@@ -9,6 +9,7 @@ const resume = (overrides: Partial<ResumeView> = {}): ResumeView => ({
   model: null,
   updatedAt: new Date("2026-01-01T00:00:00Z"),
   jobDescription: "Build things",
+  jobDescriptionShort: null,
   customInstructions: "",
   jobLink: "",
   recruiterName: "",

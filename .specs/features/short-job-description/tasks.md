@@ -218,8 +218,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Renders the stored value escaped, empty for NULL, positioned after the Job Description
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Renders the stored value escaped, empty for NULL, positioned after the Job Description
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
