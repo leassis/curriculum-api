@@ -360,7 +360,7 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Entry added; Build gate passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Entry added; Build gate passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: none
 **Gate**: build
