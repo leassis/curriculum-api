@@ -568,6 +568,23 @@ describe("recruiter chat update", () => {
     expect(repo.rows.find((r) => r.id === revoked.id)?.status).toBe("revoked");
   });
 
+  it("saves an expired chat with its own stored expiry", async () => {
+    const { recruiterChat, repo, newChat } = await recruiterSetup();
+    const chat = await newChat();
+    const stored = new Date(Math.floor((Date.now() - 3_600_000) / 60_000) * 60_000 + 25_000);
+    const row = repo.rows.find((r) => r.id === chat.id);
+    if (row) row.expiresAt = stored;
+    const saved = await recruiterChat.update(chat.id, {
+      ...edit,
+      expiresAt: new Date(Math.floor(stored.getTime() / 60_000) * 60_000).toISOString(),
+    });
+    expect(saved).toMatchObject({ recruiterName: "Janet", status: "expired" });
+    const other = new Date(stored.getTime() - 120_000).toISOString();
+    await expect(recruiterChat.update(chat.id, { ...edit, expiresAt: other })).rejects.toThrow(
+      "expiresAt: must be in the future",
+    );
+  });
+
   it("answers not found for a missing or malformed id", async () => {
     const { recruiterChat } = await recruiterSetup();
     for (const id of [MISSING, "nope"]) {

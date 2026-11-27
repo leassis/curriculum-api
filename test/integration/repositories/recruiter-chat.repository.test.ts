@@ -256,8 +256,16 @@ describe("recruiter chat repository update", () => {
     await repo.acquire(chat.id);
     await repo.acquire(chat.id);
     await repo.revoke(chat.id);
+    await repo.addMessages(chat.id, [
+      { role: "user", content: "q" },
+      { role: "assistant", content: "a" },
+    ]);
     const row = await repo.update(chat.id, patch({ maxQuestions: 2 }));
     expect(row).toMatchObject({ token: chat.token, used: 2, status: "revoked", maxQuestions: 2 });
+    expect((await repo.messages(chat.id)).map((m) => [m.role, m.content])).toEqual([
+      ["user", "q"],
+      ["assistant", "a"],
+    ]);
   });
 
   it("refuses a max below the current used", async () => {

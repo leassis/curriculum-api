@@ -245,12 +245,15 @@ Proof: run unit | ✓ GET /admin/chats/:id/edit > shows not found for a deleted 
 **C16** - Max equal to used is accepted, and the next question gets the limit-reached answer (Edge case 3)
 Proof: run unit | ✓ recruiter chat update > accepts max equal to used and the next ask hits the limit
 
+**C17** - An expired chat saves with its own stored expiry and stays expired; a different past expiry still answers 400 (RCE-13, AC 11)
+Proof: run unit | ✓ recruiter chat update > saves an expired chat with its own stored expiry
+
 ---
 
 ## Handoff
 
 **Settled mid-build:** 2026-11-27 - user: "nao implementa ainda" (specs and tasks approved; Execute not started)
-**Dispatched:** none
+**Dispatched:** Verifier (fresh sub-agent) at HEAD 06ef89e - returned: no
 **Walked:** none
 
 ---

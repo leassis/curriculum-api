@@ -353,7 +353,9 @@ describe("GET /admin/chats/:id/edit", () => {
         .map((o) => o.attrs.value),
     ).toEqual([RESUME]);
     expect(button(html, "Save")).toBeDefined();
-    expect(button(html, "Cancel")).toBeDefined();
+    const cancel = button(html, "Cancel");
+    expect(cancel.attrs["hx-get"]).toBe("/admin/chats/new");
+    expect(cancel.attrs["hx-target"]).toBe("#chat-form");
   });
 
   it("shows not found for a deleted chat", async () => {
@@ -365,6 +367,8 @@ describe("GET /admin/chats/:id/edit", () => {
       expect(html).toContain('role="alert"');
       expect(html).toContain("Recruiter Chat not found");
       expect(html).not.toContain("Edit chat");
+      expect(html).not.toContain("chat-form");
+      expect(html).not.toContain("<form");
     }
   });
 });

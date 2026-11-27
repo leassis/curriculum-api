@@ -62,6 +62,7 @@ A Recruiter Chat stores a snapshot of its Job Description, company, resume and l
 8. WHEN the Owner saves with an empty expiry THEN the system SHALL store no expiry for that chat.
 9. WHILE a chat is revoked or expired the system SHALL allow it to be edited and SHALL keep its status as it was.
 10. IF the chat no longer exists when the Owner saves THEN the system SHALL answer 404 and show "Recruiter Chat not found" in the status line.
+11. WHEN the Owner saves a chat whose expiry has already passed and leaves the expiry as it was stored (to the minute) THEN the system SHALL accept it and keep the chat expired; a different past expiry SHALL still answer 400 "must be in the future". (RCE-13, found by the Verifier: the edit form carries the stored expiry back)
 
 **Independent Test**: Create a chat, ask one question through the test panel or recruiter route, edit its Job Description and max questions, ask again, see the new Job Description in the model request and the same token working.
 
@@ -122,6 +123,7 @@ A Recruiter Chat stores a snapshot of its Job Description, company, resume and l
 | RCE-10 | P1: Edit - deleted chat 404 | Tasks | Pending |
 | RCE-11 | P1: Autofill - same rule in edit form | Tasks | Pending |
 | RCE-12 | P1: Autofill - stored values count as Owner text | Tasks | Pending |
+| RCE-13 | P1: Edit - expired chat saves with its stored expiry | Verification | Pending |
 
 **Coverage:** 12 total, 0 mapped to tasks, 12 unmapped ⚠️ (tasks come after approval)
 
