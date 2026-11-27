@@ -299,8 +299,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] Empty (incl. whitespace-only) → fill; equal to lastFilled → fill; other text → keep + `kept`; `replace` → fill; null source → keep + `no-source` for Job Description, keep + no notice for Company
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] Empty (incl. whitespace-only) → fill; equal to lastFilled → fill; other text → keep + `kept`; `replace` → fill; null source → keep + `no-source` for Job Description, keep + no notice for Company
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick
