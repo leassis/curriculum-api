@@ -198,8 +198,8 @@ T13 → T14
 
 **Done when**:
 
-- [ ] 2000 accepted, 2001 rejected with stored value kept, blank stores NULL
-- [ ] Gate check passes: `pnpm test:unit`
+- [x] 2000 accepted, 2001 rejected with stored value kept, blank stores NULL
+- [x] Gate check passes: `pnpm test:unit`
 
 **Tests**: unit
 **Gate**: quick

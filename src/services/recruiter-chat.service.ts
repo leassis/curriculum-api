@@ -22,6 +22,7 @@ import type { ContactItem, PersonalInfoService } from "./personal-info.service.j
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import { parseDocument } from "./tailor/document.js";
+import { SHORT_JD_MAX_CHARS } from "./tailor/short-description.js";
 
 export type { ChatMessageRow, ResumeOption };
 
@@ -70,7 +71,7 @@ export interface RecruiterAnswer {
   remaining: number;
 }
 
-export const MAX_JOB_DESCRIPTION_CHARS = 2000;
+export const MAX_JOB_DESCRIPTION_CHARS = SHORT_JD_MAX_CHARS;
 const MAX_QUESTIONS_LIMIT = 100;
 const EMPTY_CV = "The Master CV is empty: tell the recruiter there is no career information yet.";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
