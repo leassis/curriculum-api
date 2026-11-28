@@ -87,8 +87,13 @@ export const tailoredResumes = curriculum.table(
     omissions: jsonb().notNull().default(sql`'[]'::jsonb`),
     /** Job Description cut to what a Recruiter Chat needs, at most 2000 characters; NULL until the first successful generation. */
     jobDescriptionShort: text(),
+    /** The printed length the tailor aims for, in pages. */
+    targetPages: integer().notNull().default(2),
   },
-  (t) => [check("tailored_resumes_score", sql`${t.score} between 0 and 100`)],
+  (t) => [
+    check("tailored_resumes_score", sql`${t.score} between 0 and 100`),
+    check("tailored_resumes_target_pages", sql`${t.targetPages} between 1 and 3`),
+  ],
 );
 
 export const recruiterChats = curriculum.table(

@@ -150,12 +150,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Migration test: an existing row gets 2; inserting 4 violates the check
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Migration test: an existing row gets 2; inserting 4 violates the check
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: integration
 **Gate**: build
 **Commit**: `feat(db): add target pages to tailored resumes`
+**Status**: done
 
 ---
 

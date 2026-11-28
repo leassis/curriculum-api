@@ -35,6 +35,7 @@ export class FakeResumeRepo implements ResumeRepo {
       missingSkills: [],
       omissions: [],
       jobDescriptionShort: null,
+      targetPages: 2,
       createdAt: at,
       updatedAt: at,
     };
