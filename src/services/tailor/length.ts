@@ -21,7 +21,7 @@ const CHARS_PER_LINE_HEADING = 90;
 const HEADER_ALLOWANCE_MM = 22.2;
 const PAGE_BREAK_WASTE = 1.04;
 /** Letter's printable area (179.9 x 247.4mm) over A4's (174 x 265mm). */
-const LETTER_AREA_RATIO = 0.965;
+export const LETTER_AREA_RATIO = 0.965;
 /** Average printed characters per A4 page for this resume's mix of blocks. */
 export const CHARS_PER_PAGE = 2340;
 

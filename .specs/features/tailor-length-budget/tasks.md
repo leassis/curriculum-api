@@ -21,6 +21,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 - `src/services/tailor/length.ts`: `estimatePages(doc, pageSize)` - line-based: each block (headline, summary paragraph, item title, meta line, text paragraph, bullet, skills line) costs `ceil(chars / charsPerLine)` lines plus measured spacing; headings cost fixed lines; a fixed allowance covers the Personal Header (only its line count, never its values). Constants come from the spec's `## Measurement`; Letter scales by printable area.
 - `src/services/tailor/budget.ts`: `bulletCaps(library, targetPages, pageSize)` → `Map<itemId, cap>` for experiences, per spec AC P1.2-3.
+- Experience bullet budget (spec leaves it open): `targetPages × 2,340 characters` (× 0.965 for Letter) less the library's printed characters outside experience bullets (titles, meta lines, text, skills, other kinds' bullets); the mean bullet length is taken over every library bullet.
 - `src/services/tailor/fit.ts`: `fitToBudget(doc, caps, targetPages, pageSize)` → `{ doc, estimate }`, per spec AC P1.4-7.
 - `resume.service.generate` passes caps and target into `tailorInput`, and runs `fitToBudget` on the finished document before storing it. Pure functions stay in `services/tailor/`; views receive the estimate as a prop.
 
@@ -109,12 +110,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests cover ranking (current first, then end year and month), the weights, the sixth role at 0, the library-count ceiling, and the 120-char fallback
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests cover ranking (current first, then end year and month), the weights, the sixth role at 0, the library-count ceiling, and the 120-char fallback
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(tailor): compute bullet caps from the page budget`
+**Status**: done
 
 ---
 
