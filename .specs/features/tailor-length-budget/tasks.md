@@ -130,12 +130,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests cover cap trimming, fewer bullets than a cap, the cut order, every experience kept, and an over-minimum document returned with its estimate
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests cover cap trimming, fewer bullets than a cap, the cut order, every experience kept, and an over-minimum document returned with its estimate
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(tailor): cut bullets until the resume fits its target`
+**Status**: done
 
 ---
 

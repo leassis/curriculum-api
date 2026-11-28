@@ -15,7 +15,7 @@ export function meanBulletLength(items: CareerItem[]): number {
 }
 
 /** Current first, then the latest end (year, then month), then the latest start. */
-function recency(a: CareerItem, b: CareerItem): number {
+export function recency(a: CareerItem, b: CareerItem): number {
   if (a.current !== b.current) return a.current ? -1 : 1;
   const key = (i: CareerItem) => [
     i.endYear ?? 0,
