@@ -149,6 +149,44 @@ describe("assemble v2", () => {
     });
   });
 
+  it("keeps an empty library text empty whatever the model returns", () => {
+    const job = item("experience", {
+      title: "Lead Engineer",
+      organisation: "Brainsfirst",
+      location: "Amsterdam, Netherlands",
+      startYear: 2023,
+      startMonth: 1,
+      current: true,
+      text: "",
+      bullets: ["Shipped the scoring API"],
+    });
+    const r = assemble(
+      [job],
+      annotate([job]),
+      reply([
+        {
+          source_id: "c1",
+          text: "Lead Engineer at Brainsfirst (Amsterdam, Netherlands, Jan 2023 – Present)",
+          bullets: ["Shipped the scoring API"],
+        },
+      ]),
+    );
+    expect(r.ok && r.doc.items[0]).toMatchObject({
+      text: "",
+      bullets: ["Shipped the scoring API"],
+    });
+  });
+
+  it("treats a whitespace-only library text as empty", () => {
+    const job = item("experience", { title: "Engineer", organisation: "Initech", text: "  \n " });
+    const r = assemble(
+      [job],
+      annotate([job]),
+      reply([{ source_id: "c1", text: "Engineer, Initech", bullets: [] }]),
+    );
+    expect(r.ok && r.doc.items[0]).toMatchObject({ text: "" });
+  });
+
   it("keeps a skill group's library body whatever the model returns", () => {
     const skills = item("skill_group", { title: "Tools", skills: ["Git"] });
     const map = annotate([skills]);
