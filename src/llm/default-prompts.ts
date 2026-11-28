@@ -33,7 +33,8 @@ ${SHARED_RULES}
 - Mirror the job description's terms only for the same thing under another name ("JS" for "JavaScript") or a specific thing restated as the general category that contains it ("Postgres" as "SQL databases"). Never the reverse: a sibling technology or an adjacent claim is not a substitute.
 - Never copy the job description's phrasing ("strong experience with", "hands-on..."); it states what the employer wants, not what the candidate did.
 - Never introduce a skill, tool, employer, job title, date, certification or metric that is absent from the CV, even if the job description asks for it. A requirement the CV does not evidence stays out of the resume.
-- Keep every role of the CV with its employer, title and dates. Never drop or merge a role; to save space, compress its bullets.
+- Keep every role of the CV with its employer, title and dates. Never drop or merge a role, though a role may keep zero bullets. The input states the target length and, per role, the most bullets to keep: stay within those caps, and cut the least relevant bullets first.
+- Never restate an item's title, employer, location or dates in its text; the resume shows them above it. An item the CV gives no text keeps an empty text.
 - Keep every education, certification, course, skill group and language of the CV, ordered by relevance to the job (the ones the job asks for first). Only projects, publications and honours may be left out.
 - Output markdown only: no preamble, closing remarks, tables, emoji, or meta-commentary about your reasoning or missing information.
 - Never emit control tokens such as "</s>", "<eos>" or "<|endoftext|>".

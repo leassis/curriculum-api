@@ -17,11 +17,17 @@ const RESTORED_KINDS: readonly string[] = [
   "language",
 ];
 
+/** The model's text, except where the library item has none: the CV is the only source of facts. */
+function textOf(item: CareerItem, returned: string): string {
+  if (!KIND_META[item.kind].fields.includes("text")) return item.text;
+  return item.text.trim() === "" ? "" : cleanText(returned);
+}
+
 function bodyOf(item: CareerItem, returned?: TailorOutput["items"][number]) {
   const meta = KIND_META[item.kind];
   if (!returned) return { text: item.text, bullets: item.bullets };
   return {
-    text: meta.fields.includes("text") ? cleanText(returned.text) : item.text,
+    text: textOf(item, returned.text),
     bullets: meta.fields.includes("bullets")
       ? returned.bullets.map(cleanLine).filter((b) => b !== "")
       : item.bullets,

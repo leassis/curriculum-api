@@ -9,6 +9,8 @@ import {
   PAGE_SIZE_KEY,
   PAGE_SIZES,
   SETTINGS_KEYS,
+  TARGET_PAGES,
+  TARGET_PAGES_KEY,
   temperatureKey,
 } from "../../services/settings-keys.js";
 import { type Row, SettingsForm, SettingsPage } from "./view.js";
@@ -55,6 +57,8 @@ async function rowsFor(c: { var: Env["Variables"] }, submitted?: Record<string, 
     limits,
     pageSizes: PAGE_SIZES,
     pageSize: { key: PAGE_SIZE_KEY, override: pick(PAGE_SIZE_KEY), fallback: "A4" },
+    targetPagesOptions: TARGET_PAGES,
+    targetPages: { key: TARGET_PAGES_KEY, override: pick(TARGET_PAGES_KEY), fallback: "2" },
   };
 }
 
@@ -105,6 +109,13 @@ settingsRouter.post("/settings", async (c) => {
     }
     if (key === PAGE_SIZE_KEY && value !== "" && !PAGE_SIZES.some((p) => p === value)) {
       return reject(`${key} must be A4 or Letter`);
+    }
+    if (
+      key === TARGET_PAGES_KEY &&
+      value !== "" &&
+      !TARGET_PAGES.some((p) => String(p) === value)
+    ) {
+      return reject(`${key} must be 1, 2 or 3`);
     }
   }
   try {

@@ -42,6 +42,20 @@ describe("default prompt rules", () => {
     expect(DEFAULT_PUBLIC_SYSTEM_PROMPT).toContain("say the CV does not mention it");
   });
 
+  it("tailor prompt forbids restating the meta line in item text", () => {
+    expect(DEFAULT_TAILOR_SYSTEM_PROMPT).toContain(
+      "Never restate an item's title, employer, location or dates in its text",
+    );
+  });
+
+  it("tailor prompt asks to keep within the length budget", () => {
+    const p = DEFAULT_TAILOR_SYSTEM_PROMPT;
+    expect(p).toContain("Never drop or merge a role");
+    expect(p).toContain("a role may keep zero bullets");
+    expect(p).toContain("stay within those caps, and cut the least relevant bullets first");
+    expect(p).not.toContain("compress its bullets");
+  });
+
   it("tailor prompt forbids invented facts, copied phrasing, dropped roles and noise", () => {
     const p = DEFAULT_TAILOR_SYSTEM_PROMPT;
     for (const part of [
@@ -49,7 +63,6 @@ describe("default prompt rules", () => {
       "stays out of the resume",
       "Never copy the job description's phrasing",
       "Never drop or merge a role",
-      "compress its bullets",
       "tables, emoji",
       "meta-commentary",
       "control tokens",

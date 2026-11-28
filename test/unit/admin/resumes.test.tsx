@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INVALID_DOCUMENT, NOT_GENERATED } from "../../../src/admin/resumes/view";
 import type { ResumeDocument } from "../../../src/services/tailor/document";
+import { estimatePages } from "../../../src/services/tailor/length";
 import { item, SAMPLE_IDS, sampleLibrary, sampleReplyV2 } from "../../support/career";
 import {
   button,
@@ -286,6 +287,78 @@ describe("admin resumes", () => {
     expect(tag.attrs["hx-include"]).toBe("#resume-form");
     expect(tag.attrs["hx-target"]).toBe("#editor-status");
     expect(gesture(tag).method).toBe("PUT");
+  });
+});
+
+describe("admin resumes length", () => {
+  /** The stored document grown with one-line bullets until it estimates `pages` (to 0.05). */
+  async function withEstimate(pages: number, target: number) {
+    const s = await generated();
+    const stored = s.doc() as ResumeDocument;
+    const grown = structuredClone(stored);
+    const roles = grown.items.filter((i) => i.kind === "experience" || i.kind === "project");
+    for (const role of roles) role.bullets = [];
+    for (let n = 0; estimatePages(grown, "A4") < pages; n++) {
+      roles[n % roles.length]?.bullets.push("x".repeat(100));
+    }
+    expect(estimatePages(grown, "A4")).toBeLessThan(pages + 0.05);
+    const row = s.repo.rows[0];
+    if (row) {
+      row.structured = grown;
+      row.targetPages = target;
+    }
+    return s;
+  }
+
+  it("stores target pages 3 from the options form and shows it after a reload", async () => {
+    const s = await generated();
+    const html = await s.page();
+    const form = tags(html, "form").find((f) => f.attrs.id === "resume-form");
+    expect(formFields(form?.html ?? "").targetPages).toBe("2");
+    const fields = { ...formFields(form?.html ?? ""), targetPages: "3" };
+    const res = await s.send({ ...gesture(button(html, "Save options")), fields });
+    expect(res.status).toBe(200);
+    expect(s.repo.rows[0]?.targetPages).toBe(3);
+    const reloaded = tags(await s.page(), "form").find((f) => f.attrs.id === "resume-form");
+    expect(formFields(reloaded?.html ?? "").targetPages).toBe("3");
+  });
+
+  it("answers 400 and keeps the target pages when the posted value is outside 1 to 3", async () => {
+    const s = await generated();
+    const html = await s.page();
+    const form = tags(html, "form").find((f) => f.attrs.id === "resume-form");
+    for (const targetPages of ["0", "4", "abc"]) {
+      const fields = { ...formFields(form?.html ?? ""), targetPages };
+      const res = await s.send({ ...gesture(button(html, "Save options")), fields });
+      expect(res.status).toBe(400);
+    }
+    expect(s.repo.rows[0]?.targetPages).toBe(2);
+  });
+
+  it("shows the page estimate against the target", async () => {
+    const s = await withEstimate(2.3, 2);
+    expect(decode(await s.page())).toContain("~2.3 of 2 pages");
+  });
+
+  it("warns only when the estimate exceeds the target", async () => {
+    const over = await withEstimate(2.3, 2);
+    expect(decode(await over.page())).toContain("over its target of 2 pages");
+    const under = await withEstimate(1.8, 2);
+    const html = decode(await under.page());
+    expect(html).toContain("~1.8 of 2 pages");
+    expect(html).not.toContain("over its target");
+    const barely = await withEstimate(2.02, 2);
+    const printed = decode(await barely.page());
+    expect(printed).toContain("~2.0 of 2 pages");
+    expect(printed).not.toContain("over its target");
+  });
+
+  it("shows no estimate before the first generation", async () => {
+    const { resumes, get } = await resumeApp();
+    const { id } = await resumes.create(newResume);
+    const html = decode(await (await get(`/admin/resumes/${id}`)).text());
+    expect(html).not.toMatch(/~\d\.\d of \d pages?/);
+    expect(html).not.toContain("over its target");
   });
 });
 

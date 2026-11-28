@@ -32,6 +32,8 @@ export const SettingsForm = ({
   limits,
   pageSize,
   pageSizes,
+  targetPages,
+  targetPagesOptions,
   error,
   saved,
 }: {
@@ -40,6 +42,8 @@ export const SettingsForm = ({
   limits: Row[];
   pageSize: Row;
   pageSizes: readonly string[];
+  targetPages: Row;
+  targetPagesOptions: readonly number[];
   error?: string;
   saved?: boolean;
 }) => (
@@ -117,6 +121,21 @@ export const SettingsForm = ({
           ))}
         </select>
       </div>
+      <div class="field max-w-xs">
+        <label class="field-label" for={targetPages.key}>
+          Target pages
+        </label>
+        <select class="input" id={targetPages.key} name={targetPages.key}>
+          <option value="" selected={targetPages.override === ""}>
+            Default ({targetPages.fallback})
+          </option>
+          {targetPagesOptions.map((pages) => (
+            <option value={String(pages)} selected={targetPages.override === String(pages)}>
+              {pages}
+            </option>
+          ))}
+        </select>
+      </div>
     </section>
     <div class="actions mt-8">
       <button type="submit" class="btn">
@@ -133,6 +152,8 @@ export const SettingsPage = ({
   limits,
   pageSize,
   pageSizes,
+  targetPages,
+  targetPagesOptions,
   error,
   saved,
 }: {
@@ -142,6 +163,8 @@ export const SettingsPage = ({
   limits: Row[];
   pageSize: Row;
   pageSizes: readonly string[];
+  targetPages: Row;
+  targetPagesOptions: readonly number[];
   error?: string;
   saved?: boolean;
 }) => (
@@ -157,6 +180,8 @@ export const SettingsPage = ({
       limits={limits}
       pageSize={pageSize}
       pageSizes={pageSizes}
+      targetPages={targetPages}
+      targetPagesOptions={targetPagesOptions}
       error={error}
       saved={saved}
     />

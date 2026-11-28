@@ -18,6 +18,11 @@ export type PageSize = (typeof PAGE_SIZES)[number];
 
 export const PAGE_SIZE_KEY = "print.pageSize";
 
+export const TARGET_PAGES = [1, 2, 3] as const;
+export type TargetPages = (typeof TARGET_PAGES)[number];
+export const DEFAULT_TARGET_PAGES: TargetPages = 2;
+export const TARGET_PAGES_KEY = "print.targetPages";
+
 export const modelKey = (area: ModelArea) => `model.${area}`;
 export const limitKey = (name: LimitName) => `limits.${name}`;
 export const temperatureKey = (area: ModelArea) => `temperature.${area}`;
@@ -31,4 +36,5 @@ export const SETTINGS_KEYS: readonly string[] = [
   ...LIMIT_NAMES.map(limitKey),
   ...MODEL_AREAS.map(temperatureKey),
   PAGE_SIZE_KEY,
+  TARGET_PAGES_KEY,
 ];

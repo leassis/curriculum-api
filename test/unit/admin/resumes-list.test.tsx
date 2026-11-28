@@ -15,6 +15,7 @@ const resume = (overrides: Partial<ResumeView> = {}): ResumeView => ({
   recruiterName: "",
   notes: "",
   headerFields: null,
+  targetPages: 2,
   document: null,
   invalid: false,
   score: 85,

@@ -23,6 +23,7 @@ const KEYS = [
   "temperature.recruiter",
   "temperature.import",
   "print.pageSize",
+  "print.targetPages",
 ];
 
 function setup(rows: Record<string, string> = {}) {
@@ -116,6 +117,21 @@ describe("admin settings", () => {
       "limits.maxHistoryMessages": "7",
       "print.pageSize": "Letter",
     });
+  });
+
+  it("saves the target pages default in Settings", async () => {
+    const { post, get, repo } = setup();
+    const html = await (await get()).text();
+    expect(html).toMatch(/for="print\.targetPages"[^>]*>\s*Target pages/);
+    expect(html).toContain("Default (2)");
+    const saved = await post({ "print.targetPages": "1" });
+    expect(saved.status).toBe(303);
+    expect(repo.rows).toEqual({ "print.targetPages": "1" });
+    expect(await (await get()).text()).toMatch(/<option value="1" selected/);
+    const bad = await post({ "print.targetPages": "5" });
+    expect(bad.status).toBe(400);
+    expect(await bad.text()).toContain("print.targetPages must be 1, 2 or 3");
+    expect(repo.rows).toEqual({ "print.targetPages": "1" });
   });
 
   it("rejects an invalid limit and saves nothing", async () => {

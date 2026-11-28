@@ -17,6 +17,8 @@ export interface ResumeView {
   recruiterName: string;
   notes: string;
   headerFields: string[] | null;
+  /** The printed length the tailor aims for, in pages. */
+  targetPages: number;
   /** The header of the Resume Document; null when not generated yet or when the stored value is invalid. */
   document: { headline: string; summary: string } | null;
   /** The stored document failed its schema. */
@@ -271,12 +273,27 @@ const HeaderCard = ({
   </details>
 );
 
+/** The estimated printed length against the target, with a warning while it is over. */
+const LengthEstimate = ({ estimate, target }: { estimate: number; target: number }) => (
+  <div id="length-estimate">
+    <p class="status">
+      ~{estimate.toFixed(1)} of {target} {target === 1 ? "page" : "pages"}
+    </p>
+    {Number(estimate.toFixed(1)) > target ? (
+      <p class="text-danger" role="alert">
+        This resume is over its target of {target} {target === 1 ? "page" : "pages"}
+      </p>
+    ) : null}
+  </div>
+);
+
 /** The Header card and the item cards of a generated resume; the unit every control swaps. */
 export const ResumeCards = ({
   basePath,
   resume,
   fullName,
   cards,
+  estimate,
   form,
   headerError,
   leftOutError,
@@ -286,6 +303,8 @@ export const ResumeCards = ({
   fullName: string;
   /** One card per kind, empty ones included. */
   cards: CardView[];
+  /** Estimated printed pages of the document, computed by the route. */
+  estimate: number | null;
   form?: FormView;
   headerError?: string;
   leftOutError?: string;
@@ -300,6 +319,9 @@ export const ResumeCards = ({
   }
   return (
     <CareerCards cards={cards} url={`${url}/items`} leftOutUrl={`${url}/left-out`} form={form}>
+      {estimate === null ? null : (
+        <LengthEstimate estimate={estimate} target={resume.targetPages} />
+      )}
       {leftOutError ? (
         <div class="error" role="alert" data-toast="error">
           {leftOutError}
@@ -383,6 +405,7 @@ export const Editor = ({
   options,
   fullName,
   cards,
+  estimate,
   assessment,
   error,
 }: {
@@ -391,6 +414,7 @@ export const Editor = ({
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
+  estimate: number | null;
   assessment: AssessmentView | null;
   error?: string;
 }) => {
@@ -462,6 +486,18 @@ export const Editor = ({
             </textarea>
           </div>
           <div class="field">
+            <label class="field-label" for="target-pages">
+              Target pages
+            </label>
+            <select class="input" id="target-pages" name="targetPages">
+              {[1, 2, 3].map((pages) => (
+                <option value={String(pages)} selected={resume.targetPages === pages}>
+                  {pages}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="field">
             <label class="field-label" for="custom-instructions">
               Custom instructions
             </label>
@@ -522,7 +558,13 @@ export const Editor = ({
           </p>
         </form>
         <AssessmentPanels assessment={assessment} />
-        <ResumeCards basePath={basePath} resume={resume} fullName={fullName} cards={cards} />
+        <ResumeCards
+          basePath={basePath}
+          resume={resume}
+          fullName={fullName}
+          cards={cards}
+          estimate={estimate}
+        />
       </div>
     </div>
   );
@@ -535,6 +577,7 @@ export const EditorPage = (p: {
   options: HeaderOption[];
   fullName: string;
   cards: CardView[];
+  estimate: number | null;
   assessment: AssessmentView | null;
   error?: string;
 }) => (

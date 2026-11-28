@@ -1,0 +1,2 @@
+ALTER TABLE "curriculum_api"."tailored_resumes" ADD COLUMN "target_pages" integer DEFAULT 2 NOT NULL;--> statement-breakpoint
+ALTER TABLE "curriculum_api"."tailored_resumes" ADD CONSTRAINT "tailored_resumes_target_pages" CHECK ("curriculum_api"."tailored_resumes"."target_pages" between 1 and 3);

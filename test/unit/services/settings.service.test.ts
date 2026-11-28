@@ -83,6 +83,26 @@ describe("SettingsService", () => {
     );
   });
 
+  it("defaults target pages to 2 and reads a stored 3", async () => {
+    const unset = new SettingsService(new FakeSettingsRepo(), resolvedConfig());
+    expect(await unset.targetPages()).toBe(2);
+    const stored = new SettingsService(
+      new FakeSettingsRepo({ "print.targetPages": "3" }),
+      resolvedConfig(),
+    );
+    expect(await stored.targetPages()).toBe(3);
+  });
+
+  it("rejects target pages outside 1 to 3", async () => {
+    const repo = new FakeSettingsRepo();
+    const service = new SettingsService(repo, resolvedConfig());
+    await service.set("print.targetPages", "3");
+    for (const value of ["0", "4", "2.5", "abc"]) {
+      await expect(service.set("print.targetPages", value)).rejects.toBeInstanceOf(ValidationError);
+    }
+    expect(repo.rows["print.targetPages"]).toBe("3");
+  });
+
   it("temperature prefers a valid override, 'default' sends none, invalid falls back", async () => {
     const repo = new FakeSettingsRepo({
       "temperature.public": "0.9",

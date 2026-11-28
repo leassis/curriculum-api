@@ -62,7 +62,7 @@ describe("migrate", () => {
     const before = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
     await expect(migrate(TEST_DATABASE_URL)).resolves.toBeUndefined();
     const after = await rows("SELECT * FROM curriculum_api.__drizzle_migrations");
-    expect(before).toHaveLength(10);
+    expect(before).toHaveLength(11);
     expect(after).toEqual(before);
   });
 });
