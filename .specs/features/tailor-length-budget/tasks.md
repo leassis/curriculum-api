@@ -170,12 +170,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests: unset → 2; "3" → 3; "4" rejected with a validation error, stored value kept
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests: unset → 2; "3" → 3; "4" rejected with a validation error, stored value kept
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: integration
 **Gate**: build
 **Commit**: `feat(settings): add a default target pages setting`
+**Status**: done
 
 ---
 

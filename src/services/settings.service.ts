@@ -2,6 +2,7 @@ import type { LimitName, ResolvedConfig } from "../config.js";
 import type { SettingsRepo } from "../repositories/settings.repository.js";
 import { ConfigError, ValidationError } from "./errors.js";
 import {
+  DEFAULT_TARGET_PAGES,
   limitKey,
   type ModelArea,
   modelKey,
@@ -9,6 +10,9 @@ import {
   PAGE_SIZES,
   type PageSize,
   SETTINGS_KEYS,
+  TARGET_PAGES,
+  TARGET_PAGES_KEY,
+  type TargetPages,
   TEMPERATURE_DEFAULT,
   temperatureKey,
 } from "./settings-keys.js";
@@ -64,6 +68,11 @@ export class SettingsService {
     return PAGE_SIZES.find((p) => p === override) ?? "A4";
   }
 
+  async targetPages(): Promise<TargetPages> {
+    const override = await this.repo.get(TARGET_PAGES_KEY);
+    return TARGET_PAGES.find((p) => String(p) === override) ?? DEFAULT_TARGET_PAGES;
+  }
+
   async set(key: string, value: string): Promise<void> {
     if (!SETTINGS_KEYS.includes(key)) {
       throw new ValidationError(`Unknown setting: ${key}`, { key: "unknown setting" });
@@ -86,6 +95,9 @@ export class SettingsService {
     }
     if (key === PAGE_SIZE_KEY && !PAGE_SIZES.some((p) => p === value)) {
       throw new ValidationError(`${key} must be A4 or Letter`, { [key]: "A4 or Letter" });
+    }
+    if (key === TARGET_PAGES_KEY && !TARGET_PAGES.some((p) => String(p) === value)) {
+      throw new ValidationError(`${key} must be 1, 2 or 3`, { [key]: "1, 2 or 3" });
     }
     await this.repo.set(key, value);
   }
