@@ -4,6 +4,7 @@ import { KINDS, type Kind } from "../../services/career/item.js";
 import { leftOut } from "../../services/career/ops.js";
 import { LlmUnavailableError, NotFoundError, ValidationError } from "../../services/errors.js";
 import type { Resume } from "../../services/resume.service.js";
+import { estimatePages } from "../../services/tailor/length.js";
 import { bandFor } from "../../services/tailor/rubric.js";
 import { cardsFrom, formFor } from "../career/model.js";
 import type { FormView } from "../career/view.js";
@@ -14,6 +15,8 @@ import { Editor, EditorPage, ResumeCards, ResumesPage } from "./view.js";
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 /** `undefined` when the field was not posted, so the stored value is kept. */
 const optionalText = (value: unknown) => (typeof value === "string" ? value : undefined);
+/** A posted number; an absent field stays undefined, a non-numeric one becomes NaN and is rejected. */
+const optionalNumber = (value: unknown) => (typeof value === "string" ? Number(value) : undefined);
 
 const CREATE_ERRORS: Record<string, string> = {
   generate: "Generation failed, try again",
@@ -85,11 +88,15 @@ async function fullName(c: Ctx): Promise<string> {
 async function editor(c: Ctx, resume: Resume) {
   const items = resume.document?.items ?? [];
   const library = (await c.var.services.career.library()).items;
+  const estimate = resume.document
+    ? estimatePages(resume.document, await c.var.services.settings.pageSize())
+    : null;
   return {
     basePath: c.var.config.basePath,
     resume,
     fullName: await fullName(c),
     cards: cardsFrom(items, leftOut(library, items)),
+    estimate,
     options: await c.var.services.resumes.headerOptions(),
     assessment: resume.assessment && {
       score: resume.assessment.score,
@@ -156,6 +163,7 @@ resumesRouter.put("/resumes/:id", async (c) => {
       notes: optionalText(body.notes),
       jobDescriptionShort: optionalText(body.jobDescriptionShort),
       company: optionalText(body.company),
+      targetPages: optionalNumber(body.targetPages),
     },
   );
   return c.html("Saved");

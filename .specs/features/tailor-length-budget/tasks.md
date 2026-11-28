@@ -250,12 +250,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests: select shows the stored value; saving 3 posts it; "~2.3 of 2 pages" and the warning at 2.3/2; no estimate without a document; no warning at 1.8/2
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests: select shows the stored value; saving 3 posts it; "~2.3 of 2 pages" and the warning at 2.3/2; no estimate without a document; no warning at 1.8/2
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(admin): show target pages and the page estimate on a resume`
+**Status**: done
 
 ---
 
