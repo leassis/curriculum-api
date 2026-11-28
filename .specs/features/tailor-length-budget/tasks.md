@@ -210,12 +210,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests: the recorded input contains "Target length: 2 pages" and "c1: at most N bullets"; a 9-role, 43-bullet reply returning every bullet is stored at ≤ 2 estimated pages with every role kept
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests: the recorded input contains "Target length: 2 pages" and "c1: at most N bullets"; a 9-role, 43-bullet reply returning every bullet is stored at ≤ 2 estimated pages with every role kept
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(tailor): pass the length budget to the model and enforce it`
+**Status**: done
 
 ---
 

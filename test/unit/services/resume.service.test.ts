@@ -10,6 +10,7 @@ import {
   tailorInput,
 } from "../../../src/services/resume.service";
 import type { ResumeDocument } from "../../../src/services/tailor/document";
+import { estimatePages } from "../../../src/services/tailor/length";
 import { item, sampleDocumentV2, sampleLibrary, sampleReplyV2 } from "../../support/career";
 import { SAMPLE_MARKDOWN } from "../../support/career-markdown";
 import { FULL_NAME, failingFactory, JD, resumeSetup, TAILOR_PROMPT } from "../../support/resumes";
@@ -63,6 +64,45 @@ describe("resume service", () => {
       );
     }
     expect((await resumes.get(id)).targetPages).toBe(3);
+  });
+
+  it("states the target pages and bullet caps in the tailor input", async () => {
+    const { resumes, calls } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    await resumes.generate(id);
+    const prompt = calls[0]?.prompt ?? "";
+    expect(prompt).toContain("Target length: 2 pages");
+    // c1 is the Staff Engineer role: 2 library bullets, far under its budget share.
+    expect(prompt).toContain("c1: at most 2 bullets");
+    expect(prompt).toContain("c2: at most 1 bullet\n");
+  });
+
+  it("stores a long reply cut to the target pages", async () => {
+    const roles = Array.from({ length: 9 }, (_, n) =>
+      item("experience", {
+        title: `Role ${n + 1}`,
+        organisation: `Company ${n + 1}`,
+        startYear: 2016 + n,
+        endYear: 2017 + n,
+        bullets: Array.from({ length: n < 7 ? 5 : 4 }, (_, b) =>
+          `Role ${n + 1} bullet ${b + 1}: `.padEnd(190, "x"),
+        ),
+      }),
+    );
+    expect(roles.flatMap((r) => r.bullets)).toHaveLength(43);
+    const { resumes } = await resumeSetup({
+      items: roles,
+      mock: { text: JSON.stringify(sampleReplyV2(roles)) },
+    });
+    const { id } = await resumes.create(draft);
+    const stored = (await resumes.generate(id)).document;
+    expect(stored).not.toBeNull();
+    const doc = stored as ResumeDocument;
+    expect(estimatePages(doc, "A4")).toBeLessThanOrEqual(2);
+    expect(doc.items).toHaveLength(9);
+    const kept = (title: string) => doc.items.find((i) => i.title === title)?.bullets.length ?? -1;
+    expect(kept("Role 9")).toBeGreaterThan(kept("Role 1"));
+    expect(kept("Role 1")).toBeGreaterThanOrEqual(0);
   });
 
   it("answers not found for an unknown or malformed id", async () => {

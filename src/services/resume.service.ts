@@ -32,6 +32,7 @@ import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
 import { type PageSize, TARGET_PAGES, type TargetPages } from "./settings-keys.js";
 import type { Assessment } from "./tailor/assessment.js";
+import { bulletCaps } from "./tailor/budget.js";
 import {
   parseDocument,
   type ResumeDocument,
@@ -39,6 +40,7 @@ import {
   type ResumeItem,
 } from "./tailor/document.js";
 import { type FinishResult, finish } from "./tailor/finish.js";
+import { fitToBudget } from "./tailor/fit.js";
 import { annotate, TailorOutputSchema } from "./tailor/output.js";
 import { TAILOR_ASSESSMENT_RULES } from "./tailor/rubric.js";
 import { SHORT_JD_MAX_CHARS, SHORT_JD_RULES } from "./tailor/short-description.js";
@@ -87,12 +89,33 @@ function cleanInstructions(value: string): string {
  * The tailor `input`: date, then the Custom Instructions (if any) under the preamble inside
  * `<custom_instructions>` tags (AD-007), then the Job Description.
  */
-export function tailorInput(date: string, instructions: string, jobDescription: string): string {
+export function tailorInput(
+  date: string,
+  instructions: string,
+  jobDescription: string,
+  budget?: LengthBudget,
+): string {
   const steering =
     instructions === ""
       ? ""
       : `${CUSTOM_INSTRUCTIONS_PREAMBLE}\n<custom_instructions>\n${cleanInstructions(instructions)}\n</custom_instructions>\n\n`;
-  return `Today's date: ${date}\n\n${steering}${dataBlock("JOB_DESCRIPTION", jobDescription)}`;
+  const length = budget === undefined ? "" : `${lengthBudget(budget)}\n\n`;
+  return `Today's date: ${date}\n\n${length}${steering}${dataBlock("JOB_DESCRIPTION", jobDescription)}`;
+}
+
+/** What the tailor is told about length: the target pages and each experience's bullet cap by id. */
+export interface LengthBudget {
+  targetPages: number;
+  /** Bullet cap per experience, as `[per-call id, cap]` in the order they are listed. */
+  caps: [string, number][];
+}
+
+function lengthBudget({ targetPages, caps }: LengthBudget): string {
+  const pages = `Target length: ${targetPages} ${targetPages === 1 ? "page" : "pages"}`;
+  const lines = caps.map(
+    ([tag, cap]) => `${tag}: at most ${cap} ${cap === 1 ? "bullet" : "bullets"}`,
+  );
+  return [pages, ...lines].join("\n");
 }
 
 const EMPTY_LIBRARY = "Add Career Items to your profile before generating";
@@ -314,6 +337,17 @@ export class ResumeService {
       resume = await this.update(id, { customInstructions: instructions });
     }
     const ids = annotate(items);
+    const { targetPages } = resume;
+    const pageSize = await this.settings.pageSize();
+    const caps = bulletCaps(items, targetPages, pageSize);
+    const budget: LengthBudget = {
+      targetPages,
+      caps: items.flatMap((item) => {
+        const cap = caps.get(item.id);
+        const tag = ids.get(item.id);
+        return cap === undefined || tag === undefined ? [] : [[tag, cap] as [string, number]];
+      }),
+    };
     const request = {
       area: "tailor" as const,
       system: `${profile.tailorSystemPrompt}\n\n${TAILOR_ASSESSMENT_RULES}\n\n${SHORT_JD_RULES}`,
@@ -324,6 +358,7 @@ export class ResumeService {
         this.now().toISOString().slice(0, 10),
         resume.customInstructions,
         resume.jobDescription,
+        budget,
       ),
       maxOutputTokens: TAILOR_MAX_OUTPUT_TOKENS,
       schema: TailorOutputSchema,
@@ -342,8 +377,9 @@ export class ResumeService {
               collapsed: finished.collapsed,
             });
           }
+          const { doc } = fitToBudget(finished.doc, caps, targetPages, pageSize);
           return this.update(id, {
-            structured: finished.doc,
+            structured: doc,
             model,
             score: assessment.score,
             scoreRationale: assessment.rationale,
