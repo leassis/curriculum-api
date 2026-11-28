@@ -42,6 +42,12 @@ describe("default prompt rules", () => {
     expect(DEFAULT_PUBLIC_SYSTEM_PROMPT).toContain("say the CV does not mention it");
   });
 
+  it("tailor prompt forbids restating the meta line in item text", () => {
+    expect(DEFAULT_TAILOR_SYSTEM_PROMPT).toContain(
+      "Never restate an item's title, employer, location or dates in its text",
+    );
+  });
+
   it("tailor prompt forbids invented facts, copied phrasing, dropped roles and noise", () => {
     const p = DEFAULT_TAILOR_SYSTEM_PROMPT;
     for (const part of [
