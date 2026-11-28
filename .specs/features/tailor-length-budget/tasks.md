@@ -270,12 +270,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests: field renders with the fallback 2; saving 1 stores it; 5 shows an error
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests: field renders with the fallback 2; saving 1 stores it; 5 shows an error
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(admin): add the target pages default to Settings`
+**Status**: done
 
 ---
 
