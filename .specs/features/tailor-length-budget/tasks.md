@@ -353,7 +353,7 @@ Proof: run unit | ✓ ranks a role with no end date as ongoing
 ## Handoff
 
 **Settled mid-build:** user: "nao implemente codigo... mas continue" then "Restaurar spec + medir" - no code in this session; spec, tasks and measurement only, uncommitted.
-**Dispatched:** Verifier at HEAD 56122ab (sent)
+**Dispatched:** Verifier at HEAD 56122ab (returned)
 **Walked:** none
 
 ---
