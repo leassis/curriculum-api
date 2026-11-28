@@ -35,7 +35,7 @@ export class FakeResumeRepo implements ResumeRepo {
       missingSkills: [],
       omissions: [],
       jobDescriptionShort: null,
-      targetPages: 2,
+      targetPages: input.targetPages ?? 2,
       createdAt: at,
       updatedAt: at,
     };
@@ -61,6 +61,7 @@ export class FakeResumeRepo implements ResumeRepo {
     if (patch.jobDescriptionShort !== undefined) {
       next.jobDescriptionShort = patch.jobDescriptionShort;
     }
+    if (patch.targetPages !== undefined) next.targetPages = patch.targetPages;
     if (patch.omissions !== undefined) next.omissions = structuredClone(patch.omissions);
     next.updatedAt = new Date();
     this.rows[index] = next;

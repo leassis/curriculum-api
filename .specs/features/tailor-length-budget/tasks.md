@@ -190,12 +190,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Tests: create takes the setting; update to 3 stored; 0 rejected with the stored value kept
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Tests: create takes the setting; update to 3 stored; 0 rejected with the stored value kept
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `feat(resumes): store target pages per resume`
+**Status**: done
 
 ---
 

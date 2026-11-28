@@ -30,7 +30,7 @@ import type {
 } from "./personal-info.service.js";
 import type { Profile, ProfileService } from "./profile.service.js";
 import type { SettingsService } from "./settings.service.js";
-import type { PageSize } from "./settings-keys.js";
+import { type PageSize, TARGET_PAGES, type TargetPages } from "./settings-keys.js";
 import type { Assessment } from "./tailor/assessment.js";
 import {
   parseDocument,
@@ -188,6 +188,16 @@ export function slugify(title: string): string {
   return slug || "resume";
 }
 
+/** `undefined` leaves the stored value; anything but 1, 2 or 3 is rejected. */
+function checkTargetPages(value: number | undefined): TargetPages | undefined {
+  if (value === undefined) return undefined;
+  const pages = TARGET_PAGES.find((p) => p === value);
+  if (pages === undefined) {
+    throw new ValidationError("Target pages must be 1, 2 or 3", { targetPages: "1, 2 or 3" });
+  }
+  return pages;
+}
+
 const required = (field: string, label: string, value: unknown): string => {
   if (typeof value !== "string" || value.trim() === "") {
     throw new ValidationError(`${label} is required`, { [field]: "is required" });
@@ -245,6 +255,7 @@ export class ResumeService {
         jobLink: tracking.jobLink ?? "",
         recruiterName: tracking.recruiterName ?? "",
         notes: tracking.notes ?? "",
+        targetPages: await this.settings.targetPages(),
       }),
     );
   }
@@ -356,7 +367,11 @@ export class ResumeService {
     id: string,
     headerKeys: string[],
     customInstructions?: string,
-    tracking: Partial<Tracking> & { jobDescriptionShort?: string; company?: string } = {},
+    tracking: Partial<Tracking> & {
+      jobDescriptionShort?: string;
+      company?: string;
+      targetPages?: number;
+    } = {},
   ): Promise<Resume> {
     await this.get(id);
     const fields = await this.personalInfo.allValues();
@@ -367,8 +382,10 @@ export class ResumeService {
     const checked = this.checkTracking(tracking);
     const jobDescriptionShort = this.checkShortJobDescription(tracking.jobDescriptionShort);
     const company = tracking.company === undefined ? undefined : tracking.company.trim() || null;
+    const targetPages = checkTargetPages(tracking.targetPages);
     return this.update(id, {
       ...checked,
+      ...(targetPages === undefined ? {} : { targetPages }),
       ...(jobDescriptionShort === undefined ? {} : { jobDescriptionShort }),
       ...(company === undefined ? {} : { company }),
       headerFields: headerFieldsFor(

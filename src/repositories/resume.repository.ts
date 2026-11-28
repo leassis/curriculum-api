@@ -13,6 +13,7 @@ export interface ResumeInsert {
   notes?: string;
   /** `null` or omitted stores NULL, meaning every Personal Info Field. */
   headerFields?: string[] | null;
+  targetPages?: number;
 }
 export interface ResumePatch {
   model?: string | null;
@@ -32,6 +33,7 @@ export interface ResumePatch {
   omissions?: unknown;
   /** The Short Job Description, already trimmed and bounded by the service; `null` clears it. */
   jobDescriptionShort?: string | null;
+  targetPages?: number;
 }
 
 export interface ResumeRepo {

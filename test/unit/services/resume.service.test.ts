@@ -38,6 +38,33 @@ describe("resume service", () => {
     expect(created).not.toHaveProperty("content");
   });
 
+  it("creates a resume with the default target pages", async () => {
+    const { resumes, settings } = await resumeSetup();
+    expect((await resumes.create(draft)).targetPages).toBe(2);
+    await settings.set("print.targetPages", "1");
+    expect((await resumes.create(draft)).targetPages).toBe(1);
+  });
+
+  it("stores target pages from the options", async () => {
+    const { resumes } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    const updated = await resumes.updateOptions(id, [], undefined, { targetPages: 3 });
+    expect(updated.targetPages).toBe(3);
+    expect((await resumes.get(id)).targetPages).toBe(3);
+  });
+
+  it("rejects target pages outside 1 to 3", async () => {
+    const { resumes } = await resumeSetup();
+    const { id } = await resumes.create(draft);
+    await resumes.updateOptions(id, [], undefined, { targetPages: 3 });
+    for (const targetPages of [0, 4, 1.5, Number.NaN]) {
+      await expect(resumes.updateOptions(id, [], undefined, { targetPages })).rejects.toMatchObject(
+        { status: 400 },
+      );
+    }
+    expect((await resumes.get(id)).targetPages).toBe(3);
+  });
+
   it("answers not found for an unknown or malformed id", async () => {
     const { resumes } = await resumeSetup();
     for (const id of [MISSING, "not-a-uuid", ""]) {
