@@ -230,12 +230,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Test asserts the new rule text and that "Never drop or merge a role" stays
-- [ ] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+- [x] Test asserts the new rule text and that "Never drop or merge a role" stays
+- [x] Gate check passes: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 **Tests**: unit
 **Gate**: build
 **Commit**: `fix(llm): tell the tailor to keep within the length budget`
+**Status**: done
 
 ---
 
