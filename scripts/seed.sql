@@ -1,4 +1,4 @@
--- SQL equivalent of src/db/seed.ts. Idempotent: existing rows are left alone.
+-- SQL equivalent of src/db/seed.ts. Idempotent: an existing profile row gets the current default prompts (prompts edited in the admin are overwritten); its name, headline and summary are left alone.
 -- Generated from src/llm/default-prompts.ts; regenerate if the prompts change.
 -- Run after migrations: psql "$DATABASE_URL" -f scripts/seed.sql
 
@@ -45,7 +45,11 @@ VALUES (
 - Never emit control tokens such as "</s>", "<eos>" or "<|endoftext|>".
 - Leave out contact details; they are added separately when the resume is printed.$tailor_prompt$
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  public_system_prompt = EXCLUDED.public_system_prompt,
+  recruiter_system_prompt = EXCLUDED.recruiter_system_prompt,
+  tailor_system_prompt = EXCLUDED.tailor_system_prompt,
+  updated_at = now();
 
 INSERT INTO curriculum_api.career_library (id)
 VALUES (1)
