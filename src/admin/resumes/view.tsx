@@ -279,7 +279,7 @@ const LengthEstimate = ({ estimate, target }: { estimate: number; target: number
     <p class="status">
       ~{estimate.toFixed(1)} of {target} {target === 1 ? "page" : "pages"}
     </p>
-    {estimate > target ? (
+    {Number(estimate.toFixed(1)) > target ? (
       <p class="text-danger" role="alert">
         This resume is over its target of {target} {target === 1 ? "page" : "pages"}
       </p>

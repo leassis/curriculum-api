@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { tailoredResumes } from "../../../src/db/schema";
 import { pgErrorCode, resetDb, testDb } from "../../support/db";
@@ -20,8 +22,27 @@ describe("target pages column", () => {
   });
 
   it("gives existing resumes target pages 2", async () => {
-    const [row] = await db.insert(tailoredResumes).values(base).returning();
-    expect(row?.targetPages).toBe(2);
+    // Put the table back as it was before 0010, add a resume, then run the migration's own SQL.
+    await db.execute(
+      sql.raw('ALTER TABLE "curriculum_api"."tailored_resumes" DROP COLUMN "target_pages"'),
+    );
+    await db.execute(
+      sql.raw(
+        `INSERT INTO "curriculum_api"."tailored_resumes" (title, job_description) VALUES ('Old', 'JD')`,
+      ),
+    );
+    const file = readFileSync(
+      new URL("../../../drizzle/0010_cute_blue_shield.sql", import.meta.url),
+      "utf8",
+    );
+    for (const statement of file.split("--> statement-breakpoint")) {
+      await db.execute(sql.raw(statement));
+    }
+    const [old] = await db.select().from(tailoredResumes);
+    expect(old?.targetPages).toBe(2);
+    expect(await codeOf(db.insert(tailoredResumes).values({ ...base, targetPages: 4 }))).toBe(
+      "23514",
+    );
     const [three] = await db
       .insert(tailoredResumes)
       .values({ ...base, targetPages: 3 })

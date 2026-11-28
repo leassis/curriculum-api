@@ -14,12 +14,15 @@ export function meanBulletLength(items: CareerItem[]): number {
   return bullets.reduce((sum, b) => sum + b.length, 0) / bullets.length;
 }
 
-/** Current first, then the latest end (year, then month), then the latest start. */
+/** A role with no end date is still going on, whether or not it is flagged current. */
+const ongoing = (i: CareerItem): boolean => i.current || i.endYear === null;
+
+/** Ongoing first, then the latest end (year, then month), then the latest start; the id breaks ties. */
 export function recency(a: CareerItem, b: CareerItem): number {
-  if (a.current !== b.current) return a.current ? -1 : 1;
+  if (ongoing(a) !== ongoing(b)) return ongoing(a) ? -1 : 1;
   const key = (i: CareerItem) => [
-    i.endYear ?? 0,
-    i.endMonth ?? 0,
+    ongoing(i) ? 0 : (i.endYear ?? 0),
+    ongoing(i) ? 0 : (i.endMonth ?? 0),
     i.startYear ?? 0,
     i.startMonth ?? 0,
   ];
@@ -28,7 +31,7 @@ export function recency(a: CareerItem, b: CareerItem): number {
     const other = kb[index] ?? 0;
     if (value !== other) return other - value;
   }
-  return 0;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 /** Printed characters of the library that are not experience bullets. */

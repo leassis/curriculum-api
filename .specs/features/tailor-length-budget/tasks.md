@@ -345,12 +345,15 @@ Proof: run unit | ✓ saves the target pages default in Settings
 **C21** - The tailor prompt keeps "Never drop or merge a role" and adds the budget rule (LEN-01)
 Proof: run unit | ✓ tailor prompt asks to keep within the length budget
 
+**C22** - An experience that is not current and has no end year ranks as ongoing (LEN-07, edge case)
+Proof: run unit | ✓ ranks a role with no end date as ongoing
+
 ---
 
 ## Handoff
 
 **Settled mid-build:** user: "nao implemente codigo... mas continue" then "Restaurar spec + medir" - no code in this session; spec, tasks and measurement only, uncommitted.
-**Dispatched:** none
+**Dispatched:** Verifier at HEAD 56122ab (sent)
 **Walked:** none
 
 ---

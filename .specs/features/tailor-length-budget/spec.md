@@ -104,6 +104,7 @@ Tailored resumes come out nearly as long as the Career Library. A dev DB sample 
 - IF the Career Library has no bullets THEN the system SHALL use 120 characters as the mean bullet length.
 - WHEN the page size is Letter THEN the estimate SHALL use the A4 constant scaled by the ratio of Letter's printable area to A4's.
 - IF the model returns fewer bullets than a cap THEN the assembly SHALL keep them all.
+- IF an experience is not current and has no end year THEN the ranking SHALL treat it as ongoing, like a current one. (LEN-07, added after verification)
 
 ---
 
@@ -117,6 +118,7 @@ Tailored resumes come out nearly as long as the Career Library. A dev DB sample 
 | LEN-04 | P2: AC 1-4 (target pages field and setting) | Tasks | Pending |
 | LEN-05 | P3: AC 1-3 (editor estimate) | Tasks | Pending |
 | LEN-06 | Edge cases (estimate constant, Letter, no bullets) | Tasks | Pending |
+| LEN-07 | Edge cases (no end date ranks as ongoing) | Tasks | Pending |
 
 **Coverage:** 6 total, 6 mapped to tasks, 0 unmapped
 

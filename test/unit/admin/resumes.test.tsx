@@ -347,6 +347,10 @@ describe("admin resumes length", () => {
     const html = decode(await under.page());
     expect(html).toContain("~1.8 of 2 pages");
     expect(html).not.toContain("over its target");
+    const barely = await withEstimate(2.02, 2);
+    const printed = decode(await barely.page());
+    expect(printed).toContain("~2.0 of 2 pages");
+    expect(printed).not.toContain("over its target");
   });
 
   it("shows no estimate before the first generation", async () => {
