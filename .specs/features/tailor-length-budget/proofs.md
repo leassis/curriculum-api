@@ -1,9 +1,9 @@
 # tailor-length-budget proofs
 
-**HEAD**: 56122ab
+**HEAD**: 893273c
 **Tree**: clean
 **Shell**: /bin/sh
-**Result**: 24 pass, 0 fail
+**Result**: 25 pass, 0 fail
 
 | Check | Proof | Result |
 | --- | --- | --- |
@@ -28,6 +28,7 @@
 | C19 | `run unit / ✓ keeps every bullet under the cap` | pass |
 | C20 | `run unit / ✓ saves the target pages default in Settings` | pass |
 | C21 | `run unit / ✓ tailor prompt asks to keep within the length budget` | pass |
+| C22 | `run unit / ✓ ranks a role with no end date as ongoing` | pass |
 | Build | `pnpm build` | pass |
 | Build | `pnpm typecheck` | pass |
 | Build | `pnpm lint` | pass |
@@ -38,20 +39,20 @@
 
 ```
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > header save answers 400 with the form open and the entered values 3ms
- ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > header save rejects the full name and personal info 5ms
+ ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > header save rejects the full name and personal info 4ms
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > header and item routes answer 400 before the resume is generated 1ms
- ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > every control swaps the whole career fragment 3ms
- ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > creates a resume with the posted tracking fields 2ms
- ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > saves posted tracking fields and keeps omitted ones 3ms
+ ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes career routes > every control swaps the whole career fragment 2ms
+ ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > creates a resume with the posted tracking fields 3ms
+ ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > saves posted tracking fields and keeps omitted ones 1ms
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > answers 400 for an invalid job link on create and save 1ms
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > shows job link, recruiter name and notes on the new resume form 1ms
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > shows the stored tracking fields in the editor form 1ms
  ✓ |unit| test/unit/admin/resumes.test.tsx > admin resumes tracking fields > links the job link in a new tab with noopener noreferrer 1ms
 
  Test Files  8 passed (8)
-      Tests  183 passed (183)
-   Start at  19:48:55
-   Duration  1.06s (import 64%, tests 22%, transform 13%, worker 1%)
+      Tests  185 passed (185)
+   Start at  19:52:33
+   Duration  1.10s (import 67%, tests 20%, transform 11%, worker 1%)
 ```
 
 `Run int` - exit 0
@@ -59,13 +60,13 @@
 ```
 RUN  v5.1.1 /Users/leassis/workspace/curriculum-root/curriculum-api/.claude/worktrees/bold-jackson-319c04
 
- ✓ |integration| test/integration/db/target-pages-migration.test.ts > target pages column > gives existing resumes target pages 2 41ms
+ ✓ |integration| test/integration/db/target-pages-migration.test.ts > target pages column > gives existing resumes target pages 2 42ms
  ✓ |integration| test/integration/db/target-pages-migration.test.ts > target pages column > rejects target pages outside 1 to 3 17ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 38ms
- ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > rejects a target pages override outside 1 to 3 10ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > override change applies on next call 51ms
+ ✓ |integration| test/integration/services/settings.service.test.ts > SettingsService > rejects a target pages override outside 1 to 3 13ms
 
  Test Files  2 passed (2)
       Tests  4 passed (4)
-   Start at  19:48:57
-   Duration  2.59s (import 80%, tests 17%, transform 2%, worker 1%)
+   Start at  19:52:35
+   Duration  2.95s (import 78%, tests 20%, transform 2%, worker 1%)
 ```
